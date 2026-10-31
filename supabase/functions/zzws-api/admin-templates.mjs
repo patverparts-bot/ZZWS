@@ -32,7 +32,7 @@ export async function adminTemplateRoutes(c){
   if(!row||row.profile.role!=='client')fail(404,'Հաճախորդը չի գտնվել');
   return row;
  };
- const permitted=async row=>{const v=await current();return project(v.products,{...row.profile,id:row.id},v.rules);};
+ const permitted=async row=>{const v=await current();return project(v.products,{...row.profile,id:row.id},v.rules,{mainWarehouses:v.mainWarehouses});};
  if(path==='admin/templates/customers'&&req.method==='GET'){
   const rows=await query(table('users').select('id,login,profile,active').eq('profile->>role','client').order('login').limit(5000));
   return json({customers:rows.map(r=>({id:r.id,login:r.login,client:r.profile.client,active:r.active}))});

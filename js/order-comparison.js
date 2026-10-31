@@ -50,6 +50,10 @@
  }
  function eventNotice(event){
   const d=event?.detail||{};
+  if(d.kind==='approval_requested')return {text:'Սպասում է հաճախորդի համաձայնությանը',changed:true};
+  if(d.kind==='approval_approved')return {text:'Հաճախորդը համաձայնեցրել է',changed:true};
+  if(d.kind==='approval_declined')return {text:'Հաճախորդը հրաժարվել է պատվերից',changed:false};
+  if(d.kind==='approval_deferred')return {text:'Հաճախորդը ժամանակ է խնդրել դիտարկման համար՝ '+d.minutes+' րոպե։',changed:false};
   if(d.changes?.length)return {text:'Կան ապրանքների փոփոխություններ',changed:true};
   if(d.deliveryChanged)return {text:'Առաքման տվյալները փոխվել են',changed:true};
   if(d.kind==='closed_order_reopened')return {text:'Պատվերը վերաբացվել է',changed:false};

@@ -14,13 +14,13 @@
    const badge=el('orderNotificationsCount');badge.textContent=events.length>=50?'50+':String(events.length);badge.hidden=!events.length;
    const cabinetBadge=el('cabinetNotificationCount');if(cabinetBadge){cabinetBadge.textContent=badge.textContent;cabinetBadge.hidden=!events.length;}
    const fresh=events.filter(e=>!noticeSeen.has(e.id));for(const event of events)noticeSeen.add(event.id);
-   if(fresh.length)setNotice('Ձեր պատվերներում կան փոփոխություններ՝ '+fresh.length+'։ Բացեք ծանուցումները կամ անձնական հաշիվը։');
+   if(fresh.some(e=>e.detail.kind==='approval_requested'))setNotice('Պատվերի փոփոխությունները սպասում են Ձեր համաձայնությանը։ Բացեք ծանուցումները կամ անձնական հաշիվը։');else if(fresh.length)setNotice('Ձեր պատվերներում կան փոփոխություններ՝ '+fresh.length+'։ Բացեք ծանուցումները կամ անձնական հաշիվը։');
    if(!events.length)setNotice('');
    if(fresh.length&&!el('cabinetModal').classList.contains('hidden'))await load();
   }catch(e){if(e.status===401)lockCatalog();}finally{if(owner===activeOwner)polling=false;}
  }
- function start(user){stop();owner=user.id;window.ZZWS_RECEIPTS?.start(user);poll();timer=setInterval(poll,30000);}
- function stop(){polling=false;++loadTicket;window.ZZWS_RECEIPTS?.stop();document.body.classList.remove('cabinet-open');if(timer)clearInterval(timer);timer=null;owner=null;events=[];orders=[];noticeSeen=new Set();for(const id of ['serverOrderSearch','serverOrderFrom','serverOrderTo'])if(el(id))el(id).value='';el('orderNotificationsCount')?.setAttribute('hidden','');el('cabinetNotificationCount')?.setAttribute('hidden','');if(el('serverOrdersList'))el('serverOrdersList').replaceChildren();if(el('orderNotificationList')){el('orderNotificationList').replaceChildren();el('orderNotificationList').hidden=true;}if(el('orderNotificationNotice'))setNotice('');}
+ function start(user){stop();owner=user.id;window.ZZWS_RECEIPTS?.start(user);window.ZZWS_APPROVAL_REMINDER?.start(user);poll();timer=setInterval(poll,30000);}
+ function stop(){window.ZZWS_APPROVAL_REMINDER?.stop();polling=false;++loadTicket;window.ZZWS_RECEIPTS?.stop();document.body.classList.remove('cabinet-open');if(timer)clearInterval(timer);timer=null;owner=null;events=[];orders=[];noticeSeen=new Set();for(const id of ['serverOrderSearch','serverOrderFrom','serverOrderTo'])if(el(id))el(id).value='';el('orderNotificationsCount')?.setAttribute('hidden','');el('cabinetNotificationCount')?.setAttribute('hidden','');if(el('serverOrdersList'))el('serverOrdersList').replaceChildren();if(el('orderNotificationList')){el('orderNotificationList').replaceChildren();el('orderNotificationList').hidden=true;}if(el('orderNotificationNotice'))setNotice('');}
  async function load(more=false){
   if(!owner)return;const root=el('serverOrdersList');
   const activeOwner=owner;
@@ -33,7 +33,7 @@
   if(!orders.length){const pending=el('pendingReceiptOnly').checked;root.append(node('p',pending?'Չփակված պատվերներ չկան։':'Ընտրված պայմաններով պատվերներ չկան։','orders-empty'));if(pending){const all=node('button','Ցույց տալ բոլոր պատվերները');all.type='button';all.className='orders-show-all';all.onclick=()=>{el('pendingReceiptOnly').checked=false;load();};root.append(all);}return;}
   for(const order of orders){const card=node('details',null,'server-order-card'),summary=node('summary'),identity=node('div'),total=node('div');
    identity.append(node('strong','Պատվեր №'+order.number),node('span',shortDate(order.created),'server-order-date'));
-   total.append(node('span',labels[order.status]||order.status,'order-status status-'+order.status),node('strong',money(order.total)));
+   total.append(node('span',window.ZZWS_ORDER_APPROVAL?.label(order)||labels[order.status]||order.status,'order-status status-'+order.status),node('strong',money(order.total)));
    if(events.some(e=>e.order_id===order.id))identity.append(node('span','Կան փոփոխություններ','order-unread'));
    summary.append(identity,total);card.append(summary);const content=node('div',null,'server-order-content');card.append(content);card.dataset.orderId=order.id;
    card.ontoggle=async()=>{if(card.open&&matchMedia('(max-width:640px)').matches)for(const other of root.querySelectorAll('.server-order-card[open]'))if(other!==card)other.open=false;if(card.open&&!content.dataset.loaded){content.textContent='Պատվերը բեռնվում է…';const activeOwner=owner;try{const revision=await details(order.id,content);if(owner!==activeOwner||!card.open||!card.isConnected||el('cabinetModal').classList.contains('hidden')||revision==null)return;content.dataset.loaded='true';await ZZWS.json('orders/read',{method:'POST',body:JSON.stringify({orderId:order.id,revision})});events=events.filter(e=>e.order_id!==order.id||e.revision>revision);poll();}catch(e){if(owner===activeOwner&&content.isConnected)content.textContent=ZZWS.message(e);}}};root.append(card);if(opened.has(order.id))card.open=true;
@@ -42,11 +42,12 @@
  function linesTable(lines){const wrap=node('div',null,'order-lines-scroll'),table=node('table');const head=table.createTHead().insertRow();for(const h of ['Ապրանք','Քանակ','Գին','Գումար'])head.append(node('th',h));
   for(const line of lines){const row=table.insertRow();const product=row.insertCell();product.append(node('strong',line.name),node('small',line.articul));row.insertCell().textContent=line.qty;row.insertCell().textContent=money(line.unitPrice);row.insertCell().textContent=money(line.qty*line.unitPrice);}wrap.append(table);return wrap;}
  async function details(id,root){const who=owner,result=await ZZWS.json('orders/detail',{method:'POST',body:JSON.stringify({id})}),order=result.order;if(owner!==who||!root.isConnected)return null;root.replaceChildren();
-  root.append(node('p',(order.status==='new'?'Պատվերը ստացվել է։ Սպասում է ադմինիստրատորի հաստատմանը։':'Կարգավիճակ՝ '+labels[order.status])+ ' · Թարմացվել է '+date(order.updated),'order-info'));
+  root.append(node('p',(order.approval?.state==='pending'?'Սպասում է հաճախորդի համաձայնությանը':order.status==='new'?'Պատվերը ստացվել է։ Սպասում է ադմինիստրատորի հաստատմանը։':'Կարգավիճակ՝ '+labels[order.status])+ ' · Թարմացվել է '+date(order.updated),'order-info'));
   if(order.comment)root.append(node('p','Ադմինիստրատորի մեկնաբանությունը՝ '+order.comment,'order-admin-comment'));
   root.append(node('h4','Պատվերի կազմը','order-content-heading'),node('p','Ջնջագծված են նախկին արժեքներն ու չհաստատված ապրանքները։','order-info order-comparison-hint'));
   root.append(ZZWS_ORDER_COMPARE.render(order.original_lines?.length?order.original_lines:order.lines,order.lines));
-  window.ZZWS_RECEIPTS?.render(order,root);
+  window.ZZWS_ORDER_APPROVAL?.render(order,root,async()=>{await load();if(root.isConnected&&owner===who)await details(id,root);await poll();});
+  if(order.approval?.state!=='pending')window.ZZWS_RECEIPTS?.render(order,root);
   const delivery=order.delivery||{},deliveryBox=node('details',null,'order-delivery-details'),deliveryList=node('dl');deliveryBox.append(node('summary','Առաքման տվյալներ'));
   for(const [key,label] of Object.entries({organization:'Կազմակերպություն',contact:'Կոնտակտ',address:'Հասցե',method:'Առաքման եղանակ',date:'Առաքման օր',paymentDeadline:'Վճարման վերջնաժամկետ',comment:'Ձեր մեկնաբանությունը'}))if(delivery[key])deliveryList.append(node('dt',label),node('dd',delivery[key]));deliveryBox.append(deliveryList);root.append(deliveryBox);
   const tools=node('details',null,'order-secondary-tools');tools.append(node('summary','Կրկնել պատվերը կամ գտնել փոխարինում'));
@@ -58,13 +59,18 @@
    saveCartToStorage();updateOrderPanel();resetAndRender();window.ZZWS_MEMORY?.capture();closePersonalCabinet();openOrderModal();};tools.append(repeat);
   const alternatives=node('details'),heading=node('summary','Փոխարինող մոդելներ՝ նոր զամբյուղի համար');alternatives.append(heading);for(const line of order.lines){const b=node('button',line.name+' · '+line.articul);b.type='button';b.dataset.replaceArt=line.articul;b.dataset.replaceOrder=order.id;alternatives.append(b);}tools.append(alternatives);root.append(tools);
   const history=node('details',null,'order-change-history');history.append(node('summary','Փոփոխությունների պատմություն · '+result.events.length));
-  for(const event of result.events){const box=node('details',null,'order-event'),summary=node('summary',date(event.created)+' · '+labels[event.detail.status]);box.append(summary);
-   for(const change of event.detail.changes||[]){const before=change.before,after=change.after;box.append(node('p',change.articul+' · '+({removed:'Ջնջված',added:'Ավելացված',changed:'Փոփոխված'}[change.kind])+(before?' · նախկինում՝ '+before.qty+' × '+money(before.unitPrice):'')+(after?' · հաստատված՝ '+after.qty+' × '+money(after.unitPrice):'')));}history.append(box);}if(result.events.length)root.append(history);
+  for(const event of result.events){const box=node('details',null,'order-event'),summary=node('summary',date(event.created)+' · '+(event.detail.kind==='approval_requested'?'Սպասում է հաճախորդի համաձայնությանը':labels[event.detail.status]));box.append(summary);
+   for(const change of event.detail.changes||[]){const before=change.before,after=change.after;box.append(node('p',change.articul+' · '+({removed:'Ջնջված',added:'Ավելացված',changed:'Փոփոխված'}[change.kind])+(before?' · նախկինում՝ '+before.qty+' × '+money(before.unitPrice):'')+(after?(event.detail.kind==='approval_requested'?' · առաջարկված՝ ':' · հաստատված՝ ')+after.qty+' × '+money(after.unitPrice):'')));}history.append(box);}if(result.events.length)root.append(history);
   return order.revision;
  }
  async function notifications(){const who=owner;openPersonalCabinet();await load();if(owner!==who)return;const root=el('orderNotificationList');root.replaceChildren();root.hidden=false;document.querySelector('.cabinet-notifications-link').setAttribute('aria-expanded','true');const heading=node('div',null,'order-notification-heading'),back=node('button','Դեպի պատվերներ');back.type='button';back.onclick=()=>{root.hidden=true;document.querySelector('.cabinet-notifications-link').setAttribute('aria-expanded','false');el('serverOrdersList').scrollIntoView({block:'start'});};heading.append(node('strong','Պատվերների փոփոխություններ'),back);root.append(heading);el('cabinetScroll').scrollTop=0;
   if(!events.length){root.append(node('p','Չընթերցված փոփոխություններ չկան։'));return;}
-  for(const event of events){const b=node('button','Պատվեր №'+event.detail.number+' · '+labels[event.detail.status]+' · '+shortDate(event.created));b.type='button';b.onclick=async()=>{const box=node('div',null,'server-order-content');root.replaceChildren(heading,box);try{const activeOwner=owner,revision=await details(event.order_id,box);if(owner!==activeOwner||!box.isConnected||el('cabinetModal').classList.contains('hidden')||revision==null)return;await ZZWS.json('orders/read',{method:'POST',body:JSON.stringify({orderId:event.order_id,revision})});await poll();}catch(e){if(box.isConnected)box.textContent=ZZWS.message(e);}};root.append(b);}
+  for(const event of events){const b=node('button','Պատվեր №'+event.detail.number+' · '+(event.detail.kind==='approval_requested'?'Սպասում է հաճախորդի համաձայնությանը':labels[event.detail.status])+' · '+shortDate(event.created));b.type='button';b.onclick=async()=>{const box=node('div',null,'server-order-content');root.replaceChildren(heading,box);try{const activeOwner=owner,revision=await details(event.order_id,box);if(owner!==activeOwner||!box.isConnected||el('cabinetModal').classList.contains('hidden')||revision==null)return;await ZZWS.json('orders/read',{method:'POST',body:JSON.stringify({orderId:event.order_id,revision})});await poll();}catch(e){if(box.isConnected)box.textContent=ZZWS.message(e);}};root.append(b);}
+ }
+ async function openApproval(id){
+  const who=owner;if(!who)return;openPersonalCabinet();await load();if(owner!==who)return;
+  const root=el('orderNotificationList');root.replaceChildren();root.hidden=false;const back=node('button','Դեպի պատվերներ');back.type='button';back.onclick=()=>{root.hidden=true;};const box=node('div',null,'server-order-content');root.append(back,box);el('cabinetScroll').scrollTop=0;
+  const revision=await details(id,box);if(owner!==who||revision==null||!box.isConnected)return;await ZZWS.json('orders/read',{method:'POST',body:JSON.stringify({orderId:id,revision})});await poll();
  }
  async function submit(){
   if(window.ZZWS_ASSISTED?.active()){if(window.ZZWS_CHECKOUT&&!ZZWS_CHECKOUT.ready())return;return ZZWS_ASSISTED.submit();}
@@ -95,6 +101,6 @@
   finally{busy=false;ZZWS_RECEIPTS.setSubmitting(false);ZZWS_RECEIPTS.refresh().catch(()=>{});}
  }
  el('serverOrderSearchForm').onsubmit=e=>{e.preventDefault();load();};el('serverOrderSearchForm').onreset=()=>setTimeout(()=>load(),0);
- window.ZZWS_ORDERS={start,stop,load,notifications,submit};
+ window.ZZWS_ORDERS={start,stop,load,notifications,submit,openApproval};
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll();});
 })();

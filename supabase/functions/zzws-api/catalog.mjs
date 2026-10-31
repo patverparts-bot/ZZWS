@@ -1,4 +1,7 @@
+import {DEFAULT_MAIN_WAREHOUSES} from './warehouses.mjs';
 import {email,emailRows} from './report-email.mjs';
+import {phoneNumber,phoneNumbers} from './phones.mjs';
+import {personContacts,contactEmailRows} from './contacts.mjs';
 import { effectiveRules, permits, selectPrice, validateAccess, validateContacts } from './rules.mjs';
 export const norm = v => String(v??'').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu,'');
 import {catalogNumber as number,validateCatalogProducts} from './catalog-contract.mjs';
@@ -37,8 +40,9 @@ export function inspectPrice(rows){
  catch(e){return {products:[],issues:issues.length?issues:[{row:null,articul:'',message:e.message}]};}
 }
 
-export function project(products,user,storedRules,{forOrder=false}={}) {
+export function project(products,user,storedRules,{forOrder=false,mainWarehouses=DEFAULT_MAIN_WAREHOUSES}={}) {
   const result=[],admin=user.role==='admin',kp=user.sheet==='KP'&&!admin,domus=/ԴՈՄՈՒՍ|ДОМУՍ|DOMUS/i.test(user.client);
+  const main=new Set(mainWarehouses);
   const group=effectiveRules(storedRules)[user.sheet||'Dealers'];
   if(!group)throw Error('Հաճախորդի կատեգորիան չի գտնվել');
   const allowed=(user.brands||[]).map(norm);
@@ -52,8 +56,8 @@ export function project(products,user,storedRules,{forOrder=false}={}) {
     const selected=selectPrice(p,group.pricing);
     const wholesale=admin?p.ws:selected.price,kpPrice=p.kpPromo||p.kp,retail=p.retail;
     if(!admin&&(wholesale<=0||(group.pricing.hideAboveRetail&&retail>0&&wholesale>retail)))continue;
-    const entries=Object.entries(p.stocks),base=entries.filter(([n])=>['003','023','026','031'].includes(n)).reduce((s,[,q])=>s+q,0);
-    const other=entries.filter(([n])=>!['003','023','026','031'].includes(n)).reduce((s,[,q])=>s+q,0);
+    const entries=Object.entries(p.stocks),base=entries.filter(([n])=>main.has(n)).reduce((s,[,q])=>s+q,0);
+    const other=entries.filter(([n])=>!main.has(n)).reduce((s,[,q])=>s+q,0);
     if(!forOrder&&(admin?base+other<=0:base<=0&&other<group.stock.otherFrom))continue;
     const margin=price=>retail>0&&price>0?(domus?retail/price:(1-price/retail)*100):0;
     const item={articul:p.articul,brand:p.brand,category:p.category,name:p.name,retail,wholesale,
@@ -76,6 +80,13 @@ export function validateProfile(p){
   const profile={client,role,sheet,brands,allBrands:p.allBrands===true,allowResale:p.allowResale===true,rowsList};
   if(Object.hasOwn(p,'emailRows'))profile.emailRows=emailRows(p.emailRows);
   if(Object.hasOwn(p,'replyToEmail'))profile.replyToEmail=email(p.replyToEmail,{optional:true});
+  if(Object.hasOwn(p,'phoneNumbers'))profile.phoneNumbers=phoneNumbers(p.phoneNumbers);
+  if(Object.hasOwn(p,'managerPhone'))profile.managerPhone=phoneNumber(p.managerPhone);
+  if(Object.hasOwn(p,'contacts')){
+   profile.contacts=personContacts(p.contacts);
+   profile.phoneNumbers=profile.contacts.map(c=>c.phone).filter(Boolean);
+   profile.emailRows=contactEmailRows(profile);
+  }
   if(role==='admin'){const seconds=Number(p.ordersRefreshSeconds??5);if(!Number.isInteger(seconds)||seconds<5||seconds>300)throw Error('Պատվերների թարմացման միջակայքը՝ 5-ից 300 վայրկյան');profile.ordersRefreshSeconds=seconds;}
   if(Object.hasOwn(p,'catalogAccess'))profile.catalogAccess=p.catalogAccess===null?null:validateAccess(p.catalogAccess);
   return {login,profile};

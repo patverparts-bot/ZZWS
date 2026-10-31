@@ -1,3 +1,4 @@
+import {warehouseRoutes,mainWarehouses} from './warehouses.mjs';
 import {dealerRoutes} from './dealer.mjs';
 import {replacementRoutes} from './replacements.mjs';
 import {adminTemplateRoutes} from './admin-templates.mjs';
@@ -87,7 +88,7 @@ async function current(){
   const state=await query(table('state').select('*').eq('id',true).single());
   if(!state?.version)fail(409,'Ադմինիստրատորը դեռ չի հրապարակել գնացուցակը');
   const version=await query(table('versions').select('*').eq('id',state.version).single());
-  return {...version,rules:effectiveRules(state.rules),storedRules:state.rules,rulesRevision:state.rules_revision};
+  return {...version,rules:effectiveRules(state.rules),storedRules:state.rules,rulesRevision:state.rules_revision,mainWarehouses:mainWarehouses(state.catalog_controls),warehouseRevision:state.catalog_controls_revision,catalogControls:state.catalog_controls};
 }
 async function saveUser(p:any,actor:string,sessionHash:string){
   if(!['create','update'].includes(p.intent))fail(400,'Օգտատիրոջը պահպանելուց առաջ թարմացրեք կաբինետի էջը');
@@ -99,7 +100,12 @@ async function saveUser(p:any,actor:string,sessionHash:string){
   const old=p.id?await query(table('users').select('*').eq('id',p.id).maybeSingle()):null;
   if(old?.profile.role==='admin'&&profile.role==='admin'&&!Object.hasOwn(p,'ordersRefreshSeconds'))profile.ordersRefreshSeconds=old.profile.ordersRefreshSeconds??5;
   // An older admin client must not erase restrictions it does not understand.
-  for(const field of ['emailRows','replyToEmail'])if(old&&Object.hasOwn(old.profile,field)&&!Object.hasOwn(p,field))profile[field]=old.profile[field];
+  for(const field of ['emailRows','replyToEmail','phoneNumbers','managerPhone'])if(old&&Object.hasOwn(old.profile,field)&&!Object.hasOwn(p,field)&&!(Object.hasOwn(p,'contacts')&&['emailRows','phoneNumbers'].includes(field)))profile[field]=old.profile[field];
+  if(old?.profile.contacts&&!Object.hasOwn(p,'contacts')){
+   // An old card cannot detach a named person's email or phone from that person.
+   for(const field of ['phoneNumbers','emailRows'])if(Object.hasOwn(p,field)&&JSON.stringify(profile[field])!==JSON.stringify(old.profile[field]))fail(409,'Կոնտակտները խմբագրելու համար թարմացրեք էջը');
+   profile.contacts=old.profile.contacts;
+  }
   if(old&&Object.hasOwn(old.profile,'catalogAccess')&&!Object.hasOwn(p,'catalogAccess'))profile.catalogAccess=old.profile.catalogAccess;
   if(old&&!Object.hasOwn(p,'rowsList'))profile.rowsList=old.profile.rowsList;
   if(p.id&&!old)fail(404,'Օգտատերը չի գտնվել');
@@ -231,7 +237,8 @@ export async function handle(req:Request){
     if(['me/resources','me/resources/apk','admin/resources','admin/users/channels','admin/devices/register','admin/devices/revoke'].includes(path)){const response=await channelRoutes({path,req,user,service,table,query,body,json,fail});if(response)return response;}
     const bulletinResponse=await bulletinRoutes({path,req,user,service,table,query,body,json,current,project,fail});if(bulletinResponse)return bulletinResponse;
     const mobileResponse=await mobileRoutes({path,req,user,service,table,query,body,json,fail});if(mobileResponse)return mobileResponse;
-    if(path==='admin/catalog-controls'&&req.method==='POST'&&!(confirmedUntil&&Date.parse(confirmedUntil)>Date.now()))return json({error:'Հաստատեք ձեր ընթացիկ գաղտնաբառը',reauthRequired:true},428);
+    if(['admin/catalog-controls','admin/warehouses'].includes(path)&&req.method==='POST'&&!(confirmedUntil&&Date.parse(confirmedUntil)>Date.now()))return json({error:'Հաստատեք ձեր ընթացիկ գաղտնաբառը',reauthRequired:true},428);
+    const warehouseResponse=await warehouseRoutes({path,req,user,table,query,body,json,fail,audit});if(warehouseResponse)return warehouseResponse;
     const controlResponse=await catalogControlRoutes({path,req,user,table,query,body,json,fail,audit,service,current});if(controlResponse)return controlResponse;
     const assistantResponse=await assistantRoutes({path,req,user,body,current,project,json,fail,knowledge:assistantKnowledge,publicCatalog:assistantPublicCatalog,options:{apiKey:Deno.env.get('ZZWS_ASSISTANT_GEMINI_KEY'),freeTierConfirmed:Deno.env.get('ZZWS_ASSISTANT_GEMINI_FREE_TIER')==='true'}});if(assistantResponse)return assistantResponse;
     const receiptResponse=await receiptRoutes({path,req,user,service,table,query,body,json,fail});if(receiptResponse)return receiptResponse;
@@ -273,11 +280,11 @@ export async function handle(req:Request){
     }
     if(req.method==='GET'&&['catalog','catalog/version','catalog/export'].includes(path)){
       const v=await current(),updated=new Date(v.created).toLocaleDateString('en-GB',{timeZone:'Asia/Yerevan'});
-      const settings=await query(table('state').select('catalog_controls,catalog_controls_revision').eq('id',true).single());
+      const settings={catalog_controls:v.catalogControls,catalog_controls_revision:v.warehouseRevision};
       const controls=effectiveControls(settings.catalog_controls,user.id);
       const version=v.id+':'+v.rulesRevision+':'+settings.catalog_controls_revision;
       if(path==='catalog/version')return json({version,updated,presentationRevision:Math.floor(Date.now()/300000)});
-      const products=project(v.products,user,v.rules);
+      const products=project(v.products,user,v.rules,{mainWarehouses:v.mainWarehouses});
       if(path==='catalog'){
         const rules=popularityRules(settings.catalog_controls);
         const rows=controls.popular||controls.personalPopular?await query(service.rpc('zzws_catalog_popularity',{p_user:user.id,p_days:rules.days})):[];
@@ -325,13 +332,13 @@ export async function handle(req:Request){
       const p=await body(req),v=await current(),rules=validateRules(p.rules,v.rules);
       return json({groups:Object.fromEntries(Object.keys(rules).map(sheet=>{
         const profile={role:'client',sheet,client:'Նախադիտում',allBrands:true,brands:[],catalogAccess:{mode:'all',include:[],exclude:[]}};
-        const products=project(v.products,profile,rules);
+        const products=project(v.products,profile,rules,{mainWarehouses:v.mainWarehouses});
         return [sheet,{count:products.length,sample:products.slice(0,5)}];
       }))});
     }
     if(req.method==='POST'&&path==='admin/access/preview'){
       const p=await body(req),{profile}=validateProfile({...p,login:p.login||'preview',client:p.client||'Նախադիտում'}),v=await current();
-      const products=project(v.products,profile,v.rules);
+      const products=project(v.products,profile,v.rules,{mainWarehouses:v.mainWarehouses});
       return json({count:products.length,sample:products.slice(0,10),adminBypass:profile.role==='admin'});
     }
     if(req.method==='GET'&&path==='admin/dashboard'){

@@ -4,6 +4,7 @@ import {mailConnection,connectionInput} from './mail-connection.mjs';
 import {senderAddress} from './mail-config.mjs';
 import {buildOrderContext} from './order-context.mjs';
 import {email,emailRows,reportRecipients} from './report-email.mjs';
+import {contactEmailRows} from './contacts.mjs';
 import {parseConfirmation,normalizeLines,changesBetween,totalOf} from './orders.mjs';
 const encoder=new TextEncoder(),limit=10*1024*1024;
 export const sha=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',typeof value==='string'?encoder.encode(value):value))).map(b=>b.toString(16).padStart(2,'0')).join('');
@@ -69,13 +70,14 @@ export async function reportRoutes(c){
   const p=await body(req),o=await getOrder(p.orderId);let q=table('report_deliveries').select('*').eq('order_id',o.id);q=p.jobId?q.eq('id',p.jobId):q.eq('request_id',p.requestId);const j=await query(q.maybeSingle());if(!j)return json({found:false});if(['accepted','completed'].includes(j.state))return json(await complete(o,j));return json({found:true,state:j.state,jobId:j.id,attempts:j.attempts,busy:j.state==='sending'&&Date.parse(j.lease_until)>Date.now()});
  }
  if(path==='admin/orders/report-options'){
-  const p=await body(req),o=await getOrder(p.orderId),customer=await query(table('users').select('profile').eq('id',o.user_id).maybeSingle()),s=await settings();return json({rows:emailRows(customer?.profile.emailRows||[]),cc:s.cc,replyTo:user.replyToEmail||'',orderId:o.id,revision:o.revision});
+  const p=await body(req),o=await getOrder(p.orderId),customer=await query(table('users').select('profile').eq('id',o.user_id).maybeSingle()),s=await settings();return json({rows:contactEmailRows(customer?.profile),contactNames:customer?.profile.contacts?.map(c=>c.name)||[],cc:s.cc,replyTo:user.replyToEmail||'',orderId:o.id,revision:o.revision});
  }
  const bundle=await attachmentBundle(req,rowsFromBuffer),{form,attachments,candidates,bundleHash}=bundle,o=await getOrder(form.get('orderId')),revision=Number(form.get('revision'));
  if(['received','completed','rejected'].includes(o.status))fail(409,'Փակված պատվերի համար նախ նշեք պատճառը և փոխեք կարգավիճակը հատուկ կոճակով');
  if(path==='admin/orders/report-inspect')return json({candidates,files:attachments.map(f=>({name:f.name,size:f.size}))});
  const rawIndex=form.get('reportIndex');if(typeof rawIndex!=='string'||!/^\d{1,2}$/.test(rawIndex))fail(400,'Ընտրեք հաշվետվության ֆայլը');const index=Number(rawIndex);if(!candidates.includes(index))fail(400,'Ընտրեք վաճառքի հաշվետվության ֆայլը');
- const parsed=attachments[index].parsed,customer=await query(table('users').select('*').eq('id',o.user_id).maybeSingle()),v=await current(),products=customer?project(v.products,{...customer.profile,id:customer.id},v.rules,{forOrder:true}):[],lines=normalizeLines(parsed.lines,products,o.lines,true),changes=changesBetween(o.lines,lines);
+ const parsed=attachments[index].parsed,customer=await query(table('users').select('*').eq('id',o.user_id).maybeSingle()),v=await current(),products=customer?project(v.products,{...customer.profile,id:customer.id},v.rules,{forOrder:true,mainWarehouses:v.mainWarehouses}):[],lines=normalizeLines(parsed.lines,products,o.lines,true),changes=changesBetween(o.lines,lines);
+ if(customer?.profile?.role==='client'&&(o.approval?.state==='pending'||changes.length))fail(409,'Նախ փոփոխված կազմն ուղարկեք հաճախորդի համաձայնությանը');
  const secret=Deno.env.get('SUPABASE_SECRET_KEYS')||Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');if(!secret)fail(503,'Ծառայությունը կարգավորված չէ');
  const key=await crypto.subtle.importKey('raw',encoder.encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign','verify']);
  const proofData=expiry=>JSON.stringify([user.id,o.id,revision,index,bundleHash,expiry]);
@@ -94,7 +96,7 @@ export async function reportRoutes(c){
  }
  if(form.get('confirmCustomer')!=='true')fail(400,'Հաստատեք ընտրված հաճախորդին');
  const requestId=String(form.get('requestId'));if(!/^[a-f0-9-]{36}$/i.test(requestId))fail(400,'Ուղարկման սխալ նույնացուցիչ');
- const s=await settings(),recipients=reportRecipients(customer?.profile.emailRows||[],JSON.parse(String(form.get('selectedRows')||'[]')),s.cc,String(form.get('additionalCC')||''),user.replyToEmail),{env}=await mailConnection(c,s,{withPassword:true}),mode=env('ZZWS_REPORT_EMAIL_MODE'),from=senderAddress(s,env);
+ const s=await settings(),recipients=reportRecipients(contactEmailRows(customer?.profile),JSON.parse(String(form.get('selectedRows')||'[]')),s.cc,String(form.get('additionalCC')||''),user.replyToEmail),{env}=await mailConnection(c,s,{withPassword:true}),mode=env('ZZWS_REPORT_EMAIL_MODE'),from=senderAddress(s,env);
  if(!mailReady(env))fail(503,'Էլ․ փոստի ծառայությունը կարգավորված չէ');
  if(env('ZZWS_ENVIRONMENT')!=='production'&&mode!=='offline'){const allowed=new Set(String(env('ZZWS_REPORT_TEST_RECIPIENTS')||'').split(',').filter(Boolean).map(v=>email(v)));if([...recipients.to,...recipients.cc].some(v=>!allowed.has(v)))fail(403,'Փորձարկման հասցեն թույլատրված չէ');}
  const fingerprint=await sha(JSON.stringify([o.id,bundleHash,index,recipients,from])),counts={transport:['gmail','smtp'].includes(mode)?'smtp':'idempotent',bundleHash,reportIndex:index,files:attachments.length,bytes:attachments.reduce((s,f)=>s+f.size,0),to:recipients.to.length,cc:recipients.cc.length};

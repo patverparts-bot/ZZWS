@@ -1,16 +1,18 @@
 // Internal calculation evidence. Never spread this object into a public order DTO.
 import {effectiveRules,selectPrice} from './rules.mjs';
 import {project} from './catalog.mjs';
+import {DEFAULT_MAIN_WAREHOUSES} from './warehouses.mjs';
 import {totalOf} from './orders.mjs';
 const clone=value=>structuredClone(value);
 export function buildOrderContext({catalog,user,lines,priceMode='WS',previousOrder=null,previousContext=null,source='submit'}){
  const rules=effectiveRules(catalog.rules),group=user?.sheet||'Dealers';
- const available=new Map((user?project(catalog.products,user,rules,{forOrder:true}):[]).map(p=>[p.articul,p]));
+ const available=new Map((user?project(catalog.products,user,rules,{forOrder:true,mainWarehouses:catalog.mainWarehouses}):[]).map(p=>[p.articul,p]));
  const raw=new Map(catalog.products.map(p=>[p.articul,p])),before=new Map((previousOrder?.lines||[]).map(p=>[p.articul,p]));
  const prior=new Map((previousContext?.lines||[]).map(p=>[p.articul,p])),original=new Map((previousOrder?.original_lines||[]).map(p=>[p.articul,p]));
  return {
   schemaVersion:1,orderTotal:totalOf(lines),catalogVersion:catalog.id,rulesRevision:catalog.rulesRevision,profileRevision:user?.profileRevision??null,
   clientCategory:user?group:null,actorRole:user?.role??null,priceMode:user?.role==='admin'?priceMode:'client',operation:source,
+  warehouseSnapshot:{mainWarehouses:clone(catalog.mainWarehouses??DEFAULT_MAIN_WAREHOUSES),revision:catalog.warehouseRevision??null},
   rulesSnapshot:clone(rules),rulesStorageSnapshot:clone(catalog.storedRules??catalog.rules),accessSnapshot:user?clone({role:user.role,sheet:user.sheet,brands:user.brands||[],allBrands:!!user.allBrands,catalogAccess:user.catalogAccess??null}):null,
   checkedProducts:lines.map(line=>({articul:line.articul,product:clone(raw.get(line.articul)||null)})),
   lines:lines.map(line=>{

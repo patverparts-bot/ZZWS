@@ -26,19 +26,19 @@ export async function bulletinRoutes({path,req,user,table,query,service,body,jso
  if(!['me/bulletins','me/bulletins/read'].includes(path))return null;
  const rows=await query(table('catalog_bulletins').select('*').eq('active',true).order('created',{ascending:false}).limit(20));
  const reads=rows.length?await query(table('bulletin_reads').select('bulletin_id').eq('user_id',user.id).in('bulletin_id',rows.map(r=>r.id))):[];
- const state=await query(table('state').select('version,rules_revision').eq('id',true).single());
- const stamp=JSON.stringify([user.id,user.profileRevision,user.role,user.sheet,state.version,state.rules_revision,rows.map(r=>r.id),reads.map(r=>r.bulletin_id).sort()]);
+ const state=await query(table('state').select('version,rules_revision,catalog_controls_revision').eq('id',true).single());
+ const stamp=JSON.stringify([user.id,user.profileRevision,user.role,user.sheet,state.version,state.rules_revision,state.catalog_controls_revision,rows.map(r=>r.id),reads.map(r=>r.bulletin_id).sort()]);
  const cursor=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(stamp)))).map(b=>b.toString(16).padStart(2,'0')).join('');
  if(path==='me/bulletins'&&req.method==='GET'&&new URL(req.url).searchParams.get('cursor')===cursor)return json({unchanged:true,cursor});
  if(!rows.length&&path==='me/bulletins'&&req.method==='GET')return json({bulletins:[],cursor});
- const v=await current(),available=new Map(project(v.products,user,v.rules).map(p=>[p.articul,p]));
+ const v=await current(),available=new Map(project(v.products,user,v.rules,{mainWarehouses:v.mainWarehouses}).map(p=>[p.articul,p]));
  const seen=new Set(reads.map(r=>r.bulletin_id)),versions=new Map(),result=[];
  async function version(id){if(!versions.has(id))versions.set(id,await query(table('versions').select('products').eq('id',id).maybeSingle()));return versions.get(id);}
  for(const row of rows){let products=[];
   if(row.kind==='offers')products=row.articles.filter(a=>available.has(a)).map(a=>available.get(a));
   else{const before=await version(row.before_version),after=await version(row.after_version);if(!before||!after)continue;
-   const old=new Map(project(before.products,user,v.rules).map(p=>[p.articul,p]));
-   products=project(after.products,user,v.rules).filter(p=>available.has(p.articul)&&old.has(p.articul)&&old.get(p.articul).wholesale!==p.wholesale).map(p=>({...p,previousPrice:old.get(p.articul).wholesale}));
+   const old=new Map(project(before.products,user,v.rules,{mainWarehouses:v.mainWarehouses}).map(p=>[p.articul,p]));
+   products=project(after.products,user,v.rules,{mainWarehouses:v.mainWarehouses}).filter(p=>available.has(p.articul)&&old.has(p.articul)&&old.get(p.articul).wholesale!==p.wholesale).map(p=>({...p,previousPrice:old.get(p.articul).wholesale}));
   }
   if(!products.length)continue;
   result.push({id:row.id,kind:row.kind,title:row.kind==='prices'?'Գների փոփոխություններ':row.title,created:row.created,seen:seen.has(row.id),products:products.map(p=>({articul:p.articul,name:p.name,brand:p.brand,price:p.wholesale,...(p.previousPrice!=null?{previousPrice:p.previousPrice}:{})}))});

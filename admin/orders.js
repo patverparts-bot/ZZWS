@@ -17,18 +17,21 @@
    const extra=el('manualOrderLines').closest('details');if(extra)extra.open=true;el('manualOrderLines').scrollIntoView({behavior:'smooth',block:'center'});
   });});el('closeAdminOrder').before(reportButton);
  function controls(){
-  reportButton.hidden=!canEdit();reportButton.disabled=busy||!selected;
+  reportButton.hidden=!canEdit()||selected?.approval?.state==='pending';reportButton.disabled=busy||!selected;
   const readOnly=!canEdit(),locked=readOnly||busy||!selected;
   el('adminOrderEditor').dataset.orderReadOnly=String(readOnly);const workflowHelp=el('adminOrderEditor').querySelector('.order-workflow-help');if(workflowHelp)workflowHelp.hidden=readOnly;
   for(const id of ['manualOrderSave','previewFinalFile','previewFinalPaste','applyConfirmation','cancelConfirmation'])el(id).hidden=readOnly;
   for(const field of el('adminOrderEditor').querySelectorAll('input,select,textarea'))field.disabled=locked;
   el('confirmationPaste').closest('fieldset').hidden=readOnly;
   el('manualOrderSave').disabled=locked||!!preview;
+  const pendingApproval=selected?.approval?.state==='pending';el('editOrderStatus').disabled=locked||pendingApproval;
+  el('manualOrderSave').textContent=selected?.user_id&&selected.customer?.role!=='admin'&&ZZWS_ORDER_COMPARE.hasLineChanges(selected.lines,manualRows)?'Ուղարկել հաճախորդի համաձայնությանը':'Պահպանել';
+  el('exportServerOrder').disabled=!selected||busy||pendingApproval;
   for(const id of ['previewFinalFile','previewFinalPaste'])el(id).disabled=locked;
   el('applyOrderDelivery').disabled=locked||!Object.keys(preview?.delivery||{}).length;
   el('applyConfirmation').disabled=locked||!preview||!el('confirmOrderCustomer').checked;
   el('cancelConfirmation').disabled=busy;
-  el('closeAdminOrder').disabled=busy;el('exportServerOrder').disabled=!selected||busy;el('viewOrderExport').disabled=!selected||busy;
+  el('closeAdminOrder').disabled=busy;el('exportServerOrder').disabled=!selected||busy||selected.approval?.state==='pending';el('viewOrderExport').disabled=!selected||busy;
   for(const button of el('adminOrderList').querySelectorAll('button'))button.disabled=busy;
   for(const button of el('manualOrderLines').querySelectorAll('button'))button.disabled=locked;
  }
@@ -47,7 +50,7 @@
   const shown=list;el('adminOrderCount').textContent='Ցուցադրված է՝ '+shown.length;
   if(!shown.length){root.append(node('p','Ընտրված պայմաններով պատվերներ չկան։'));return;}
   const table=node('table'),head=table.createTHead().insertRow();for(const h of ['№ / ամսաթիվ','Հաճախորդ','Կարգավիճակ','Գումար',''])head.append(node('th',h));
-  for(const o of shown){const row=table.insertRow();row.insertCell().append(node('strong','№'+o.number),node('small',date(o.created),'admin-order-date'));const customer=row.insertCell();customer.append(node('strong',o.customer.client),node('small',o.customer.login,'admin-order-date'));if(o.created_by)customer.append(node('small','Լրացրել է՝ '+o.created_by.name+' ('+o.created_by.login+')','admin-order-date'));row.insertCell().append(node('span',statuses[o.status],'order-status status-'+o.status));row.insertCell().textContent=money(o.total);const actions=row.insertCell();actions.className='order-list-actions';actions.append(btn('Բացել',()=>open(o.id)),btn('Դիտել',()=>viewOrder(o.id)));}root.append(table);controls();
+  for(const o of shown){const row=table.insertRow();row.insertCell().append(node('strong','№'+o.number),node('small',date(o.created),'admin-order-date'));const customer=row.insertCell();customer.append(node('strong',o.customer.client),node('small',o.customer.login,'admin-order-date'));if(o.created_by)customer.append(node('small','Լրացրել է՝ '+o.created_by.name+' ('+o.created_by.login+')','admin-order-date'));row.insertCell().append(node('span',window.ZZWS_ORDER_APPROVAL?.label(o)||statuses[o.status],'order-status status-'+o.status));row.insertCell().textContent=money(o.total);const actions=row.insertCell();actions.className='order-list-actions';actions.append(btn('Բացել',()=>open(o.id)),btn('Դիտել',()=>viewOrder(o.id)));}root.append(table);controls();
  }
  async function open(id,internal=false){
   if(busy&&!internal){waitMessage();return;}
@@ -56,13 +59,17 @@
   el('confirmationPreview').hidden=true;el('selectedOrderTitle').textContent='Պատվերը բեռնվում է…';
   for(const name of ['manualOrderLines','adminOriginalOrder','adminOrderHistory'])el(name).replaceChildren();controls();
   let o;try{o=await request('admin/orders/detail',{id});}catch(e){if(ticket===editorEpoch)throw e;return;}if(ticket!==editorEpoch)return;
-  selected=o;document.dispatchEvent(new CustomEvent('zzws:admin-order',{detail:o}));window.ZZWS_REOPEN_ORDER?.edit(o);manualRows=o.lines.map(row=>({...row}));
+  selected=o;document.dispatchEvent(new CustomEvent('zzws:admin-order',{detail:o}));window.ZZWS_REOPEN_ORDER?.edit(o);manualRows=(o.approval?.state==='pending'?o.approval.lines:o.lines).map(row=>({...row}));
   el('adminOrderEditor').hidden=false;el('confirmationPaste').value='';el('finalOrderFile').value='';el('finalOrderFile').dispatchEvent(new Event('change',{bubbles:true}));
   el('selectedOrderTitle').textContent='Պատվեր №'+o.number+' · '+o.customer.client;
   el('selectedOrderMeta').textContent=o.customer.login+' · Ստացվել է '+date(o.created)+' · Տարբերակ '+o.revision+(o.created_by?' · Լրացրել է ադմինիստրատոր՝ '+o.created_by.name+' ('+o.created_by.login+')':'');
+  let approvalInfo=el('adminApprovalInfo');if(!approvalInfo){approvalInfo=node('div');approvalInfo.id='adminApprovalInfo';el('selectedOrderMeta').after(approvalInfo);}approvalInfo.textContent=o.approval?.state==='approved'&&o.status==='confirmed'?'Հաճախորդը համաձայնեցրել է փոփոխությունները։ Կարելի է ձևակերպել պատվերը։':window.ZZWS_ORDER_APPROVAL?.label(o)||'';
+  if(o.approval?.state==='pending'&&o.approval.reviewRequestedMinutes)approvalInfo.append(node('p','Հաճախորդը ժամանակ է խնդրել դիտարկման համար՝ '+o.approval.reviewRequestedMinutes+' րոպե։ Հիշեցնել՝ '+date(o.approval.remindAfter)));
+  if(o.approval?.response?.declinedArticuls?.length)approvalInfo.append(node('p','Հաճախորդի մերժած ապրանքները՝ '+o.approval.response.declinedArticuls.join(', ')));
+  if(o.approval?.state==='pending')approvalInfo.append(ZZWS_ORDER_COMPARE.render(o.lines,o.approval.lines));
   ZZWS_ORDER_LAYOUT.delivery(el('selectedOrderDelivery'),o.delivery);
   ZZWS_ADMIN_RECEIPTS.proof(o,el('selectedOrderReceipt'));
-  renderOrderHistory(o.events||[]);el('editOrderStatus').value=o.status;el('editOrderComment').value=o.comment;renderManual();controls();
+  renderOrderHistory(o.events||[]);el('editOrderStatus').value=o.status;el('editOrderComment').value=o.approval?.state==='pending'?o.approval.comment:o.comment;renderManual();controls();
   el('adminOrderStatus').textContent='';el('adminOrderEditor').scrollIntoView({behavior:'smooth',block:'start'});try{await request('admin/orders/read',{id:o.id,revision:o.revision});if(ticket===editorEpoch)await refreshUnread();}catch(e){if(ticket===editorEpoch)el('adminOrderStatus').textContent='Չհաջողվեց թարմացնել դիտված նշումը։ '+ZZWS.message(e);}return o;
  }
  function renderManual(){const root=el('manualOrderLines');root.replaceChildren();const table=node('table'),head=table.createTHead().insertRow();for(const h of ['Ապրանք','Քանակ','Միավորի գին',''])head.append(node('th',h));
@@ -71,7 +78,7 @@
    const actions=tr.insertCell();if(canEdit())actions.append(btn('Փոխարինել',()=>replaceLine(row)),btn('Ջնջել տողը',()=>{if(busy)return;manualRows=manualRows.filter(r=>r!==row);dirty=true;renderManual();},'storage-danger'));}
   root.append(table);manualTotal();
  }
- function manualTotal(){el('manualOrderTotal').textContent='Ընդամենը՝ '+money(manualRows.reduce((sum,row)=>sum+row.qty*row.unitPrice,0));const root=el('adminOriginalOrder');root.replaceChildren();root.append(ZZWS_ORDER_COMPARE.render(selected.original_lines?.length?selected.original_lines:selected.lines,manualRows));}
+ function manualTotal(){el('manualOrderSave').textContent=selected?.user_id&&selected.customer?.role!=='admin'&&ZZWS_ORDER_COMPARE.hasLineChanges(selected.lines,manualRows)?'Ուղարկել հաճախորդի համաձայնությանը':'Պահպանել';el('manualOrderTotal').textContent='Ընդամենը՝ '+money(manualRows.reduce((sum,row)=>sum+row.qty*row.unitPrice,0));const root=el('adminOriginalOrder');root.replaceChildren();root.append(ZZWS_ORDER_COMPARE.render(selected.original_lines?.length?selected.original_lines:selected.lines,manualRows));}
  function draftDialog(title){
   activeDialog?.remove();const dialog=node('dialog',null,'admin-draft-dialog'),heading=node('h2',title),message=node('p'),content=node('div'),close=node('button','Փակել');heading.id='adminDraftDialogTitle';dialog.setAttribute('aria-labelledby',heading.id);message.setAttribute('role','status');close.type='button';dialog.append(heading,message,content,close);document.body.append(dialog);activeDialog=dialog;dialog.showModal();
   return {dialog,message,content,close};
@@ -124,12 +131,12 @@
    const apply=btn('Կիրառել կազմի նախագծում',async()=>{if(!valid())return;apply.disabled=true;ui.close.disabled=true;try{const latest=await request('admin/orders/template-preview',payload);if(!valid())return;if(JSON.stringify(latest)!==JSON.stringify(result))throw Error('Ձևանմուշը կամ գները փոխվել են։ Կրկին բացեք նախադիտումը։');manualRows=latest.lines;dirty=true;renderManual();close();await selectAdminTab('manager');el('adminOrderStatus').textContent='Ձևանմուշն ավելացված է կազմի նախագծին։ Վերջում պահպանեք պատվերը։';}catch(e){ui.message.textContent=ZZWS.message(e);}finally{apply.disabled=false;ui.close.disabled=false;}});apply.disabled=!result.changes.some(r=>r.added>0);ui.content.append(apply);
   }catch(e){if(valid())ui.message.textContent=ZZWS.message(e);}
  }
- function renderOrderHistory(events){const root=el('adminOrderHistory');root.replaceChildren();for(const event of events){const details=node('details',null,'order-event');details.append(node('summary',date(event.created)+' · '+statuses[event.detail.status]));for(const c of event.detail.changes||[]){details.append(node('p',c.articul+' · '+({removed:'Ջնջված',added:'Ավելացված',changed:'Փոփոխված'}[c.kind])+(c.before?' · նախկինում՝ '+c.before.qty+' × '+money(c.before.unitPrice):'')+(c.after?' → '+c.after.qty+' × '+money(c.after.unitPrice):'')));}root.append(details);}}
+ function renderOrderHistory(events){const root=el('adminOrderHistory');root.replaceChildren();for(const event of events){const details=node('details',null,'order-event');details.append(node('summary',date(event.created)+' · '+(event.detail.kind==='approval_requested'?'Սպասում է հաճախորդի համաձայնությանը':event.detail.kind==='approval_deferred'?'Հաճախորդը ժամանակ է խնդրել դիտարկման համար՝ '+event.detail.minutes+' րոպե':event.detail.kind==='approval_approved'?'Հաճախորդը համաձայնեցրել է':event.detail.kind==='approval_declined'?'Հաճախորդը հրաժարվել է պատվերից':statuses[event.detail.status])));for(const c of event.detail.changes||[]){details.append(node('p',c.articul+' · '+({removed:'Ջնջված',added:'Ավելացված',changed:'Փոփոխված'}[c.kind])+(c.before?' · նախկինում՝ '+c.before.qty+' × '+money(c.before.unitPrice):'')+(c.after?' → '+c.after.qty+' × '+money(c.after.unitPrice):'')));}root.append(details);}}
  async function saveManual(){
   if(!selected||busy||!canEdit())return;if(!confirm('Պահպանե՞լ պատվեր №'+selected.number+'-ի փոփոխությունները։ Օգտատերը կստանա ծանուցում։'))return;
   const ticket=editorEpoch,id=selected.id,token=begin();
   const payload={id,revision:selected.revision,lines:manualRows.map(r=>({...r})),status:el('editOrderStatus').value,comment:el('editOrderComment').value};
-  try{const result=await request('admin/orders/update',payload);if(token!==operation||ticket!==editorEpoch||selected?.id!==id)return;dirty=false;await open(result.id,true);await load();el('adminOrderStatus').textContent='Պատվերը պահպանված է։ Օգտատիրոջը հասանելի է ծանուցումը։';}finally{finish(token);}
+  try{const result=await request('admin/orders/update',payload);if(token!==operation||ticket!==editorEpoch||selected?.id!==id)return;dirty=false;await open(result.id,true);await load();el('adminOrderStatus').textContent=result.approval?.state==='pending'?'Փոփոխություններն ուղարկված են հաճախորդի համաձայնությանը։ Մինչև պատասխանը պատվերը չի ձևակերպվում։':'Պատվերը պահպանված է։ Օգտատիրոջը հասանելի է ծանուցումը։';}finally{finish(token);}
  }
  async function makePreview(kind){
   if(!selected||busy||!canEdit())return;
@@ -159,7 +166,7 @@
   if(!preview||busy||!canEdit()||!selected)return;
   if(preview.context.id!==selected.id||preview.context.revision!==selected.revision)throw new Error('Վերաբացեք պատվերը և կրկին ստուգեք հաստատումը');
   const token=begin(),ticket=editorEpoch,id=selected.id,payload={draft:preview.draft,orderId:preview.context.id,revision:preview.context.revision,confirmCustomer:el('confirmOrderCustomer').checked,applyDelivery:el('applyOrderDelivery').checked,comment:el('editOrderComment').value};
-  try{const result=await request('admin/orders/apply',payload);if(token!==operation||ticket!==editorEpoch||selected?.id!==id)return;dirty=false;await open(result.id,true);await load();el('adminOrderStatus').textContent='Վերջնական պատվերը կիրառված և հաստատված է։ Օգտատիրոջը կայքում հասանելի է ծանուցումը։';}finally{finish(token);}
+  try{const result=await request('admin/orders/apply',payload);if(token!==operation||ticket!==editorEpoch||selected?.id!==id)return;dirty=false;await open(result.id,true);await load();el('adminOrderStatus').textContent=result.approval?.state==='pending'?'Փոփոխություններն ուղարկված են հաճախորդի համաձայնությանը։ Մինչև պատասխանը պատվերը չի ձևակերպվում։':'Վերջնական պատվերը կիրառված և հաստատված է։ Օգտատիրոջը կայքում հասանելի է ծանուցումը։';}finally{finish(token);}
  }
  async function viewOrder(id){
   if(busy){waitMessage();return;}const ticket=++viewEpoch;
@@ -173,7 +180,7 @@
  async function viewExport(){
   if(!selected||busy)return;const session=pollSession,id=selected.id,data=await request('admin/orders/export-preview',{id});if(!running||session!==pollSession||selected?.id!==id)return;
   document.getElementById('orderExportPreviewDialog')?.remove();const dialog=node('dialog');dialog.id='orderExportPreviewDialog';const heading=node('div',null,'export-preview-heading');heading.append(node('h2','Պատվեր №'+data.number+' · '+data.statusLabel));
-  const close=btn('Փակել',()=>{dialog.close();dialog.remove();}),downloadButton=btn('Ներբեռնել Excel',()=>download('admin/orders/export','Order-'+data.number+'.xlsx',{id:data.id,revision:data.revision}));heading.append(close,downloadButton);
+  const close=btn('Փակել',()=>{dialog.close();dialog.remove();}),downloadButton=btn('Ներբեռնել Excel',()=>download('admin/orders/export','Order-'+data.number+'.xlsx',{id:data.id,revision:data.revision}));downloadButton.disabled=selected?.approval?.state==='pending';heading.append(close,downloadButton);
   const body=node('div',null,'export-preview-body');body.append(node('p','Ցուցադրվում է վերջին պահպանված կազմը՝ նույն կառուցվածքով, ինչ Excel ֆայլում։ Չպահպանված փոփոխությունները ներառված չեն։'));
   const table=node('table'),head=table.createTHead().insertRow();for(const value of data.rows[1])head.append(node('th',value));const tbody=table.createTBody();
   data.rows.slice(2).forEach(values=>{const row=tbody.insertRow();values.forEach((value,index)=>{row.insertCell().textContent=typeof value==='number'&&(index===4||index===5)?money(value):value;});});body.append(table);dialog.append(heading,body);document.body.append(dialog);dialog.showModal();

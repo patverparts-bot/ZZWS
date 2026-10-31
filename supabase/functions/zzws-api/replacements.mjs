@@ -36,7 +36,7 @@ export async function replacementRoutes(c){
   if(order.revision!==p.revision||order.received_at||['received','completed','rejected'].includes(order.status))fail(409,'Պատվերն արդեն փոխվել է կամ ստացված է։ Վերաբացեք այն');
   const account=await query(table('users').select('id,profile,active,login').eq('id',order.user_id).maybeSingle());
   if(!account?.active||account.profile.role!=='client')fail(409,'Հաճախորդի հաշիվը հասանելի չէ');
-  const v=await current(),products=project(v.products,{...account.profile,id:account.id},v.rules);
+  const v=await current(),products=project(v.products,{...account.profile,id:account.id},v.rules,{mainWarehouses:v.mainWarehouses});
   const previous=order.lines.find(r=>r.articul===p.articul);
   let source=products.find(r=>r.articul===p.articul);
   if(!source&&previous)source={...previous,wholesale:0};
@@ -46,7 +46,7 @@ export async function replacementRoutes(c){
  }
  if(path!=='orders/replacements'||req.method!=='POST')return null;
  const p=await body(req);if(typeof p.articul!=='string'||p.articul.length>100||!Array.isArray(p.inCart)||p.inCart.length>5000||p.inCart.some(r=>!r||typeof r.articul!=='string'||r.articul.length>100||!Number.isInteger(r.qty)||r.qty<1||r.qty>9999))fail(400,'Ստուգեք ապրանքն ու քանակները');
- const v=await current(),products=project(v.products,user,v.rules),mode=user.role==='admin'&&p.priceMode==='KP'?'KP':'WS';let source=products.find(r=>r.articul===p.articul),order;
+ const v=await current(),products=project(v.products,user,v.rules,{mainWarehouses:v.mainWarehouses}),mode=user.role==='admin'&&p.priceMode==='KP'?'KP':'WS';let source=products.find(r=>r.articul===p.articul),order;
  if(p.orderId){order=await query(table('orders').select('id,lines').eq('id',p.orderId).eq('user_id',user.id).maybeSingle());if(!order?.lines.some(l=>l.articul===p.articul))fail(404,'Պատվերի ապրանքը չի գտնվել');}
  if(!source&&order){const line=order.lines.find(l=>l.articul===p.articul),raw=v.products.find(r=>r.articul===p.articul);if(raw)source={articul:line.articul,name:line.name,category:raw.category,wholesale:0};}
  if(!source)fail(404,'Ապրանքը հասանելի չէ։ Փորձեք փոխարինում փնտրել ձեր պատվերի պատմությունից։');

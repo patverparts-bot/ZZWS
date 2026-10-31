@@ -105,7 +105,7 @@ export async function dealerRoutes(c){
  const {path,req,user,body,current,project,json,fail,knowledge,table,query}=c;
  if(!['dealer/facts','dealer/details','dealer/bundles'].includes(path)||req.method!=='POST')return null;
  const input=await body(req);if(!input||typeof input!=='object'||Array.isArray(input))fail(400,'Հարցման սխալ ձևաչափ։');
- const version=await current(),products=project(version.products,user,version.rules);
+ const version=await current(),products=project(version.products,user,version.rules,{mainWarehouses:version.mainWarehouses});
  if(path==='dealer/facts')return json({version:version.id||null,items:Object.fromEntries(products.map(p=>[p.articul,technicalFacts(p,knowledge)]))});
  if(path==='dealer/details'){
   if(!Array.isArray(input.articuls)||!input.articuls.length||input.articuls.length>4||input.articuls.some(a=>typeof a!=='string'||a.length>100))fail(400,'Ընտրեք մեկից չորս ապրանք։');

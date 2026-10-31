@@ -17,8 +17,9 @@ function showLogin() {
   window.ZZWS_OFFERS?.reset();
   window.ZZWS_REPORT_EMAIL?.clearCredentials();
   adminNavigationActive=false;adminHistoryPosition=0;updateAdminBackButton();
-  pricePreviewTicket++;window.ZZWS_ADMIN_CATALOG_CONTROLS?.reset();window.ZZWS_ADMIN_OPERATIONS?.reset();window.ZZWS_ADMIN_WORKBENCH?.reset();window.ZZWS_ADMIN_TEMPLATES?.reset();
+  pricePreviewTicket++;window.ZZWS_ADMIN_WAREHOUSES?.reset();window.ZZWS_ADMIN_CATALOG_CONTROLS?.reset();window.ZZWS_ADMIN_OPERATIONS?.reset();window.ZZWS_ADMIN_WORKBENCH?.reset();window.ZZWS_ADMIN_TEMPLATES?.reset();
   window.ZZWS_REOPEN_ALERTS?.reset();
+  window.ZZWS_ADMIN_APPROVAL_REMINDERS?.reset();
   window.ZZWS_ENTRY?.reset();
   window.ZZWS_HELP_USER=null;
   document.getElementById('categoryManagerDialog')?.close();
@@ -41,7 +42,7 @@ function table(headers, rows) {
 }
 function button(label, callback) { const b = document.createElement('button'); b.type='button'; b.textContent = label; b.onclick = () => run(callback); return b; }
 async function run(fn) { try { await fn(); } catch(e) { if(!e.staleSession)status(ZZWS.message(e), true); } }
-const adminTabs=['dashboard','manager','orders','templates','price','users','rules','audit','storage','email','offers','catalogControls','operations'];
+const adminTabs=['dashboard','manager','orders','templates','price','users','rules','audit','storage','email','offers','catalogControls','warehouses','operations'];
 let adminNavigationActive=false,adminHistoryPosition=0,activeAdminTab=null;
 const adminBackButton=document.createElement('button');adminBackButton.id='adminBackSection';adminBackButton.type='button';adminBackButton.textContent='← Նախորդ բաժին';
 const adminSectionTrail=document.createElement('div');adminSectionTrail.className='admin-section-trail';el('adminActiveSection').before(adminSectionTrail);adminSectionTrail.append(adminBackButton,el('adminActiveSection'));
@@ -91,6 +92,7 @@ async function selectAdminTab(name,options={}){
   if(name==='audit')await loadAudit();
   if(name==='storage')await ZZWS_STORAGE.load();
   if(name==='orders')await ZZWS_ADMIN_ORDERS.load();if(name==='manager')await ZZWS_ADMIN_WORKBENCH.load();if(name==='templates')await ZZWS_ADMIN_TEMPLATES.load();if(name==='catalogControls')await ZZWS_ADMIN_CATALOG_CONTROLS.load();if(name==='operations')await ZZWS_ADMIN_OPERATIONS.load();
+  if(name==='warehouses')await ZZWS_ADMIN_WAREHOUSES.load();
   if(name==='offers')await ZZWS_OFFERS.load();
   if(name==='email')await ZZWS_REPORT_EMAIL.loadSettings();
 }
@@ -102,6 +104,7 @@ async function enter() {
   window.ZZWS_ENTRY?.navigation(user);window.ZZWS_HELP_USER=user;ZZWS_ADMIN_HOME.setUser(user);
   ZZWS_ADMIN_CHANNELS.start(user);
   window.ZZWS_REOPEN_ALERTS?.start(user);
+  window.ZZWS_ADMIN_APPROVAL_REMINDERS?.start(user);
   const rememberedTab=rememberedAdminTab(),activeTab=ZZWS_ADMIN_HOME.can(rememberedTab)?rememberedTab:'dashboard';startAdminNavigation(activeTab);for(const section of adminTabs)el(section).hidden=section!==activeTab;
   el('login').hidden = true; el('workspace').hidden = false; el('logout').hidden = false;
   catalogPairs=(await api('admin/catalog-options')).pairs;
@@ -155,7 +158,7 @@ function editUser(user = {}) {
   el('resetUserPassword').hidden=!user.id;el('issueInvitation').hidden=!user.id||!user.needsPasswordSetup;
   el('passwordSetupState').textContent=!user.id||user.needsPasswordSetup?'Առաջին մուտք՝ մուտքանունով և մեկանգամյա հրավերի կոդով։':'Օգտատերն արդեն սահմանել է գաղտնաբառը։';
   el('adminOrdersRefresh').value=user.ordersRefreshSeconds??5;el('saveAdminPolling').hidden=!user.id;el('adminPollingStatus').textContent='';
-  ZZWS_REPORT_EMAIL.edit(user);updateClientCategory();ZZWS_ADMIN_RECEIPTS.loadClient(user);ZZWS_CARD_LAYOUT.edit(user,users);
+  ZZWS_REPORT_EMAIL.edit(user);window.ZZWS_PHONE_CARD?.edit(user);updateClientCategory();ZZWS_ADMIN_RECEIPTS.loadClient(user);ZZWS_CARD_LAYOUT.edit(user,users);
   el('userSavedBaskets').hidden=!user.id||user.role!=='client'||!ZZWS_ADMIN_HOME.can('templates');f.scrollIntoView({behavior:'smooth'});
 }
 el('resetUserPassword').onclick=()=>run(async()=>{
@@ -182,6 +185,7 @@ el('importUsers').onclick = () => run(async () => { if (!userDraft) return; el('
 function userPayload(){
   const f = el('userForm'), p = Object.fromEntries(new FormData(f));
   Object.assign(p,ZZWS_REPORT_EMAIL.payload());
+  Object.assign(p,window.ZZWS_PHONE_CARD?.payload());
   p.intent=editingUserId?'update':'create';
   if(editingUserId)p.id=editingUserId;else delete p.id;
   for (const key of ['active','allowResale']) p[key] = f.elements[key].checked;
@@ -195,6 +199,7 @@ function userPayload(){
 }
 function updateClientCategory(){
   ZZWS_REPORT_EMAIL.role(el('userForm').elements.role.value);
+  window.ZZWS_PHONE_CARD?.role(el('userForm').elements.role.value);
   const f=el('userForm'),pricing=pricingByGroup[f.elements.sheet.value],labels={ws:'Մեծածախ',kpPromo:'Խոշոր գործընկերոջ ակցիոն',kp:'Խոշոր գործընկերոջ',retail:'Զեղչված մանրածախ',base:'Հիմնական մանրածախ'};
   const staffRole=f.elements.role.value==='admin',savedStaff=staffRole&&!!editingUserId&&editingProfile?.role==='admin';el('adminRoleSetupNote').hidden=!staffRole||savedStaff;el('adminScopePanel').hidden=!savedStaff;el('adminChannelsPanel').hidden=!savedStaff||window.ZZWS_HELP_USER?.adminScope!=='owner';
   el('clientPricingFields').hidden=f.elements.role.value==='admin';el('adminPollingPanel').hidden=f.elements.role.value!=='admin';el('adminOrdersRefresh').disabled=f.elements.role.value!=='admin';
@@ -319,4 +324,3 @@ el('saveAdminPolling').onclick=()=>run(async()=>{
 });
 
 el('userSavedBaskets').onclick=()=>run(()=>ZZWS_ADMIN_TEMPLATES.openCustomer(editingUserId));
-

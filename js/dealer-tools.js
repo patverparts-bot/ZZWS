@@ -28,6 +28,15 @@
  function notice(text){message.textContent=text;}
  function live(id){return serverIdentity?.id===id&&catalogLoaded;}
  function price(p){return p?getItemWholesalePrice({articul:p.articul}):0;}
+ // Catalogue categories identify the appliance even when an older server calls its facts "other".
+ // No dimensions or compatibility facts are inferred here.
+ function bundleType(p,fallback=facts[p?.articul]?.type){
+  const category=String(p?.category||'');
+  if(/պարագա|աքսեսուար|accessor|аксессуар/i.test(category))return 'other';
+  if(/օդաքարշ|օդաքաշ|քարշիչ|cooker hood|kitchen hood|вытяж/i.test(category))return 'hood';
+  if(/ներկառուցվող.*գազօջախ|գազօջախ.*ներկառուցվող|եփման (?:վահանակ|մակերես)|եփող մակերես|\bhobs?\b|cooktop|варочн/i.test(category))return 'hob';
+  return fallback||'other';
+ }
  function photo(p){const box=node('div',null,'dealer-photo');box.innerHTML=getProductImageHtml(p.articul,p.name);return box;}
  function field(label,control){const l=node('label',null,'dealer-field');l.append(node('span',label),control);return l;}
  function select(options,current=''){const s=node('select');for(const [v,t] of options){const o=node('option',t);o.value=v;s.append(o);}s.value=current;return s;}
@@ -146,7 +155,7 @@
    cartControls(p,body);
    const tools=node('div',null,'dealer-inline-actions');tools.append(button('Ցույց տալ գնորդին',()=>showroom([articul])),button('Համեմատել',()=>{toggleCompare(articul);notice('Ընտրված է համեմատության համար։');}),button('Փոխարինող մոդելներ',()=>ZZWS_REPLACEMENTS.open(articul)));
    tools.append(button('Հարցնել ԶիգԶագին',()=>ZZWS_ASSISTANT.ask(articul)));
-   const recipe=Object.entries(recipes).find(([,r])=>r.types.includes(info.facts.type))?.[0];if(recipe)tools.append(button('Հավաքածու կազմել',()=>bundles(recipe,articul)));body.append(tools);
+   const recipe=Object.entries(recipes).find(([,r])=>r.types.includes(bundleType(p,info.facts.type)))?.[0];if(recipe)tools.append(button('Հավաքածու կազմել',()=>bundles(recipe,articul)));body.append(tools);
    body.append(node('h3','Բոլոր բնութագրերը'));if(info.specifications.length)body.append(specTable(info.specifications));else body.append(node('p','Այս մոդելի հաստատված բնութագրերը դեռ չկան։'));
    source(info,body);
   }catch(e){if(d.isConnected)body.replaceChildren(node('p',ZZWS.message(e)));}
@@ -227,7 +236,7 @@
   function sum(){shownPrices.clear();shownMode=adminOrderPriceMode;const products=currentProducts();for(const p of products)shownPrices.set(p.articul,price(p));total.textContent='Ձեր գնման գումարը՝ '+money(products.reduce((n,p)=>n+price(p),0));}
   function build(prefill=[]){
    chosen.clear();builder.replaceChildren();for(const type of recipes[recipeSelect.value].types){
-    const options=allProducts.filter(p=>facts[p.articul]?.type===type&&price(p)>0),initial=prefill.find(p=>p.type===type)?.articul||(seed&&options.some(p=>p.articul===seed)?seed:'');
+    const options=allProducts.filter(p=>bundleType(p)===type&&price(p)>0),initial=prefill.find(p=>p.type===type&&options.some(option=>option.articul===p.articul))?.articul||(seed&&options.some(p=>p.articul===seed)?seed:'');
     const s=select([['','Ընտրեք մոդելը'],...options.map(p=>[p.articul,p.name+' · '+money(price(p))])],initial);s.dataset.bundleType=type;if(initial)chosen.set(type,initial);
     s.onchange=()=>{if(s.value)chosen.set(type,s.value);else chosen.delete(type);sum();};builder.append(field(labels[type],s));
    }sum();
@@ -243,7 +252,8 @@
   }));
   async function load(){
    const ticket=++turn;suggestions.replaceChildren(node('p','Համատեղ գնումները վերլուծվում են…'));build();
-   try{const data=await request('dealer/bundles',{recipe:recipeSelect.value,seed,priceMode:adminOrderPriceMode});if(!d.isConnected||!live(userId)||ticket!==turn)return;
+   const historySeed=seed&&recipes[recipeSelect.value].types.includes(facts[seed]?.type)?seed:null;
+   try{const data=await request('dealer/bundles',{recipe:recipeSelect.value,seed:historySeed,priceMode:adminOrderPriceMode});if(!d.isConnected||!live(userId)||ticket!==turn)return;
     suggestions.replaceChildren();if(!data.bundles?.length)suggestions.append(node('p','Բավարար համատեղ գնումներ չկան։ Կարող եք ինքնուրույն կազմել հավաքածուն։'));
     for(const bundle of data.bundles||[]){const card=node('section',null,'dealer-bundle-option');card.append(node('h3',bundle.items.map(p=>p.name).join(' + ')),node('p','Միասին գնվել են տարբեր հաճախորդների ավարտված պատվերներում։'),node('strong',money(bundle.total)),button('Ընտրել այս հավաքածուն',()=>build(bundle.items)));suggestions.append(card);}
    }catch(e){if(d.isConnected&&ticket===turn)suggestions.replaceChildren(node('p','Պատմության առաջարկները չբեռնվեցին։ '+ZZWS.message(e)));}

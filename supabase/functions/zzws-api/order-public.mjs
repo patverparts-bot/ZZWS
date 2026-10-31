@@ -1,5 +1,5 @@
 // Shared public boundary: internal calculation evidence and 1C routing never leave through order APIs.
-const privateKeys=new Set(['integration_snapshot','integrationSnapshot','integration','order_calculation_contexts','checkedProducts','rulesStorageSnapshot','accessSnapshot','rulesSnapshot']);
+const privateKeys=new Set(['approval_context','approval_catalog_version','integration_snapshot','integrationSnapshot','integration','order_calculation_contexts','checkedProducts','rulesStorageSnapshot','accessSnapshot','rulesSnapshot']);
 export function orderPublic(value){
  if(Array.isArray(value))return value.map(orderPublic);
  if(value&&typeof value==='object'){

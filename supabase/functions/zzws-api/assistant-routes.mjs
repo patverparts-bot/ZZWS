@@ -14,7 +14,7 @@ export async function assistantRoutes(c) {
   gate.count++; gate.active++; gates.set(user.id, gate);
   try {
     const version = await current();
-    const products = project(version.products, user, version.rules);
+    const products = project(version.products, user, version.rules,{mainWarehouses:version.mainWarehouses});
     // The request may select KP only for an authenticated administrator.
     // Prices still come from the server-projected catalogue on every turn.
     const orderPriceMode=user.role==='admin'&&payload.orderPriceMode==='KP'?'KP':'WS';

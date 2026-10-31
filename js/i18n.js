@@ -21,7 +21,7 @@
   const option=node.parentElement.closest('option');if(option&&!option.hasAttribute('value'))option.setAttribute('value',option.textContent);
   const translated=t(source);sources.set(node,{source,last:translated});if(current!==translated)node.nodeValue=translated;
  }
- const names=['title','placeholder','aria-label','alt'];
+ const names=['title','placeholder','aria-label','alt','data-label'];
  function attrs(el){
   if(el.matches('script,style,[data-i18n-skip]'))return;let original=attributes.get(el)||{};
   for(const name of names){if(!el.hasAttribute(name))continue;const current=el.getAttribute(name),prior=original[name],source=prior&&current===prior.last?prior.source:current;if(!letter.test(source)&&!prior)continue;const translated=t(source);original[name]={source,last:translated};if(current!==translated)el.setAttribute(name,translated);}

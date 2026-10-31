@@ -23,7 +23,7 @@
  function customer(order){
   selected=order;el('manager').dataset.orderSelected=String(!!order);const root=el('managerCustomer');root.replaceChildren();el('managerEmpty').hidden=!!order;
   if(!order)return;
-  root.append(node('h2',order.customer.client),node('p',order.customer.login+' · Պատվեր №'+order.number+' · '+labels[order.status],'help'));
+  root.append(node('h2',order.customer.client),node('p',order.customer.login+' · Պատվեր №'+order.number+' · '+(window.ZZWS_ORDER_APPROVAL?.label(order)||labels[order.status]),'help'));
   const details=node('div',null,'manager-customer-data');
   for(const [label,value] of [['Կազմակերպություն',order.delivery?.organization],['Կոնտակտ',order.delivery?.contact],['Հասցե',order.delivery?.address],['Առաքման օր',order.delivery?.date]])if(value)details.append(node('p',label+'՝ '+value));
   root.append(details);
@@ -33,7 +33,8 @@
  function render(){
   const root=el('managerQueue');root.replaceChildren();
   for(const order of rows){const b=node('button',null,'manager-order'+(selected?.id===order.id?' is-selected':''));b.type='button';b.dataset.managerOrder=order.id;
-   b.append(node('strong','№'+order.number+' · '+order.customer.client),node('span',labels[order.status],'order-status status-'+order.status),node('small',Number(order.total).toLocaleString('hy-AM')+' ֏ · '+new Date(order.created).toLocaleDateString('hy-AM',{timeZone:'Asia/Yerevan'})));
+   b.append(node('strong','№'+order.number+' · '+order.customer.client),node('span',window.ZZWS_ORDER_APPROVAL?.label(order)||labels[order.status],'order-status status-'+order.status),node('small',Number(order.total).toLocaleString('hy-AM')+' ֏ · '+new Date(order.created).toLocaleDateString('hy-AM',{timeZone:'Asia/Yerevan'})));
+   if(order.approval?.state==='pending'&&order.approval.reviewRequestedMinutes)b.append(node('small','Հաճախորդը ժամանակ է խնդրել դիտարկման համար՝ '+order.approval.reviewRequestedMinutes+' րոպե։'));
    b.onclick=safe(async()=>{const opened=await ZZWS_ADMIN_ORDERS.openNotice(order.id);if(opened){customer(opened);if(matchMedia('(max-width:1100px)').matches){mobileBack.scrollIntoView({block:'start'});mobileBack.focus({preventScroll:true});}}});root.append(b);
   }
   if(!rows.length)root.append(node('p','Ընտրված պայմաններով պատվերներ չկան։','help'));
