@@ -15,7 +15,8 @@
  function showPending(){closeOrderModal();el('pendingReceiptOnly').checked=true;openPersonalCabinet();ZZWS_ORDERS.load();}
  function render(order,root){
   if(order.approval?.state==='pending')return;
-  if(order.received_at){const proof=node('div',null,'receipt-proof');proof.append(node('strong','Ստացումն արդեն հաստատված է'),node('p',order.receipt?.statement||'Ապրանքներն ամբողջությամբ և առանց վնասվածքների ստացված են։'),node('small',new Date(order.received_at).toLocaleString('hy-AM',{timeZone:'Asia/Yerevan'})));root.append(proof);return;}
+  if(order.received_at){const proof=node('div',null,'receipt-proof');proof.append(node('strong','Ստացումն արդեն հաստատված է'),node('p',order.receipt?.statement||'Ապրանքներն ամբողջությամբ և առանց վնասվածքների ստացված են։'),node('small',new Date(order.received_at).toLocaleString(window.ZZWS_I18N?.language==='ru'?'ru-RU':'hy-AM',{timeZone:'Asia/Yerevan'})));root.append(proof);return;}
+  if(order.user_id&&typeof serverIdentity!=='undefined'&&order.user_id!==serverIdentity?.id){root.append(node('p','Ստացումը կարող է հաստատել պատվերը կազմած աշխատակիցը։'));return;}
   if(!['confirmed','in_progress','completed'].includes(order.status)){root.append(node('p',order.status==='new'?'Ստացումը կարող եք հաստատել ադմինիստրատորի կողմից պատվերը հաստատելուց հետո։':order.status==='rejected'?'Մերժված պատվերի ստացումը չի հաստատվում։':'Այս կարգավիճակով ստացման հաստատումը հասանելի չէ։','order-info'));return;}
   const action=node('div',null,'receipt-order-action'),button=node('button','Հաստատել ապրանքների ստացումը','confirm-receipt-button');button.type='button';button.onclick=()=>confirmReceipt(order).catch(e=>alert(ZZWS.message(e)));action.append(button);root.append(action);
  }

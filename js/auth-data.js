@@ -23,7 +23,7 @@ function lockCatalog() {
   window.ZZWS_CATALOG_VIEW?.reset();
   window.ZZWS_ASSISTED?.reset();
   window.ZZWS_ENTRY?.reset();
-  window.ZZWS_ADMIN_RESOURCES?.reset();
+  window.ZZWS_ADMIN_RESOURCES?.reset();window.ZZWS_TEAM?.reset();
   finishSessionLoading();
   window.ZZWS_ORDERS?.stop();
   window.ZZWS_MEMORY?.capture();window.ZZWS_MEMORY?.stop();
@@ -38,13 +38,13 @@ function lockCatalog() {
   for (const id of ['orderModal','cabinetModal','bulkAddModal']) document.getElementById(id)?.classList.add('hidden');
 }
 async function acceptIdentity(user) {
-  if(user.needsPasswordSetup){user=await requirePasswordSetup(user);if(!user){finishSessionLoading();return;}}
+  if(user.needsPasswordSetup||user.needsProfileSetup){user=await requirePasswordSetup(user);if(!user){finishSessionLoading();return;}}
   window.ZZWS_ASSISTED?.start(user);
   window.ZZWS_CATALOG_VIEW?.start(user);
   window.ZZWS_ENTRY?.navigation(user);
   serverIdentity = user;window.ZZWS_HELP_USER=user; authorizedClient = user.client; userSheetType = user.sheet; clientRowsData = user.rowsList;
   window.ZZWS_BULLETINS?.start(user);
-  window.ZZWS_ADMIN_RESOURCES?.start(user);
+  window.ZZWS_ADMIN_RESOURCES?.start(user);window.ZZWS_TEAM?.start(user);
   configureSortPrices();
   await ZZWS_MEMORY.start(user);
   ZZWS_ORDERS.start(user);
@@ -62,7 +62,7 @@ async function checkPassword() {
       login:document.getElementById('loginInput').value.trim(),password:document.getElementById('passwordInput').value})});
     await completeSecureLogin(user);
     let identity=await secureApi('me');
-    if(identity.needsPasswordSetup){identity=await requirePasswordSetup(identity);if(!identity)return;}
+    if(identity.needsPasswordSetup||identity.needsProfileSetup){identity=await requirePasswordSetup(identity);if(!identity)return;}
     document.getElementById('passwordInput').value='';
     await ZZWS_ENTRY.choose(identity,()=>acceptIdentity(identity));
   } catch(e) { errorMsg.textContent = e.message; errorMsg.classList.remove('hidden'); } finally {loginInProgress=false;}
@@ -298,8 +298,10 @@ updateStickyOffsets();
 
 document.addEventListener('DOMContentLoaded', async () => {
 hideVersionBadge();
-try { await acceptIdentity(await secureApi('me')); } catch(e) {
-  if(sessionStorage.getItem('zzws_session_v3'))sessionLoadFailed(e.message);
+const invited=window.ZZWS_INVITE_CODE;window.ZZWS_INVITE_CODE='';
+try { if(invited)await secureApi('invitation/open',{method:'POST',body:JSON.stringify({code:invited})});await acceptIdentity(await secureApi('me')); } catch(e) {
+  if(invited){finishSessionLoading();document.getElementById('errorMsg').textContent=e.message;document.getElementById('errorMsg').classList.remove('hidden');}
+  else if(sessionStorage.getItem('zzws_session_v3'))sessionLoadFailed(e.message);
   else{finishSessionLoading();if (!e.message.includes('Մուտք գործեք')) document.getElementById('auth-status').textContent = 'Սերվերը հասանելի չէ։';}
 }
 
@@ -389,7 +391,7 @@ function priceDateFromRows(rows) {
 
 async function fetchPriceRows() {
   const identity=serverIdentity?.id,context=window.ZZWS_CATALOG_VIEW?.key()||'';const data=window.ZZWS_CATALOG_VIEW?.active()?await ZZWS_CATALOG_VIEW.fetch():await secureApi('catalog');if(identity!==serverIdentity?.id||context!==(window.ZZWS_CATALOG_VIEW?.key()||''))throw {staleCatalog:true};
-  window.ZZWS_CATALOG_CONTROLS?.apply(data);return {rows:data.products, dateText:data.updated};
+  if(data.account?.id===identity){serverIdentity=data.account;window.ZZWS_HELP_USER=data.account;authorizedClient=data.account.client;userSheetType=data.account.sheet;clientRowsData=data.account.rowsList;}window.ZZWS_CATALOG_CONTROLS?.apply(data);return {rows:data.products, dateText:data.updated};
 }
 
 function applyPriceDate(dateText) {

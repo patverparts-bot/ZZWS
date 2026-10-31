@@ -50,7 +50,7 @@
   const shown=list;el('adminOrderCount').textContent='Ցուցադրված է՝ '+shown.length;
   if(!shown.length){root.append(node('p','Ընտրված պայմաններով պատվերներ չկան։'));return;}
   const table=node('table'),head=table.createTHead().insertRow();for(const h of ['№ / ամսաթիվ','Հաճախորդ','Կարգավիճակ','Գումար',''])head.append(node('th',h));
-  for(const o of shown){const row=table.insertRow();row.insertCell().append(node('strong','№'+o.number),node('small',date(o.created),'admin-order-date'));const customer=row.insertCell();customer.append(node('strong',o.customer.client),node('small',o.customer.login,'admin-order-date'));if(o.created_by)customer.append(node('small','Լրացրել է՝ '+o.created_by.name+' ('+o.created_by.login+')','admin-order-date'));row.insertCell().append(node('span',window.ZZWS_ORDER_APPROVAL?.label(o)||statuses[o.status],'order-status status-'+o.status));row.insertCell().textContent=money(o.total);const actions=row.insertCell();actions.className='order-list-actions';actions.append(btn('Բացել',()=>open(o.id)),btn('Դիտել',()=>viewOrder(o.id)));}root.append(table);controls();
+  for(const o of shown){const row=table.insertRow();row.insertCell().append(node('strong','№'+o.number),node('small',date(o.created),'admin-order-date'));const customer=row.insertCell();customer.append(node('strong',o.customer.client),node('small',o.customer.customerCode,'admin-order-date'));if(o.customer.author)customer.append(node('small',[o.customer.author.firstName,o.customer.author.lastName].filter(Boolean).join(' '),'admin-order-date'));if(o.created_by)customer.append(node('small','Լրացրել է՝ '+o.created_by.name+' ('+o.created_by.login+')','admin-order-date'));row.insertCell().append(node('span',window.ZZWS_ORDER_APPROVAL?.label(o)||statuses[o.status],'order-status status-'+o.status));row.insertCell().textContent=money(o.total);const actions=row.insertCell();actions.className='order-list-actions';actions.append(btn('Բացել',()=>open(o.id)),btn('Դիտել',()=>viewOrder(o.id)));}root.append(table);controls();
  }
  async function open(id,internal=false){
   if(busy&&!internal){waitMessage();return;}
@@ -62,7 +62,7 @@
   selected=o;document.dispatchEvent(new CustomEvent('zzws:admin-order',{detail:o}));window.ZZWS_REOPEN_ORDER?.edit(o);manualRows=(o.approval?.state==='pending'?o.approval.lines:o.lines).map(row=>({...row}));
   el('adminOrderEditor').hidden=false;el('confirmationPaste').value='';el('finalOrderFile').value='';el('finalOrderFile').dispatchEvent(new Event('change',{bubbles:true}));
   el('selectedOrderTitle').textContent='Պատվեր №'+o.number+' · '+o.customer.client;
-  el('selectedOrderMeta').textContent=o.customer.login+' · Ստացվել է '+date(o.created)+' · Տարբերակ '+o.revision+(o.created_by?' · Լրացրել է ադմինիստրատոր՝ '+o.created_by.name+' ('+o.created_by.login+')':'');
+  el('selectedOrderMeta').textContent=o.customer.customerCode+' · Ստացվել է '+date(o.created)+' · Տարբերակ '+o.revision+(o.created_by?' · Լրացրել է ադմինիստրատոր՝ '+o.created_by.name+' ('+o.created_by.login+')':'');
   let approvalInfo=el('adminApprovalInfo');if(!approvalInfo){approvalInfo=node('div');approvalInfo.id='adminApprovalInfo';el('selectedOrderMeta').after(approvalInfo);}approvalInfo.textContent=o.approval?.state==='approved'&&o.status==='confirmed'?'Հաճախորդը համաձայնեցրել է փոփոխությունները։ Կարելի է ձևակերպել պատվերը։':window.ZZWS_ORDER_APPROVAL?.label(o)||'';
   if(o.approval?.state==='pending'&&o.approval.reviewRequestedMinutes)approvalInfo.append(node('p','Հաճախորդը ժամանակ է խնդրել դիտարկման համար՝ '+o.approval.reviewRequestedMinutes+' րոպե։ Հիշեցնել՝ '+date(o.approval.remindAfter)));
   if(o.approval?.response?.declinedArticuls?.length)approvalInfo.append(node('p','Հաճախորդի մերժած ապրանքները՝ '+o.approval.response.declinedArticuls.join(', ')));
@@ -151,7 +151,7 @@
  }
  function renderPreview(){const root=el('confirmationPreviewContent');root.replaceChildren();const meta=preview.metadata||{};
   root.append(node('h3','Վերջնական կազմ · '+preview.lines.length+' դիրք · '+money(preview.total)));
-  root.append(node('p','Ընտրված պատվեր՝ №'+preview.context.number+' · '+preview.context.customer.client+' ('+preview.context.customer.login+')','order-info'));
+  root.append(node('p','Ընտրված պատվեր՝ №'+preview.context.number+' · '+preview.context.customer.client+' ('+preview.context.customer.customerCode+')','order-info'));
   const customer=ZZWS_ORDER_COMPARE.confirmationCustomer(meta,preview.context.customer,preview.context.delivery);
   root.append(node('p',customer.text,customer.status==='match'?'confirmation-match':'confirmation-warning'));
   if(meta.customer||meta.organization)root.append(node('p',[meta.customer?'Ֆայլի պատվիրատու՝ '+meta.customer:'',meta.organization?'Իրավաբանական անձ՝ '+meta.organization:''].filter(Boolean).join(' · '),'order-info'));

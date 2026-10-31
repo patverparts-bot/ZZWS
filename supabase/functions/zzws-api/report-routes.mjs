@@ -3,7 +3,7 @@ import {sendSmtp,verifySmtp} from './smtp-mail.mjs';
 import {mailConnection,connectionInput} from './mail-connection.mjs';
 import {senderAddress} from './mail-config.mjs';
 import {buildOrderContext} from './order-context.mjs';
-import {email,emailRows,reportRecipients} from './report-email.mjs';
+import {email,emailRows,reportRecipients,authorReportRecipients} from './report-email.mjs';
 import {contactEmailRows} from './contacts.mjs';
 import {parseConfirmation,normalizeLines,changesBetween,totalOf} from './orders.mjs';
 const encoder=new TextEncoder(),limit=10*1024*1024;
@@ -70,7 +70,7 @@ export async function reportRoutes(c){
   const p=await body(req),o=await getOrder(p.orderId);let q=table('report_deliveries').select('*').eq('order_id',o.id);q=p.jobId?q.eq('id',p.jobId):q.eq('request_id',p.requestId);const j=await query(q.maybeSingle());if(!j)return json({found:false});if(['accepted','completed'].includes(j.state))return json(await complete(o,j));return json({found:true,state:j.state,jobId:j.id,attempts:j.attempts,busy:j.state==='sending'&&Date.parse(j.lease_until)>Date.now()});
  }
  if(path==='admin/orders/report-options'){
-  const p=await body(req),o=await getOrder(p.orderId),customer=await query(table('users').select('profile').eq('id',o.user_id).maybeSingle()),s=await settings();return json({rows:contactEmailRows(customer?.profile),contactNames:customer?.profile.contacts?.map(c=>c.name)||[],cc:s.cc,replyTo:user.replyToEmail||'',orderId:o.id,revision:o.revision});
+  const p=await body(req),o=await getOrder(p.orderId),customer=await query(table('users').select('profile').eq('id',o.user_id).maybeSingle()),s=await settings();return json({recipient:o.customer?.author?.email||'',author:o.customer?.author||null,legacy:!o.customer?.author,rows:o.customer?.author?[]:contactEmailRows(customer?.profile),contactNames:o.customer?.author?[]:customer?.profile.contacts?.map(c=>c.name)||[],defaultsConfigured:s.cc.length===3&&s.cc.every(Boolean),replyTo:user.replyToEmail||'',orderId:o.id,revision:o.revision});
  }
  const bundle=await attachmentBundle(req,rowsFromBuffer),{form,attachments,candidates,bundleHash}=bundle,o=await getOrder(form.get('orderId')),revision=Number(form.get('revision'));
  if(['received','completed','rejected'].includes(o.status))fail(409,'Փակված պատվերի համար նախ նշեք պատճառը և փոխեք կարգավիճակը հատուկ կոճակով');
@@ -96,10 +96,14 @@ export async function reportRoutes(c){
  }
  if(form.get('confirmCustomer')!=='true')fail(400,'Հաստատեք ընտրված հաճախորդին');
  const requestId=String(form.get('requestId'));if(!/^[a-f0-9-]{36}$/i.test(requestId))fail(400,'Ուղարկման սխալ նույնացուցիչ');
- const s=await settings(),recipients=reportRecipients(contactEmailRows(customer?.profile),JSON.parse(String(form.get('selectedRows')||'[]')),s.cc,String(form.get('additionalCC')||''),user.replyToEmail),{env}=await mailConnection(c,s,{withPassword:true}),mode=env('ZZWS_REPORT_EMAIL_MODE'),from=senderAddress(s,env);
+ const defaults=form.get('includeDefaults');if(defaults!==null&&!['true','false'].includes(defaults))fail(400,'Ստուգեք լրացուցիչ հասցեների ընտրությունը');const includeDefaults=defaults!=='false';
+ const s=await settings(),additional=String(form.get('additionalCC')||'');let recipients;
+ if(o.customer?.author)recipients=authorReportRecipients(o.customer.author.email,s.cc,additional,user.replyToEmail,includeDefaults);
+ else{const selected=JSON.parse(String(form.get('selectedRows')||'[]')),rows=contactEmailRows(customer?.profile);recipients=reportRecipients(rows,selected,s.cc,additional,user.replyToEmail,includeDefaults);}
+ const {env}=await mailConnection(c,s,{withPassword:true}),mode=env('ZZWS_REPORT_EMAIL_MODE'),from=senderAddress(s,env);
  if(!mailReady(env))fail(503,'Էլ․ փոստի ծառայությունը կարգավորված չէ');
  if(env('ZZWS_ENVIRONMENT')!=='production'&&mode!=='offline'){const allowed=new Set(String(env('ZZWS_REPORT_TEST_RECIPIENTS')||'').split(',').filter(Boolean).map(v=>email(v)));if([...recipients.to,...recipients.cc].some(v=>!allowed.has(v)))fail(403,'Փորձարկման հասցեն թույլատրված չէ');}
- const fingerprint=await sha(JSON.stringify([o.id,bundleHash,index,recipients,from])),counts={transport:['gmail','smtp'].includes(mode)?'smtp':'idempotent',bundleHash,reportIndex:index,files:attachments.length,bytes:attachments.reduce((s,f)=>s+f.size,0),to:recipients.to.length,cc:recipients.cc.length};
+ const fingerprint=await sha(JSON.stringify([o.id,bundleHash,index,recipients,from])),counts={transport:['gmail','smtp'].includes(mode)?'smtp':'idempotent',bundleHash,reportIndex:index,files:attachments.length,bytes:attachments.reduce((s,f)=>s+f.size,0),to:recipients.to.length,cc:recipients.cc.length,recipients:{to:recipients.to,cc:recipients.cc},includeDefaults};
  let j=await rpc('zzws_report_claim',{p_actor:user.id,p_order:o.id,p_revision:revision,p_request:requestId,p_fingerprint:fingerprint,p_counts:counts});
  if(['accepted','completed'].includes(j.state))return json(await complete(o,j,prepared));if(j.busy)return json({busy:true,jobId:j.id});if(j.state!=='sending')return json({manual:true,jobId:j.id,attempts:j.attempts});
  const message={from,to:recipients.to,cc:recipients.cc,reply_to:recipients.replyTo,subject:'Վաճառքի Հաշվետվություն',text:'Պատվեր №'+o.number+'։ Կցված է վաճառքի հաշվետվությունը՝ համեմատության համար։',attachments:attachments.map(f=>({filename:f.name,content:b64(f.data)}))};

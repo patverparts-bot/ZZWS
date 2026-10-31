@@ -39,10 +39,10 @@
  function hasLineChanges(before,after){return model(before,after).some(row=>!row.before||!row.after||['qty','unitPrice'].some(key=>Number(row.before[key])!==Number(row.after[key])));}
  const normalized=value=>String(value??'').normalize('NFKC').toLocaleLowerCase((window.ZZWS_I18N?.language==='ru'?'ru-RU':'hy-AM')).replace(/\s+/gu,' ').trim();
  function confirmationCustomer(metadata,customer,delivery={}){
-  const login=normalized(customer?.login),reported=normalized(metadata?.customer),organization=normalized(metadata?.organization);
+  const login=normalized(customer?.customerCode),reported=normalized(metadata?.customer),organization=normalized(metadata?.organization);
   const code=metadata?.format==='zigzag_sales_report'?reported.match(/^(\d+)(?:\s|$)/)?.[1]:null;
-  if(code&&/^\d+$/.test(login))return code===login?{status:'match',text:'Հաճախորդի կոդը համընկնում է ընտրված պատվերին՝ '+customer.login+'։'}:{status:'mismatch',text:'Հաճախորդի կոդը չի համընկնում․ ֆայլում՝ '+code+', պատվերում՝ '+customer.login+'։ Ստուգեք ընտրված պատվերն ու ֆայլը։'};
-  if(reported&&login&&reported===login)return {status:'match',text:'Հաճախորդի մուտքանունը համընկնում է ընտրված պատվերին։'};
+  if(code&&/^\d+$/.test(login))return code===login?{status:'match',text:'Հաճախորդի կոդը համընկնում է ընտրված պատվերին՝ '+customer.customerCode+'։'}:{status:'mismatch',text:'Հաճախորդի կոդը չի համընկնում․ ֆայլում՝ '+code+', պատվերում՝ '+customer.customerCode+'։ Ստուգեք ընտրված պատվերն ու ֆայլը։'};
+  if(reported&&login&&reported===login)return {status:'match',text:'Հաճախորդի կոդը համընկնում է ընտրված պատվերին։'};
   const names=[customer?.client,delivery?.organization].map(normalized).filter(Boolean);
   if(organization&&names.includes(organization))return {status:'match',text:'Իրավաբանական անձը համընկնում է ընտրված պատվերին։'};
   if(reported&&names.includes(reported))return {status:'match',text:'Հաճախորդի անվանումը համընկնում է ընտրված պատվերին։'};

@@ -34,8 +34,8 @@ export async function adminTemplateRoutes(c){
  };
  const permitted=async row=>{const v=await current();return project(v.products,{...row.profile,id:row.id},v.rules,{mainWarehouses:v.mainWarehouses});};
  if(path==='admin/templates/customers'&&req.method==='GET'){
-  const rows=await query(table('users').select('id,login,profile,active').eq('profile->>role','client').order('login').limit(5000));
-  return json({customers:rows.map(r=>({id:r.id,login:r.login,client:r.profile.client,active:r.active}))});
+  const rows=await query(table('users').select('id,login,profile,active').eq('profile->>role','client').is('customer_id',null).order('profile->>customerCode').limit(5000));
+  return json({customers:rows.map(r=>({id:r.id,customerCode:r.profile.customerCode||'',client:r.profile.client,active:r.active}))});
  }
  if(req.method==='GET'&&['admin/templates','admin/templates/catalog'].includes(path)){
   const params=new URL(req.url).searchParams,row=await account(params.get('userId')),products=await permitted(row);
@@ -45,7 +45,7 @@ export async function adminTemplateRoutes(c){
   }
   const carts=await query(table('saved_carts').select('id,title,cart,saved_at').eq('user_id',row.id).order('saved_at',{ascending:false}));
   const visible=new Map(products.map(p=>[p.articul,p]));
-  return json({customer:{id:row.id,client:row.profile.client,login:row.login,active:row.active},templates:carts.map(cart=>({...cart,rows:Object.entries(cart.cart).map(([key,r])=>{const p=visible.get(r.articul||key);return {articul:r.articul||key,name:p?.name||r.articul||key,qty:r.qty,price:Number(p?.wholesale)||0,available:!!p&&Number(p.wholesale)>0};})}))});
+  return json({customer:{id:row.id,client:row.profile.client,customerCode:row.profile.customerCode||'',active:row.active},templates:carts.map(cart=>({...cart,rows:Object.entries(cart.cart).map(([key,r])=>{const p=visible.get(r.articul||key);return {articul:r.articul||key,name:p?.name||r.articul||key,qty:r.qty,price:Number(p?.wholesale)||0,available:!!p&&Number(p.wholesale)>0};})}))});
  }
  if(preview&&req.method==='POST'){
   const p=await body(req),order=uuid(p.orderId)?await query(table('orders').select('*').eq('id',p.orderId).maybeSingle()):null;

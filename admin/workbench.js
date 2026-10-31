@@ -23,7 +23,7 @@
  function customer(order){
   selected=order;el('manager').dataset.orderSelected=String(!!order);const root=el('managerCustomer');root.replaceChildren();el('managerEmpty').hidden=!!order;
   if(!order)return;
-  root.append(node('h2',order.customer.client),node('p',order.customer.login+' · Պատվեր №'+order.number+' · '+(window.ZZWS_ORDER_APPROVAL?.label(order)||labels[order.status]),'help'));
+  root.append(node('h2',order.customer.client),node('p',order.customer.customerCode+' · Պատվեր №'+order.number+' · '+(window.ZZWS_ORDER_APPROVAL?.label(order)||labels[order.status]),'help'));
   const details=node('div',null,'manager-customer-data');
   for(const [label,value] of [['Կազմակերպություն',order.delivery?.organization],['Կոնտակտ',order.delivery?.contact],['Հասցե',order.delivery?.address],['Առաքման օր',order.delivery?.date]])if(value)details.append(node('p',label+'՝ '+value));
   root.append(details);

@@ -231,7 +231,7 @@ function populateOrderModalFields() {
   orderContactRows().forEach((row, index) => {
     const opt = document.createElement('option');
     opt.value = orderContactKey(row,index);
-    opt.text = [`${index+1}. ${row.organization || authorizedClient}`,row.address || '',row.contact || ''].filter(Boolean).join(' — ');
+    opt.text = `${index+1}. ${row.organization || authorizedClient}`;
     orgSelect.appendChild(opt);
   });
   orgSelect.value=orderContactRows().length?orderContactKey(orderContactRows()[0],0):'';

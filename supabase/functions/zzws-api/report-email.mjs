@@ -7,9 +7,15 @@ export function email(value,{optional=false}={}){
 }
 export function emailList(value,{max=50}={}){if(typeof value!=='string'||controls.test(value)||value.length>13000)throw Error('Էլ․ փոստի հասցեների սխալ ցանկ');const result=[...new Set(value.split(/[,;]/).map(s=>s.trim()).filter(Boolean).map(s=>email(s)))];if(result.length>max)throw Error('Էլ․ փոստի չափազանց շատ հասցեներ');return result;}
 export function emailRows(value){if(!Array.isArray(value)||value.length>5)throw Error('Թույլատրվում է էլ․ փոստի մինչև հինգ տող');return Array.from({length:5},(_,i)=>emailList(value[i]??'',{max:20}).join(', '));}
-export function reportRecipients(rows,selected,automatic,additional,replyTo){
+export function reportRecipients(rows,selected,automatic,additional,replyTo,includeDefaults=true){
  const normalized=emailRows(rows||[]);if(!Array.isArray(selected)||!selected.length||selected.length>5||new Set(selected).size!==selected.length||selected.some(i=>!Number.isInteger(i)||i<0||i>4||!normalized[i]))throw Error('Ընտրեք հաճախորդի էլ․ փոստի առնվազն մեկ տող');
  if(!Array.isArray(automatic)||automatic.length!==3)throw Error('Կարգավորեք երեք պարտադիր պատճենի հասցեները');
- const to=[...new Set(selected.flatMap(i=>emailList(normalized[i])))],cc=[...new Set([...automatic.map(s=>email(s)),...emailList(additional||'')])].filter(s=>!to.includes(s));if(to.length+cc.length>50)throw Error('Թույլատրվում է ընդհանուր մինչև 50 ստացող');return {to,cc,replyTo:email(replyTo||'')};
+ const to=[...new Set(selected.flatMap(i=>emailList(normalized[i])))],cc=[...new Set([...(includeDefaults?automatic.map(s=>email(s)):[]),...emailList(additional||'')])].filter(s=>!to.includes(s));if(to.length+cc.length>50)throw Error('Թույլատրվում է ընդհանուր մինչև 50 ստացող');return {to,cc,replyTo:email(replyTo||'')};
+}
+export function authorReportRecipients(authorEmail,automatic,additional,replyTo,includeDefaults=true){
+ if(typeof includeDefaults!=='boolean')throw Error('Ստուգեք լրացուցիչ հասցեների ընտրությունը');
+ if(!Array.isArray(automatic)||automatic.length!==3)throw Error('Կարգավորեք երեք պատճենի հասցեները');
+ const to=[email(authorEmail)],cc=[...new Set([...(includeDefaults?automatic.map(v=>email(v)):[]),...emailList(additional||'')])].filter(v=>!to.includes(v));
+ if(to.length+cc.length>50)throw Error('Թույլատրվում է ընդհանուր մինչև 50 ստացող');return {to,cc,replyTo:email(replyTo||'')};
 }
 

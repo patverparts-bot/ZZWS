@@ -49,7 +49,7 @@
   window.ZZWS_ORDER_APPROVAL?.render(order,root,async()=>{await load();if(root.isConnected&&owner===who)await details(id,root);await poll();});
   if(order.approval?.state!=='pending')window.ZZWS_RECEIPTS?.render(order,root);
   const delivery=order.delivery||{},deliveryBox=node('details',null,'order-delivery-details'),deliveryList=node('dl');deliveryBox.append(node('summary','Առաքման տվյալներ'));
-  for(const [key,label] of Object.entries({organization:'Կազմակերպություն',contact:'Կոնտակտ',address:'Հասցե',method:'Առաքման եղանակ',date:'Առաքման օր',paymentDeadline:'Վճարման վերջնաժամկետ',comment:'Ձեր մեկնաբանությունը'}))if(delivery[key])deliveryList.append(node('dt',label),node('dd',delivery[key]));deliveryBox.append(deliveryList);root.append(deliveryBox);
+  for(const [key,label] of Object.entries({organization:'Կազմակերպություն',contact:'Կոնտակտ',phone:'Հեռախոս',email:'Էլ․ փոստ',address:'Հասցե',method:'Առաքման եղանակ',date:'Առաքման օր',paymentDeadline:'Վճարման վերջնաժամկետ',comment:'Ձեր մեկնաբանությունը'}))if(delivery[key])deliveryList.append(node('dt',label),node('dd',delivery[key]));deliveryBox.append(deliveryList);root.append(deliveryBox);
   const tools=node('details',null,'order-secondary-tools');tools.append(node('summary','Կրկնել պատվերը կամ գտնել փոխարինում'));
   const repeat=node('button','Կրկնել պատվերը ընթացիկ գներով','order-repeat-button');repeat.type='button';repeat.onclick=()=>{
    const allowed=order.lines.filter(line=>productIndex.has(line.articul)),missing=order.lines.length-allowed.length;

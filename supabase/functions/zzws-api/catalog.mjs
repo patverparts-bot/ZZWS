@@ -1,4 +1,5 @@
 import {DEFAULT_MAIN_WAREHOUSES} from './warehouses.mjs';
+import {customerCode} from './client-accounts.mjs';
 import {email,emailRows} from './report-email.mjs';
 import {phoneNumber,phoneNumbers} from './phones.mjs';
 import {personContacts,contactEmailRows} from './contacts.mjs';
@@ -78,6 +79,9 @@ export function validateProfile(p){
   const brands=p.brands||[];if(!Array.isArray(brands)||brands.length>100||brands.some(b=>typeof b!=='string'||b.length>100))throw Error('Բրենդների սխալ ցանկ');
   const rowsList=validateContacts(p.rowsList??[],client);
   const profile={client,role,sheet,brands,allBrands:p.allBrands===true,allowResale:p.allowResale===true,rowsList};
+  if(Object.hasOwn(p,'customerCode'))profile.customerCode=customerCode(p.customerCode);
+  if(Object.hasOwn(p,'companyPhone'))profile.companyPhone=phoneNumber(p.companyPhone);
+  if(Object.hasOwn(p,'companyEmail'))profile.companyEmail=email(p.companyEmail,{optional:true});
   if(Object.hasOwn(p,'emailRows'))profile.emailRows=emailRows(p.emailRows);
   if(Object.hasOwn(p,'replyToEmail'))profile.replyToEmail=email(p.replyToEmail,{optional:true});
   if(Object.hasOwn(p,'phoneNumbers'))profile.phoneNumbers=phoneNumbers(p.phoneNumbers);
@@ -91,7 +95,7 @@ export function validateProfile(p){
   if(Object.hasOwn(p,'catalogAccess'))profile.catalogAccess=p.catalogAccess===null?null:validateAccess(p.catalogAccess);
   return {login,profile};
 }
-export function parseUsers(rows){
+export function parseUsers(rows,existing=[]){
   if(rows[0]?.slice(0,3).join(',')!=='login,client,sheet')throw Error('Օգտագործեք օգտատերերի ձևանմուշը');
   const seen=new Set(),result=[];
   for(const row of rows.slice(1)){
@@ -99,8 +103,10 @@ export function parseUsers(rows){
     const p=Object.fromEntries(rows[0].map((h,i)=>[h,String(row[i]??'').trim()]));
     p.brands=(p.brands||'').split(',').map(v=>v.trim()).filter(Boolean);p.allBrands=['true','1','yes'].includes(String(p.allBrands||'').toLowerCase());
     p.rowsList=[1,2,3].map(i=>{const suffix=i===1?'':String(i);return {organization:p['organization'+suffix]||'',address:p['address'+suffix]||'',contact:p['contact'+suffix]||''};});
+    if(!p.customerCode&&!/^[0-9]+$/.test(p.login||''))throw Error('Հաճախորդի ներմուծման համար լրացրեք հաճախորդի կոդը');
+    p.customerCode=p.customerCode||p.login;const old=existing.find(u=>!u.customer_id&&u.profile.role==='client'&&u.profile.customerCode===p.customerCode);p.login=old?.login||'pending.'+crypto.randomUUID();
     const user=validateProfile(p);user.preserveExtraContacts=!rows[0].some(h=>['organization2','address2','contact2','organization3','address3','contact3'].includes(h));
-    if(seen.has(user.login))throw Error('Կրկնվող մուտքանուն՝ '+user.login);seen.add(user.login);result.push(user);
+    if(seen.has(user.profile.customerCode))throw Error('Կրկնվող հաճախորդի կոդ՝ '+user.profile.customerCode);seen.add(user.profile.customerCode);result.push(user);
   }
   if(!result.length||result.length>1000)throw Error('Թույլատրվում է 1-ից 1000 օգտատեր');
   return result;

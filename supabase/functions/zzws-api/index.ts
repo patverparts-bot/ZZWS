@@ -30,6 +30,7 @@ import { validateMemory } from './memory.mjs';
 import { securityTools } from './security.ts';
 import { orderRoutes } from './order-routes.mjs';
 import { reconcileDeliveryVariants } from './delivery-variants.mjs';
+import {accountDTO,accountRoutes,activateClient} from './client-accounts.mjs';
 
 const PROJECT_URL = Deno.env.get('SUPABASE_URL')!;
 const envKey=(name:string,legacy:string)=>JSON.parse(Deno.env.get(name)||'{}').default||Deno.env.get(legacy)!;
@@ -44,7 +45,7 @@ const email=(login:string)=>login+'@users.zzws.invalid';
 const goodPassword=validPassword;
 const randomPassword=()=>Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b=>String(b%10)).join('');
 function fail(code:number,message:string):never{throw {code,message};}
-async function query(q:any){const {data,error}=await q;if(error){if(error.code==='PT409')fail(409,'Տվյալներն արդեն փոխվել են։ Թարմացրեք քարտը կամ կրկին բեռնեք ներմուծման ֆայլը');if(error.code==='PT403')fail(403,'Հասանելիությունն արգելված է');if(error.code==='PT400')fail(400,'Ստուգեք առաքման տարբերակները');console.error('Database operation failed',error.code);fail(500,'Գործողությունը չի կատարվել։ Փորձեք ավելի ուշ');}return data;}
+async function query(q:any){const {data,error}=await q;if(error){if(error.code==='23505')fail(409,'Հաճախորդի կոդը կամ մուտքանունն արդեն օգտագործվում է');if(error.code==='PT409')fail(409,'Տվյալներն արդեն փոխվել են։ Թարմացրեք քարտը կամ կրկին բեռնեք ներմուծման ֆայլը');if(error.code==='PT403')fail(403,'Հասանելիությունն արգելված է');if(error.code==='PT400')fail(400,'Ստուգեք առաքման տարբերակները');console.error('Database operation failed',error.code);fail(500,'Գործողությունը չի կատարվել։ Փորձեք ավելի ուշ');}return data;}
 const table=(name:string)=>service.from('zzws_'+name);
 async function audit(actor:string|null,action:string,detail=''){await query(table('audit').insert({actor,action,detail}));}
 
@@ -66,7 +67,7 @@ async function uploadRows(req:Request){
   return rowsFromBuffer(await file.arrayBuffer());
 }
 const workbook=(rows:any[][],columns:any[]=[])=>{const book=XLSX.utils.book_new();const sheet=XLSX.utils.aoa_to_sheet(rows.map(r=>r.map(v=>typeof v==='string'&&/^[=+@-]/.test(v)?"'"+v:v)));sheet['!cols']=columns.length?columns:workbookColumns(rows);sheet['!merges']=catalogMetadataMerge(rows);XLSX.utils.book_append_sheet(book,sheet,'ZZWS');return XLSX.write(book,{type:'array',bookType:'xlsx'});};
-const cleanUser=(row:any)=>({...row.profile,id:row.id,login:row.login,active:row.active,profileRevision:row.profile_revision,needsPasswordSetup:row.needs_password_setup===true});
+const cleanUser=accountDTO;
 
 async function identity(req:Request){
   const token=(req.headers.get('authorization')||'').replace(/^Bearer /,'');
@@ -76,7 +77,9 @@ async function identity(req:Request){
   if(!session)fail(401,'Մուտք գործեք համակարգ');
   const user=await query(table('users').select('*').eq('id',session.user_id).eq('active',true).maybeSingle());
   if(!user)fail(401,'Հասանելիությունն անջատված է');
-  return {user:cleanUser(user),hash,setupOnly:session.setup_only,invitationHash:session.invitation_hash,mfaVerified:session.mfa_verified,confirmedUntil:session.confirmed_until};
+  if(user.customer_id&&!await query(table('users').select('id').eq('id',user.customer_id).eq('active',true).eq('profile->>role','client').maybeSingle()))fail(401,'Հաճախորդի հասանելիությունն անջատված է');
+  const account=cleanUser(user);
+  return {user:account,hash,setupOnly:session.setup_only,invitationHash:session.invitation_hash,mfaVerified:session.mfa_verified,confirmedUntil:session.confirmed_until};
 }
 
 async function body(req:Request){const b=await req.json().catch(()=>null);if(!b||Array.isArray(b)||typeof b!=='object')fail(400,'Սպասվում է JSON օբյեկտ');return b;}
@@ -94,13 +97,16 @@ async function saveUser(p:any,actor:string,sessionHash:string){
   if(!['create','update'].includes(p.intent))fail(400,'Օգտատիրոջը պահպանելուց առաջ թարմացրեք կաբինետի էջը');
   if(p.intent==='create'&&p.id)fail(400,'Նոր հաշիվը չպետք է պարունակի գոյություն ունեցող օգտատիրոջ ID-ն');
   if(p.intent==='update'&&!p.id)fail(400,'Փոփոխման ենթակա հաշիվը ընտրված չէ');
+  if(p.intent==='create'&&(p.role||'client')==='client'&&!p.login)p.login='pending.'+crypto.randomUUID();
   const validated=validateProfile(p),{login,profile}=validated;
   const categoryState=await query(table('state').select('rules').eq('id',true).single());
   if(!effectiveRules(categoryState.rules)[profile.sheet])fail(400,'Հաճախորդի կատեգորիան չի գտնվել');
   const old=p.id?await query(table('users').select('*').eq('id',p.id).maybeSingle()):null;
+  if(old?.customer_id)fail(403,'Աշխատակցի գներն ու պայմանները փոխեք հաճախորդի քարտում');
+  if(old&&!Object.hasOwn(p,'customerCode')&&Object.hasOwn(old.profile,'customerCode'))profile.customerCode=old.profile.customerCode;
   if(old?.profile.role==='admin'&&profile.role==='admin'&&!Object.hasOwn(p,'ordersRefreshSeconds'))profile.ordersRefreshSeconds=old.profile.ordersRefreshSeconds??5;
   // An older admin client must not erase restrictions it does not understand.
-  for(const field of ['emailRows','replyToEmail','phoneNumbers','managerPhone'])if(old&&Object.hasOwn(old.profile,field)&&!Object.hasOwn(p,field)&&!(Object.hasOwn(p,'contacts')&&['emailRows','phoneNumbers'].includes(field)))profile[field]=old.profile[field];
+  for(const field of ['emailRows','replyToEmail','phoneNumbers','managerPhone','companyPhone','companyEmail'])if(old&&Object.hasOwn(old.profile,field)&&!Object.hasOwn(p,field)&&!(Object.hasOwn(p,'contacts')&&['emailRows','phoneNumbers'].includes(field)))profile[field]=old.profile[field];
   if(old?.profile.contacts&&!Object.hasOwn(p,'contacts')){
    // An old card cannot detach a named person's email or phone from that person.
    for(const field of ['phoneNumbers','emailRows'])if(Object.hasOwn(p,field)&&JSON.stringify(profile[field])!==JSON.stringify(old.profile[field]))fail(409,'Կոնտակտները խմբագրելու համար թարմացրեք էջը');
@@ -176,6 +182,15 @@ export async function handle(req:Request){
       const snapshot=await query(service.rpc('zzws_application_snapshot'));return json(snapshot);
     }
     const security=await securityTools({service,table,query,digest,random,fail,authClient,cleanUser,audit});
+    if(req.method==='POST'&&path==='invitation/open'){
+      const p=await body(req),code=String(p.code||'');if(!/^[a-f0-9]{64}$/.test(code))fail(401,'Հրավերը սխալ է կամ ժամկետանց');
+      const ip=await digest((req.headers.get('x-forwarded-for')||'unknown').split(',')[0].trim()),attempt=await query(service.rpc('zzws_login_gate',{p_login:'invitation:'+await digest(code),p_ip:ip}));if(!attempt)fail(429,'Չափազանց շատ փորձեր։ Կրկնեք 15 րոպեից');
+      const invite=await query(table('invitations').select('user_id,hash').eq('hash',await digest(code)).gt('expires',new Date().toISOString()).maybeSingle());
+      const target=invite?await query(table('users').select('*').eq('id',invite.user_id).eq('active',true).eq('needs_password_setup',true).maybeSingle()):null;
+      if(!target)fail(401,'Հրավերը սխալ է կամ ժամկետանց');
+      if(target.customer_id&&!await query(table('users').select('id').eq('id',target.customer_id).eq('active',true).maybeSingle()))fail(401,'Հաճախորդի հասանելիությունն անջատված է');
+      const token=random();await query(table('sessions').insert({hash:await digest(token),user_id:target.id,invitation_hash:invite.hash,setup_only:true,expires:new Date(Date.now()+30*60000).toISOString()}));await query(table('attempts').delete().eq('id',attempt));return json({...cleanUser(target),sessionToken:token});
+    }
     if(req.method==='POST'&&path==='login/mfa'){const p=await body(req);return json(await security.verify(p.challengeToken,p.code));}
     if(req.method==='POST'&&path==='login'){
       const p=await body(req),login=String(p.login||'').trim().toLowerCase(),password=String(p.password||'');
@@ -209,7 +224,8 @@ export async function handle(req:Request){
     if(req.method==='POST'&&path==='account/password'){
       if(!user.needsPasswordSetup||!setupOnly)fail(403,'Գաղտնաբառի կարգավորումը հասանելի չէ։ Կրկին մուտք գործեք');
       const validInvite=await query(table('invitations').select('hash').eq('user_id',user.id).eq('hash',invitationHash||'').gt('expires',new Date().toISOString()).maybeSingle());if(!validInvite)fail(403,'Հրավերի ժամկետը լրացել է։ Դիմեք ադմինիստրատորին');
-      const p=await body(req);if(!goodPassword(p.password))fail(400,'Գաղտնաբառը պետք է պարունակի առնվազն 6 թվանշան և միայն թվեր');
+      const p=await body(req);if(user.role==='client')return json(await activateClient({user,hash,invitationHash,table,query,fail,service,email,security},p));
+      if(!goodPassword(p.password))fail(400,'Գաղտնաբառը պետք է պարունակի առնվազն 6 թվանշան և միայն թվեր');
       const claimed=await query(table('users').update({password_setup_claim:hash}).eq('id',user.id).eq('needs_password_setup',true).is('password_setup_claim',null).select('id'));
       if(!claimed.length)fail(409,'Գաղտնաբառն արդեն սահմանվում է այլ պատուհանում։ Կրկին մուտք գործեք');
       const result=await service.auth.admin.updateUserById(user.id,{password:p.password});
@@ -223,6 +239,8 @@ export async function handle(req:Request){
       await audit(user.id,'password_setup');return json({...user,needsPasswordSetup:false,sessionToken:token});
     }
     if(user.needsPasswordSetup||setupOnly)fail(403,'Նախ սահմանեք նոր գաղտնաբառը');
+    if(path==='account/profile'){const response=await accountRoutes({path,req,user,hash,setupOnly,invitationHash,table,query,body,json,fail,service,security,email});if(response)return response;}
+    if(user.role==='client'&&user.needsProfileSetup)fail(403,'Լրացրեք անունը, ազգանունը, հեռախոսը և էլ․ փոստը ձեր անձնական կաբինետում');
     if(req.method==='POST'&&path==='me/mobile/session'){const expires=new Date(Date.now()+30*24*3600000).toISOString();await query(table('sessions').update({expires}).eq('hash',hash));return json({expires});}
     if(path.startsWith('admin/')&&(user.role!=='admin'||!canAccess(user.adminScope,path,req.method)))fail(403,'Այս գործողության իրավունքը չունեք');
     if(req.method==='POST'&&path==='account/reauth'){
@@ -232,8 +250,9 @@ export async function handle(req:Request){
       const factors=await client.auth.mfa.listFactors();if(factors.error)fail(500,'Չհաջողվեց ստուգել երկրորդ գործոնը');const factor=factors.data.totp.find((f:any)=>f.status==='verified');await client.auth.signOut({scope:'local'});if(factor&&!mfaVerified)fail(403,'Կրկին մուտք գործեք երկրորդ գործոնով');
       await query(table('sessions').update({confirmed_until:new Date(Date.now()+5*60000).toISOString()}).eq('hash',hash));await query(table('attempts').delete().eq('id',attempt));return json({ok:true});
     }
-    if(req.method==='POST'&&['admin/users','admin/users/scope','admin/users/reset-password','admin/users/delete','admin/storage/clear','admin/price/publish','admin/price/rollback','admin/rules','admin/users/import','admin/users/channels','admin/users/polling','admin/users/invitation-email/send','admin/email-settings','admin/receipt-control','admin/users/receipt-control'].includes(path)&&!(confirmedUntil&&Date.parse(confirmedUntil)>Date.now()))return json({error:'Հաստատեք ձեր ընթացիկ գաղտնաբառը',reauthRequired:true},428);
+    if(req.method==='POST'&&['admin/users','admin/users/scope','admin/users/team/access','admin/users/reset-password','admin/users/delete','admin/storage/clear','admin/price/publish','admin/price/rollback','admin/rules','admin/users/import','admin/users/channels','admin/users/polling','admin/users/invitation-email/send','admin/email-settings','admin/receipt-control','admin/users/receipt-control'].includes(path)&&!(confirmedUntil&&Date.parse(confirmedUntil)>Date.now()))return json({error:'Հաստատեք ձեր ընթացիկ գաղտնաբառը',reauthRequired:true},428);
 
+    const accountResponse=await accountRoutes({path,req,user,hash,setupOnly,invitationHash,table,query,body,json,fail,service,security,email,audit});if(accountResponse)return accountResponse;
     if(['me/resources','me/resources/apk','admin/resources','admin/users/channels','admin/devices/register','admin/devices/revoke'].includes(path)){const response=await channelRoutes({path,req,user,service,table,query,body,json,fail});if(response)return response;}
     const bulletinResponse=await bulletinRoutes({path,req,user,service,table,query,body,json,current,project,fail});if(bulletinResponse)return bulletinResponse;
     const mobileResponse=await mobileRoutes({path,req,user,service,table,query,body,json,fail});if(mobileResponse)return mobileResponse;
@@ -281,14 +300,14 @@ export async function handle(req:Request){
     if(req.method==='GET'&&['catalog','catalog/version','catalog/export'].includes(path)){
       const v=await current(),updated=new Date(v.created).toLocaleDateString('en-GB',{timeZone:'Asia/Yerevan'});
       const settings={catalog_controls:v.catalogControls,catalog_controls_revision:v.warehouseRevision};
-      const controls=effectiveControls(settings.catalog_controls,user.id);
-      const version=v.id+':'+v.rulesRevision+':'+settings.catalog_controls_revision;
+      const controls=effectiveControls(settings.catalog_controls,user.customerId||user.id);
+      const version=v.id+':'+v.rulesRevision+':'+settings.catalog_controls_revision+':'+user.profileRevision;
       if(path==='catalog/version')return json({version,updated,presentationRevision:Math.floor(Date.now()/300000)});
       const products=project(v.products,user,v.rules,{mainWarehouses:v.mainWarehouses});
       if(path==='catalog'){
         const rules=popularityRules(settings.catalog_controls);
         const rows=controls.popular||controls.personalPopular?await query(service.rpc('zzws_catalog_popularity',{p_user:user.id,p_days:rules.days})):[];
-        return json({products,version,updated,controls,popularityRules:rules,popularity:visiblePopularity(rows,products,controls,settings.catalog_controls,user.id)});
+        return json({products,version,updated,controls,account:user,popularityRules:rules,popularity:visiblePopularity(rows,products,controls,settings.catalog_controls,user.id)});
       }
       const rows=[['Ստացող',user.client,'Տարբերակ',priceVersionLabel(v.created)],['Արտիկուլ','Բրենդ','Կատեգորիա','Անվանում','Մանրածախ','Ձեր գինը','Առկայություն',...(user.role==='admin'?['KP']:[])],
         ...products.map((p:any)=>[p.articul,p.brand,p.category,p.name,p.retail,p.wholesale,p.stockStatus,...(user.role==='admin'?[p.kpPrice]:[])])];
@@ -421,13 +440,13 @@ export async function handle(req:Request){
     }
     if(req.method==='POST'&&path==='admin/users/preview'){
       const rows=await uploadRows(req);
-      const old=await query(table('users').select('id,login,profile,profile_revision,active'));
+      const old=await query(table('users').select('id,login,profile,profile_revision,active,customer_id'));
       const state=await query(table('state').select('rules').eq('id',true).single());
       const scopes=await query(table('admin_scopes').select('*')),channels=await query(table('user_channels').select('*')),receipts=await query(table('client_receipt_controls').select('*'));
-      const full=parseUserSheet(rows,{rules:state.rules,existing:old,actor:user.id,scopes,channels,receipts});const users=full||parseUsers(rows);
+      const full=parseUserSheet(rows,{rules:state.rules,existing:old,actor:user.id,scopes,channels,receipts});const users=full||parseUsers(rows,old);
       for(const u of users){const record=old.find((r:any)=>r.login===u.login);if(!full&&record?.profile.role==='admin')fail(400,'Ներմուծումը չի կարող փոփոխել ադմինիստրատորին');reconcileDeliveryVariants(record?.profile.rowsList||[],u.profile.rowsList,{mode:'import',preserveExtra:u.preserveExtraContacts});Object.assign(u,{action:record?'update':'create',expectedUserId:record?.id||null,expectedProfileRevision:record?.profile_revision||null});}
       const d=await query(table('drafts').insert({actor:user.id,kind:'users',payload:users}).select('id').single());
-      return json({draft:d.id,users:users.map((u:any)=>({login:u.login,client:u.profile.client,action:u.action,role:u.profile.role,scope:u.scope??null,active:u.active??old.find((r:any)=>r.login===u.login)?.active??false,sheet:u.profile.sheet,mobile:u.channels?.mobile??null,telegram:u.channels?.telegram??null,refresh:u.profile.ordersRefreshSeconds??null,receipt:u.receipt?.mode??null,accessChanged:!!full&&JSON.stringify(u.profile.catalogAccess)!==JSON.stringify(old.find((r:any)=>r.login===u.login)?.profile.catalogAccess)}))});
+      return json({draft:d.id,users:users.map((u:any)=>({login:u.login,customerCode:u.profile.customerCode||'',client:u.profile.client,action:u.action,role:u.profile.role,scope:u.scope??null,active:u.active??old.find((r:any)=>r.login===u.login)?.active??false,sheet:u.profile.sheet,mobile:u.channels?.mobile??null,telegram:u.channels?.telegram??null,refresh:u.profile.ordersRefreshSeconds??null,receipt:u.receipt?.mode??null,accessChanged:!!full&&JSON.stringify(u.profile.catalogAccess)!==JSON.stringify(old.find((r:any)=>r.login===u.login)?.profile.catalogAccess)}))});
     }
     if(req.method==='POST'&&path==='admin/users/import'){
       const p=await body(req),d=await draft(p.draft,user.id,'users');

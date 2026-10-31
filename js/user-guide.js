@@ -16,7 +16,7 @@
     content.textContent = 'Ուղեցույցը բեռնվում է…';
     loading = (async () => {
       try {
-        const response = await fetch('help/user-guide.html?v=7.1.0-bilingual');
+        const response = await fetch('help/user-guide.html?v=20261101-controls');
         if (!response.ok) throw new Error('Guide unavailable');
         const html = await response.text();
         const parsed=new DOMParser().parseFromString(html,'text/html');const article=parsed.querySelector('.zzws-guide');if(!article)throw Error('Guide unavailable');content.replaceChildren(...[...parsed.querySelectorAll('style')].map(style=>document.importNode(style,true)),document.importNode(article,true));

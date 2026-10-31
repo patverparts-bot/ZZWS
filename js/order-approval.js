@@ -10,6 +10,7 @@
    const rejected=offer.response?.declinedArticuls||[];if(rejected.length)box.append(node('p','Հաճախորդի մերժած ապրանքները՝ '+rejected.join(', ')));
    root.append(box);return;
   }
+  if(order.user_id&&typeof serverIdentity!=='undefined'&&order.user_id!==serverIdentity?.id){box.append(node('p','Պատասխանը կարող է ուղարկել պատվերը կազմած աշխատակիցը։'));root.append(box);return;}
   box.append(node('p','Ադմինիստրատորն առաջարկել է փոփոխություններ։ Ստուգեք քանակը, գինը և հեռացված ապրանքները։ Ցանկից կարող եք հանել ցանկացած ապրանք և հաստատել մնացածը կամ հրաժարվել ամբողջ պատվերից։'));
   const comparison=ZZWS_ORDER_COMPARE.render(offer.beforeLines||order.lines,offer.lines||[]);box.append(comparison);
   if(offer.comment)box.append(node('p',offer.comment));

@@ -9,12 +9,12 @@
    const options=await ZZWS.json('admin/users/invitation-email/options',{method:'POST',body:JSON.stringify({id:targetId})});
    if(!dialog.isConnected)return;
    options.rows.forEach((row,index)=>{if(!row)return;const label=node('label',row),check=node('input');check.type='checkbox';check.value=index;label.prepend(check);panel.insertBefore(label,status);choices.push(check);check.onchange=()=>{send.disabled=!choices.some(c=>c.checked);};});
-   status.textContent=choices.length?'Ընտրեք քարտում պահպանված հասցեների տողերը։ Նամակը կստանան ընտրված տողերի բոլոր հասցեները։':'Քարտում էլ․ փոստ չկա։ Լրացրեք և պահպանեք այն, ապա նորից բացեք հրավերը։';
+   status.textContent=choices.length?'Ընտրեք հրավերի ստացողի պահպանված էլ․ փոստը։':options.employee?'Աշխատակցի անձնական էլ․ փոստը կլրացվի գրանցման ժամանակ։ Հիմա պատճենեք հղումը և փոխանցեք այն աշխատակցին։':'Քարտում էլ․ փոստ չկա։ Լրացրեք և պահպանեք այն, ապա նորից բացեք հրավերը։';
   }catch(e){status.textContent=ZZWS.message(e);return;}
   send.onclick=async()=>{
    send.disabled=true;choices.forEach(c=>c.disabled=true);status.textContent='Ուղարկվում է…';
    try{
-    const payload={id:targetId,code:invitation.code,selectedRows:choices.filter(c=>c.checked).map(c=>Number(c.value))};
+    const payload={id:targetId,code:invitation.code,language:window.ZZWS_I18N?.language||'hy',selectedRows:choices.filter(c=>c.checked).map(c=>Number(c.value))};
     const attempt=()=>ZZWS.json('admin/users/invitation-email/send',{method:'POST',body:JSON.stringify(payload)});
     let result;try{result=await attempt();}catch(e){if(!e.reauthRequired)throw e;await requireReauthentication();result=await attempt();}
     status.textContent=result.accepted?'Փոստային ծառայությունն ընդունել է հրավերը՝ ուղարկման համար։':result.error;

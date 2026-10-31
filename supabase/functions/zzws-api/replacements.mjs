@@ -42,7 +42,7 @@ export async function replacementRoutes(c){
   if(!source&&previous)source={...previous,wholesale:0};
   if(!source)fail(404,'Ապրանքը հասանելի չէ այս հաճախորդին');
   const history=await query(table('orders').select('lines').eq('user_id',account.id).neq('status','rejected').order('created',{ascending:false}).limit(200));
-  return json({orderId:order.id,revision:order.revision,customer:{id:account.id,client:account.profile.client,login:account.login},catalogueVersion:v.id,source:{articul:source.articul,name:source.name},candidates:suggestReplacements(source,products,knowledge,{inCart:p.inCart,history}),historyScope:200});
+  return json({orderId:order.id,revision:order.revision,customer:{id:account.id,client:account.profile.client,customerCode:account.profile.customerCode||''},catalogueVersion:v.id,source:{articul:source.articul,name:source.name},candidates:suggestReplacements(source,products,knowledge,{inCart:p.inCart,history}),historyScope:200});
  }
  if(path!=='orders/replacements'||req.method!=='POST')return null;
  const p=await body(req);if(typeof p.articul!=='string'||p.articul.length>100||!Array.isArray(p.inCart)||p.inCart.length>5000||p.inCart.some(r=>!r||typeof r.articul!=='string'||r.articul.length>100||!Number.isInteger(r.qty)||r.qty<1||r.qty>9999))fail(400,'Ստուգեք ապրանքն ու քանակները');

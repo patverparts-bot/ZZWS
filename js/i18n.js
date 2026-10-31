@@ -4,7 +4,7 @@
  const dictionaries=window.ZZWS_TRANSLATIONS||{},letter=/[\u0531-\u0556\u0561-\u0587]/,sources=new WeakMap(),attributes=new WeakMap(),validity=new WeakMap(),cache=new Map(),unknown=new Set();
  const preference='zzws_language_v1';let language='hy',applying=false,scheduled=false;
  try{const query=new URL(location.href).searchParams.get('lang'),saved=localStorage.getItem(preference);language=['hy','ru'].includes(query)?query:saved==='ru'?'ru':'hy';if(query&&['hy','ru'].includes(query))localStorage.setItem(preference,language);}catch{}
- const trie={};for(const [from,to]of Object.entries(dictionaries)){if(!from||from===to)continue;let n=trie;for(const ch of from)n=n[ch]||(n[ch]={});n.$=to;}
+ const trie={};for(const [from,to]of Object.entries(dictionaries)){if(!from||from===to||from.trim().length<2)continue;let n=trie;for(const ch of from)n=n[ch]||(n[ch]={});n.$=to;}
  const punctuation={'։':'.','՝':':','՜':'!','՞':'?','՛':''};
  function russian(value){
   const text=String(value??'').replace(/\u00ad|&shy;/g,'');if(!letter.test(text))return text;if(cache.has(text))return cache.get(text);
@@ -32,7 +32,7 @@
  }
  function refresh(root=document.body){
   if(!root||applying)return;applying=true;
-  try{if(root.nodeType===Node.TEXT_NODE)text(root);else{if(root.nodeType===Node.ELEMENT_NODE)attrs(root);const walker=document.createTreeWalker(root,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_TEXT);while(walker.nextNode()){const node=walker.currentNode;if(node.nodeType===Node.TEXT_NODE)text(node);else attrs(node);}}const title=document.querySelector('title');if(title?.firstChild)text(title.firstChild);document.documentElement.lang=language;for(const control of document.querySelectorAll('[data-language-select]'))control.value=language;}
+  try{if(root.nodeType===Node.TEXT_NODE)text(root);else{if(root.nodeType===Node.ELEMENT_NODE)attrs(root);const walker=document.createTreeWalker(root,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_TEXT);while(walker.nextNode()){const node=walker.currentNode;if(node.nodeType===Node.TEXT_NODE)text(node);else attrs(node);}}const title=document.querySelector('title');if(title?.firstChild)text(title.firstChild);document.documentElement.lang=language;for(const guide of document.querySelectorAll('.zzws-guide'))guide.lang=language;for(const control of document.querySelectorAll('[data-language-select]'))control.value=language;}
   finally{observer.takeRecords();applying=false;}
  }
  function setLanguage(value){

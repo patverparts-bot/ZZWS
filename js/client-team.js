@@ -1,0 +1,19 @@
+(() => {
+ const node=(tag,text)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;return n;},request=(path,p)=>ZZWS.json(path,p===undefined?{}:{method:'POST',body:JSON.stringify(p)});
+ let actor=null,entry=null,dialog=null;const labels={invited:'Հրավիրված է',active:'Ակտիվ է',disabled:'Հասանելիությունն անջատված է'};
+ function reset(){actor=null;entry?.remove();entry=null;dialog?.close();dialog?.remove();dialog=null;}
+ async function open(){
+  const who=actor;if(!who)return;dialog?.remove();const d=node('dialog'),message=node('p'),list=node('div'),close=node('button','Փակել');dialog=d;d.id='clientTeam';d.className='client-team-dialog';message.setAttribute('role','status');close.type='button';close.onclick=()=>{d.close();d.remove();if(dialog===d)dialog=null;};d.addEventListener('close',()=>{d.remove();if(dialog===d)dialog=null;});d.append(node('h2',who.clientRole==='manager'?'Իմ աշխատակիցները':'Անձնական տվյալներ'),node('p',who.client),node('p',who.clientRole==='manager'?'Աշխատակիցները ստանում են հաճախորդի նույն գները, բայց յուրաքանչյուրն ունի իր զամբյուղը։ Ստեղծեք և անձամբ փոխանցեք հրավերի հղումը։':'Ձեր պատվերների հաշվետվություններն ուղարկվում են այստեղ նշված անձնական էլ․ փոստին։'),message);
+  if(who.clientRole==='manager'){const form=node('form'),label=node('label','Աշխատակցի անունը՝ հրավերի համար'),name=node('input'),add=node('button','Ստեղծել հրավեր');name.maxLength=200;label.append(name);form.append(label,add);d.append(form);form.onsubmit=async e=>{e.preventDefault();add.disabled=true;try{const r=await request('team/invite',{label:name.value});if(actor!==who||dialog!==d||!d.open)return;name.value='';showInvitation('',r.invitation,r.id);await load();}catch(e){message.textContent=e.message;}finally{add.disabled=false;}};}
+  d.append(list,close);document.body.append(d);d.showModal();
+  async function load(){
+   if(who.clientRole!=='manager'){const p=who.person||{};list.replaceChildren(node('p',[p.firstName,p.lastName,p.phone,p.email].filter(Boolean).join(' · ')));return;}
+   const data=await request('team');if(actor!==who||dialog!==d)return;list.replaceChildren();
+   for(const m of data.members){const row=node('section'),p=m.person||{},name=[p.firstName,p.lastName].filter(Boolean).join(' ')||p.label||'Նոր աշխատակից';row.append(node('strong',name),node('p',(m.clientRole==='manager'?'Գլխավոր մենեջեր':'Աշխատակից')+' · '+labels[m.status]),node('p',[m.login,p.phone,p.email].filter(Boolean).join(' · ')));if(m.lastLogin)row.append(node('small','Վերջին մուտքը՝ '+new Date(m.lastLogin).toLocaleString(window.ZZWS_I18N?.language==='ru'?'ru-RU':'hy-AM',{timeZone:'Asia/Yerevan'})));
+    if(m.clientRole==='employee'){const access=node('button',m.status==='disabled'?'Միացնել հասանելիությունը':'Անջատել հասանելիությունը');access.type='button';access.onclick=async()=>{access.disabled=true;try{await request('team/access',{id:m.id,active:m.status==='disabled'});await load();}catch(e){message.textContent=e.message;access.disabled=false;}};row.append(access);if(m.status==='invited'){const invite=node('button','Նոր հրավեր');invite.type='button';invite.onclick=async()=>{invite.disabled=true;try{const r=await request('team/invitation',{id:m.id});if(actor===who&&dialog===d&&d.open)showInvitation('',r.invitation,m.id);}catch(e){message.textContent=e.message;}finally{invite.disabled=false;}};row.append(invite);}}list.append(row);
+   }
+  }
+  try{await load();}catch(e){message.textContent=e.message;}
+ }
+ window.ZZWS_TEAM={reset,start(user){reset();if(user.role!=='client')return;actor=user;entry=node('button',user.clientRole==='manager'?'Իմ աշխատակիցները':'Անձնական տվյալներ');entry.id='clientTeamButton';entry.type='button';entry.onclick=open;(document.querySelector('#cabinetModal .cabinet-toolbar')||document.querySelector('#cabinetModal > div'))?.append(entry);},open};
+})();

@@ -134,15 +134,15 @@ async function loadVersions() {
 }
 async function loadUsers() {
   const d = await api('admin/users'); users = d.users;categoryLabels={...categoryLabels,...d.categoryLabels};categoryByGroup=d.categoryByGroup||categoryByGroup;
-  el('userList').replaceChildren(table(['Մուտքանուն','Հաճախորդ','Դեր','Գներ','Կատեգորիա','Հասանելիություն',''], users.map(u => [u.login,u.client,u.role==='admin'?'Ադմինիստրատոր':'Հաճախորդ',categoryLabel(u.sheet),u.role==='client'?categoryLabel(u.sheet):'—',u.active?'Միացված է':'Անջատված է',button('Խմբագրել', () => editUser(u))])));
+  el('userList').replaceChildren(table(['Հաճախորդի կոդ','Հաճախորդ','Դեր','Գներ','Կատեգորիա','Հասանելիություն',''], users.filter(u=>u.clientRole!=='employee').map(u => [u.role==='admin'?u.login:u.customerCode||'',u.client,u.role==='admin'?'Ադմինիստրատոր':'Հաճախորդ',categoryLabel(u.sheet),u.role==='client'?categoryLabel(u.sheet):'—',u.active?'Միացված է':'Անջատված է',button('Խմբագրել', () => editUser(u))])));
 }
 function editUser(user = {}) {
   const f = el('userForm'); f.reset(); f.hidden = false;
   f.elements.sheet.value='Dealers';
   editingUserId=user.id||null;f.elements.id.value=editingUserId||'';
   editingProfile=structuredClone(user);
-  el('userTitle').textContent=editingUserId?'Օգտատիրոջ խմբագրում՝ '+user.login:'Նոր օգտատեր';
-  for (const key of ['login','client','role','sheet']) if (user[key]) f.elements[key].value = user[key];
+  el('userTitle').textContent=editingUserId?'Օգտատիրոջ խմբագրում՝ '+(user.role==='client'?user.client+(user.customerCode?' ('+user.customerCode+')':''):user.login):'Նոր օգտատեր';
+  for (const key of ['customerCode','login','client','role','sheet']) if (user[key]) f.elements[key].value = user[key];
   for (const key of ['active','allowResale']) f.elements[key].checked = key === 'active' ? user.active !== false : !!user[key];
   userAccessEditor=ZZWS_RULES_UI.accessEditor(el('userAccessEditor'),ZZWS_RULES_UI.legacyAccess({...user,sheet:user.sheet||'Dealers'}),catalogPairs);
   el('userAccessPreview').replaceChildren();
@@ -156,9 +156,9 @@ function editUser(user = {}) {
   el('adminScopePanel').hidden=!user.id||user.role!=='admin';el('adminScope').value=user.adminScope||'';
   ZZWS_ADMIN_CHANNELS.edit(user);
   el('resetUserPassword').hidden=!user.id;el('issueInvitation').hidden=!user.id||!user.needsPasswordSetup;
-  el('passwordSetupState').textContent=!user.id||user.needsPasswordSetup?'Առաջին մուտք՝ մուտքանունով և մեկանգամյա հրավերի կոդով։':'Օգտատերն արդեն սահմանել է գաղտնաբառը։';
+  el('passwordSetupState').textContent=!user.id||user.needsPasswordSetup?(user.role==='admin'?'Առաջին մուտք՝ մուտքանունով և մեկանգամյա հրավերի կոդով։':'Հրավերով գրանցում․ օգտատերն ինքն է ընտրում անձնական մուտքանունն ու գաղտնաբառը։'):'Օգտատերն արդեն սահմանել է գաղտնաբառը։';
   el('adminOrdersRefresh').value=user.ordersRefreshSeconds??5;el('saveAdminPolling').hidden=!user.id;el('adminPollingStatus').textContent='';
-  ZZWS_REPORT_EMAIL.edit(user);window.ZZWS_PHONE_CARD?.edit(user);updateClientCategory();ZZWS_ADMIN_RECEIPTS.loadClient(user);ZZWS_CARD_LAYOUT.edit(user,users);
+  ZZWS_REPORT_EMAIL.edit(user);window.ZZWS_PHONE_CARD?.edit(user);window.ZZWS_CLIENT_CARD?.edit(user);updateClientCategory();ZZWS_ADMIN_RECEIPTS.loadClient(user);ZZWS_CARD_LAYOUT.edit(user,users);
   el('userSavedBaskets').hidden=!user.id||user.role!=='client'||!ZZWS_ADMIN_HOME.can('templates');f.scrollIntoView({behavior:'smooth'});
 }
 el('resetUserPassword').onclick=()=>run(async()=>{
@@ -175,7 +175,7 @@ el('usersImportForm').onsubmit = e => { e.preventDefault(); run(async () => {
   const d = await api('admin/users/preview',{method:'POST',body:await ZZWS_I18N_WORKBOOKS.userImport(new FormData(e.target),categoryLabels)});
   userDraft = d.draft;
   const scopeLabels={owner:'Սեփականատեր՝ ամբողջ հասանելիություն',manager:'Պատվերների մենեջեր',price:'Գնացուցակի օպերատոր',viewer:'Միայն դիտում'},receiptLabels={inherit:'Ընդհանուր կարգավորում',on:'Միացված է',off:'Անջատված է',until:'Ժամանակավորապես անջատված է'},yes=value=>value==null?'Պահպանել նախկինը':value?'Այո':'Ոչ';
-  el('usersChanges').replaceChildren(table(['Մուտքանուն','Անվանում','Գործողություն','Դեր','Կատեգորիա','Հասանելիություն','Աշխատակցի իրավունքներ','Android','Telegram','Ստուգում (վրկ)','Ստացման վերահսկում','Ապրանքների կանոններ'],d.users.map(u=>[u.login,u.client,u.action==='create'?'Նոր հաշիվ':'Թարմացնել և ավարտել աշխատաշրջանները',u.role==='admin'?'Ադմինիստրատոր':'Հաճախորդ',categoryLabel(u.sheet),yes(u.active),u.role==='admin'?(scopeLabels[u.scope]||'Իրավունքները նշանակված չեն'):'Չի կիրառվում',yes(u.mobile),yes(u.telegram),u.refresh??'—',receiptLabels[u.receipt]||'Պահպանել նախկինը',u.accessChanged?'Փոխվում են':'Պահպանել նախկինը'])));
+  el('usersChanges').replaceChildren(table(['Մուտքանուն','Անվանում','Գործողություն','Դեր','Կատեգորիա','Հասանելիություն','Աշխատակցի իրավունքներ','Android','Telegram','Ստուգում (վրկ)','Ստացման վերահսկում','Ապրանքների կանոններ'],d.users.map(u=>[u.customerCode||u.login,u.client,u.action==='create'?'Նոր հաշիվ':'Թարմացնել և ավարտել աշխատաշրջանները',u.role==='admin'?'Ադմինիստրատոր':'Հաճախորդ',categoryLabel(u.sheet),yes(u.active),u.role==='admin'?(scopeLabels[u.scope]||'Իրավունքները նշանակված չեն'):'Չի կիրառվում',yes(u.mobile),yes(u.telegram),u.refresh??'—',receiptLabels[u.receipt]||'Պահպանել նախկինը',u.accessChanged?'Փոխվում են':'Պահպանել նախկինը'])));
   el('usersPreview').hidden = false; status('Ստուգեք փոփոխությունները մինչև կիրառելը');
 }); };
 el('importUsers').onclick = () => run(async () => { if (!userDraft) return; el('importUsers').disabled=true; try {
@@ -201,6 +201,7 @@ function updateClientCategory(){
   ZZWS_REPORT_EMAIL.role(el('userForm').elements.role.value);
   window.ZZWS_PHONE_CARD?.role(el('userForm').elements.role.value);
   const f=el('userForm'),pricing=pricingByGroup[f.elements.sheet.value],labels={ws:'Մեծածախ',kpPromo:'Խոշոր գործընկերոջ ակցիոն',kp:'Խոշոր գործընկերոջ',retail:'Զեղչված մանրածախ',base:'Հիմնական մանրածախ'};
+  f.elements.login.required=f.elements.role.value==='admin';f.elements.login.readOnly=f.elements.role.value==='client';f.elements.login.closest('label').hidden=f.elements.role.value==='client'&&(!editingUserId||editingProfile?.needsPasswordSetup&&editingProfile?.login?.startsWith('pending.'));f.elements.customerCode.closest('label').hidden=f.elements.role.value==='admin';
   const staffRole=f.elements.role.value==='admin',savedStaff=staffRole&&!!editingUserId&&editingProfile?.role==='admin';el('adminRoleSetupNote').hidden=!staffRole||savedStaff;el('adminScopePanel').hidden=!savedStaff;el('adminChannelsPanel').hidden=!savedStaff||window.ZZWS_HELP_USER?.adminScope!=='owner';
   el('clientPricingFields').hidden=f.elements.role.value==='admin';el('adminPollingPanel').hidden=f.elements.role.value!=='admin';el('adminOrdersRefresh').disabled=f.elements.role.value!=='admin';
   el('clientPriceSequence').value=pricing.sources.map(source=>labels[source]).join(' → ');

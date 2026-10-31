@@ -30,7 +30,7 @@
     if(section==='draft'){for(const id of fields){const el=document.getElementById(id);if(!el)continue;if(id==='organizationSelect'){
       if(Object.hasOwn(value,id)){el.value=clientRowsData.some(row=>row.id===value[id])?value[id]:'';if(!el.value)banner('Պահպանված պատվերի համար կրկին ընտրեք առաքման տարբերակը։ Հասցեն և կոնտակտը պահպանված են։',true);}
       continue;
-    }el.value=Object.hasOwn(value,id)?value[id]:id==='deliveryMethodInput'?'Առաքում':'';}handleDeliveryMethodChange();checkDeliveryBadge();}
+    }const row=selectedOrderContact();el.value=Object.hasOwn(value,id)?value[id]:id==='deliveryMethodInput'?'Առաքում':id==='deliveryAddressInput'?row?.address||'':id==='contactPersonInput'?row?.contact||'':'';}handleDeliveryMethodChange();checkDeliveryBadge();}
   }
   function capture(){
     if(!ready||suspended||!serverIdentity||owner!==serverIdentity.id)return;

@@ -1,0 +1,96 @@
+plugins {
+ id 'com.android.application' version '8.13.2'
+ id 'com.google.gms.google-services' version '4.5.0'
+ id 'org.jetbrains.kotlin.android' version '2.3.21'
+ id 'org.jetbrains.kotlin.plugin.compose' version '2.3.21'
+}
+// Explicit compile-only verification; cannot package, install or publish an APK.
+def compileOnlyCheck=providers.gradleProperty('zzwsCompileOnly').orElse('false').get()=='true'
+def calendarRegression=providers.gradleProperty('zzwsCalendarRegression').orElse('false').get()=='true'
+def catalogUiRegression=providers.gradleProperty('zzwsCatalogUiRegression').orElse('false').get()=='true'
+def requestedBuildDirectory=providers.gradleProperty('zzwsBuildDirectory').orElse('build').get()
+if(!(requestedBuildDirectory==~ /build(?:-[A-Za-z0-9-]+)?/))throw new GradleException('Build directory must stay in the Android project.')
+if(catalogUiRegression)layout.buildDirectory.set(layout.projectDirectory.dir('build-catalog-ui'))
+else if(requestedBuildDirectory!='build')layout.buildDirectory.set(layout.projectDirectory.dir(requestedBuildDirectory))
+if(compileOnlyCheck){
+ if(gradle.startParameter.taskNames.empty||!gradle.startParameter.taskNames.every{it.tokenize(':').last()=='compileDebugJavaWithJavac'})throw new GradleException('Compile-only mode permits only compileDebugJavaWithJavac, never APK tasks.')
+ googleServices { missingGoogleServicesStrategy=com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy.IGNORE }
+}
+def releaseApi=providers.gradleProperty('zzwsApiUrl').orElse('').get()
+def releasePublicKey=providers.gradleProperty('zzwsPublicKey').orElse('').get()
+def stagingBuild=providers.gradleProperty('zzwsEnvironment').orElse('production').get()=='staging'
+def signingPath=System.getenv('ZZWS_ANDROID_KEYSTORE')
+def signingAlias=System.getenv('ZZWS_ANDROID_KEY_ALIAS')
+def signingStorePassword=System.getenv('ZZWS_ANDROID_STORE_PASSWORD')
+def signingKeyPassword=System.getenv('ZZWS_ANDROID_KEY_PASSWORD')
+def quoted={ value -> groovy.json.JsonOutput.toJson(value) }
+android {
+ namespace 'am.zzws.admin'
+ compileSdk 36
+ buildToolsVersion '36.0.0'
+ buildFeatures { buildConfig true; compose true }
+ defaultConfig {
+  applicationId 'am.zzws.admin'; minSdk 26; targetSdk 36; versionCode 70111; versionName stagingBuild?'7.1.11-staging':'7.1.11'
+  buildConfigField 'boolean','ZZWS_PRODUCTION','false'
+  buildConfigField 'String','ZZWS_API_URL','""'
+  buildConfigField 'String','ZZWS_PUBLIC_KEY','""'
+ }
+ sourceSets { main { manifest.srcFile 'firebase/AndroidManifest.xml'; java.srcDirs=['src','firebase-src']; res.srcDirs=['res']; assets.srcDirs=['assets'] }; release { res.srcDirs=['release-res'] } }
+ compileOptions { sourceCompatibility JavaVersion.VERSION_1_8; targetCompatibility JavaVersion.VERSION_1_8 }
+ kotlinOptions { jvmTarget='1.8' }
+ sourceSets { test.java.srcDirs=['unit-tests'] }
+ if(calendarRegression){sourceSets.test.java.srcDir('calendar-tests');testOptions.unitTests.includeAndroidResources=true}
+ if(catalogUiRegression){sourceSets.test.java.srcDir('catalog-ui-tests');testOptions.unitTests.includeAndroidResources=true}
+ signingConfigs {
+  production {
+   if(signingPath)storeFile=file(signingPath)
+   keyAlias=signingAlias;storePassword=signingStorePassword;keyPassword=signingKeyPassword
+  }
+ }
+ buildTypes {
+  debug { versionNameSuffix '-firebase-test' }
+  release {
+   minifyEnabled false
+   signingConfig signingConfigs.production
+   buildConfigField 'boolean','ZZWS_PRODUCTION','true'
+   buildConfigField 'String','ZZWS_API_URL',quoted(releaseApi)
+   buildConfigField 'String','ZZWS_PUBLIC_KEY',quoted(releasePublicKey)
+  }
+ }
+}
+tasks.register('validateZzwsRelease') {
+ doLast {
+  def fail={throw new GradleException('ZZWS release settings missing or invalid. See RELEASE-SETUP.md; secrets are never printed.')}
+  try {
+   def uri=new URI(releaseApi)
+   if(uri.scheme!='https'||!uri.host||uri.host.endsWith('.')||uri.userInfo||uri.query||uri.fragment||uri.path!='/functions/v1/zzws-api/'||(uri.port!=-1&&uri.port!=443))fail()
+   def publicKey=releasePublicKey==~ /sb_publishable_[A-Za-z0-9_-]{20,}/
+   if(!publicKey){def p=releasePublicKey.split(/\./);publicKey=p.length==3&&(new groovy.json.JsonSlurper().parseText(new String(Base64.urlDecoder.decode(p[1]),'UTF-8')).role=='anon')}
+   if(!publicKey||releasePublicKey.length()>4096||(releasePublicKey==~ /(?s).*[\x00-\x20\x7f].*/))fail()
+   if(!signingPath||!file(signingPath).isFile()||!signingAlias||!signingStorePassword||!signingKeyPassword||signingAlias=='zzws-offline-review'||(file(signingPath).name in ['offline-review.keystore','debug.keystore']))fail()
+   def config=file('google-services.json');if(!config.isFile())fail()
+   def firebase=new groovy.json.JsonSlurper().parse(config)
+   if(!firebase.project_info?.project_id||!firebase.client?.any{it.client_info?.android_client_info?.package_name=='am.zzws.admin'})fail()
+  }catch(Exception ignored){fail()}
+ }
+}
+tasks.configureEach { if(name=='preReleaseBuild')dependsOn('validateZzwsRelease') }
+dependencies {
+ implementation 'com.google.firebase:firebase-messaging:25.0.1'
+ implementation platform('androidx.compose:compose-bom:2025.10.01')
+ implementation 'androidx.activity:activity-compose:1.12.4'
+ implementation 'androidx.compose.material3:material3'
+ implementation 'androidx.compose.ui:ui-tooling-preview'
+ implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4'
+ implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
+ testImplementation 'junit:junit:4.13.2'
+ testImplementation files('.toolchain/json-test.jar')
+ if(calendarRegression||catalogUiRegression)testImplementation 'org.robolectric:robolectric:4.17'
+ if(catalogUiRegression){
+  testImplementation platform('androidx.compose:compose-bom:2025.10.01')
+  testImplementation 'androidx.compose.ui:ui-test-junit4'
+  debugImplementation 'androidx.compose.ui:ui-test-manifest'
+ }
+}
+if(calendarRegression||catalogUiRegression)tasks.withType(Test).configureEach {maxHeapSize='512m';maxParallelForks=1;systemProperty 'robolectric.dependency.repo.url','https://repo.maven.apache.org/maven2'}
+// Service-account credentials and private signing passwords must never be BuildConfig fields.
