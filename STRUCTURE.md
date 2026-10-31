@@ -1,6 +1,6 @@
 # ZZWS file layout
 
-## Client accounts and report recipients (local candidate, 1 November 2026)
+## Client accounts and report recipients (published 1 November 2026)
 
 `client-accounts.mjs` separates the customer business code (`profile.customerCode`)
 from each person's Auth login. The root client account is the customer manager;
@@ -48,17 +48,27 @@ recipient choice; authors are not inferred retroactively.
 `client-team.js` provides the client cabinet, `admin/client-card.js` the team list,
 and `password-setup.js` registration/personal completion. Android includes mandatory
 personal completion, personal passwords, existing delivery variants and a manager-only team
-entry through the existing authenticated website. This is source preparation; no
-new release APK was published or installed.
+entry through the existing authenticated website. Signed Android 7.1.11 (70111)
+is published in the primary update channel; its certificate matches 7.1.10.
+Installation on a physical device was not part of this publication.
 
-Validation: 10 real API/SQL tests, including the new team workflow and a populated
-pre-migration database; browser suites client-accounts, admin-navigation,
-order-approval, admin-order-approval and order-races; Android compilation and
-ManagementNavigationRegressionTest plus PartnerPolicyTest. All use isolated
-synthetic data; report routing tests use an offline mail transport. Evidence is
-in work/client-accounts, with screenshots in output/publication. A source review
-archive and rollout notes are in output/client-accounts. Production has not been
-changed by this task.
+Validation: 11 API/SQL tests, 16 browser suites, 19 Android debug management/role
+checks and 113 release unit tests passed. Actual Supabase Auth registration and
+team access were also exercised on temporary staging accounts and cleaned up.
+All 36 published web assets and all 50 downloaded API files match the checked
+source. The complete published browser workflow uses isolated SQL and an offline
+mail transport: no real customer emails or production test orders were created.
+Both complete guides have working section links and fully translated Russian
+text, with Armenian/Russian switching preserving form values.
+
+Published frontend commit: `f80d54a0891fe7b279a49834e875f40491499c3a`.
+GitHub Pages workflow 41249801590 completed successfully. Production API version
+44 includes the `client_accounts` migration. All 33 existing user IDs/logins and
+client delivery variants, and all 4 existing order delivery snapshots, retained
+their preceding checksums. Encrypted pre-release application backup:
+`backups/server/ZZWS-2026-11-01_02-30-32.zzwsbackup`.
+Verification is in `work/client-accounts-publication`; source changes, evidence
+and release notes are in `output/client-accounts`.
 
 ## Named contacts, approval review deadline and Viber reminders (published 1 November 2026)
 
