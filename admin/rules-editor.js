@@ -10,7 +10,12 @@
   function accessEditor(root,initial,pairs){
     let include=[],exclude=[];
     const all=node('input');all.type='checkbox';all.dataset.accessAll='';
-    const includes=node('div',null,'pair-list'),excludes=node('div',null,'pair-list'),includeArea=node('div');
+    const includes=node('div',null,'pair-list'),excludes=node('div',null,'pair-list'),includeArea=node('div'),accessSummary=node('p',null,'catalog-access-summary');accessSummary.setAttribute('role','status');accessSummary.setAttribute('aria-live','polite');
+    function updateAccessSummary(){
+      const configured=include.some(r=>{try{return !!r.read();}catch{return false;}});
+      accessSummary.dataset.blocked=String(!all.checked&&!configured);
+      accessSummary.textContent=all.checked?'Բոլոր ապրանքները':configured?'Ընտրված ապրանքները':'Թույլտվությունների դատարկ ցանկը նշանակում է հասանելիության բացակայություն։';
+    }
     function row(value,kind){
       const wrap=node('div',null,'pair-row');wrap.dataset.pairKind=kind;
       const brand=node('input'),category=node('input'),match=node('select');
@@ -28,7 +33,7 @@
         brands.replaceChildren(...unique(pairs.filter(hasCategory).map(p=>p.brand)).map(b=>option(b,b)));
         categories.replaceChildren(...unique(pairs.filter(p=>!b||normalized(p.brand)===b).map(p=>p.category)).map(c=>option(ZZWS_I18N.t(c),ZZWS_I18N.t(c))));
         const exists=pairs.some(p=>(!b||normalized(p.brand)===b)&&hasCategory(p));
-        hint.textContent=(!b&&!c)?'Ընտրեք բրենդը կամ կատեգորիան։':exists?'':'Գործող գնացուցակում նման կապ չկա։ Կանոնը կպահպանվի ապագա ապրանքների համար։';
+        hint.textContent=(!b&&!c)?'Ընտրեք բրենդը կամ կատեգորիան։':exists?'':'Գործող գնացուցակում նման կապ չկա։ Կանոնը կպահպանվի ապագա ապրանքների համար։';updateAccessSummary();
       }
       brand.oninput=category.oninput=match.onchange=refresh;
       const item={element:wrap,read:()=>{
@@ -37,18 +42,19 @@
         return {brand:b,category:c,categoryMatch:match.value};
       }};
       wrap.append(label('Բրենդ',brand),label('Կատեգորիա',category),label('Կատեգորիայի համեմատում',match),button('Ջնջել',()=>{
-        if(kind==='include')include=include.filter(r=>r!==item);else exclude=exclude.filter(r=>r!==item);wrap.remove();
+        if(kind==='include')include=include.filter(r=>r!==item);else exclude=exclude.filter(r=>r!==item);wrap.remove();updateAccessSummary();
       }),brands,categories,hint);refresh();return item;
     }
-    function add(kind,value={}){const item=row(value,kind);if(kind==='include'){include.push(item);includes.append(item.element);}else{exclude.push(item);excludes.append(item.element);}}
+    function add(kind,value={}){const item=row(value,kind);if(kind==='include'){include.push(item);includes.append(item.element);}else{exclude.push(item);excludes.append(item.element);}updateAccessSummary();}
     root.replaceChildren();root.classList.add('access-editor');
     const explanation=node('p','Տողում բրենդն ու կատեգորիան պետք է համապատասխանեն միասին։ Տողերի միջև գործում է «կամ» պայմանը։ Դատարկ դաշտը նշանակում է ցանկացած բրենդ կամ կատեգորիա։ Բացառությունը միշտ գերակայում է թույլտվությանը։','help');
     includeArea.append(node('h4','Թույլատրված կապեր'),node('p','Թույլտվությունների դատարկ ցանկը նշանակում է հասանելիության բացակայություն։','help'),includes,button('+ Թույլատրել կապ',()=>add('include')));
-    root.append(explanation,label('Ցուցադրել բոլոր բրենդներն ու կատեգորիաները',all),includeArea,node('h4','Բացառություններ'),excludes,button('+ Բացառել կապ',()=>add('exclude')));
-    all.onchange=()=>{includeArea.hidden=all.checked;root.dispatchEvent(new Event('rules-change'));};
+    const accessChoice=label('Ցուցադրել բոլոր բրենդներն ու կատեգորիաները',all);accessChoice.className='catalog-access-choice';
+    root.append(...(root.id==='userAccessEditor'?[accessChoice,accessSummary,explanation]:[explanation,accessChoice]),includeArea,node('h4','Բացառություններ'),excludes,button('+ Բացառել կապ',()=>add('exclude')));
+    all.onchange=()=>{includeArea.hidden=all.checked;updateAccessSummary();root.dispatchEvent(new Event('rules-change'));};
     function reset(value){
       include=[];exclude=[];includes.replaceChildren();excludes.replaceChildren();all.checked=value.mode==='all';includeArea.hidden=all.checked;
-      (value.include||[]).forEach(r=>add('include',r));(value.exclude||[]).forEach(r=>add('exclude',r));
+      (value.include||[]).forEach(r=>add('include',r));(value.exclude||[]).forEach(r=>add('exclude',r));updateAccessSummary();
     }
     reset(initial);
     return {read:()=>({mode:all.checked?'all':'selected',include:all.checked?[]:include.map(r=>r.read()),exclude:exclude.map(r=>r.read())}),reset};

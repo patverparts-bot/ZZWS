@@ -210,8 +210,7 @@ function updateClientCategory(){
 el('userForm').elements.role.addEventListener('change',()=>{updateClientCategory();ZZWS_ADMIN_RECEIPTS.loadClient({...editingProfile,id:editingUserId,role:el('userForm').elements.role.value});});
 el('userForm').elements.sheet.onchange=()=>{
   updateClientCategory();
-  const f=el('userForm');
-  if(!f.elements.id.value)userAccessEditor.reset(ZZWS_RULES_UI.legacyAccess({sheet:f.elements.sheet.value,allBrands:false,brands:[]}));
+  // Pricing category and the explicitly chosen product access are independent.
   el('userAccessPreview').replaceChildren();
 };
 function showProductPreview(root,data){
