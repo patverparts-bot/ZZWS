@@ -52,7 +52,7 @@
  function setView(value){view=value;document.documentElement.dataset.dealerView=value;tableButton.setAttribute('aria-pressed',String(value==='table'));cardsButton.setAttribute('aria-pressed',String(value==='cards'));if(catalogLoaded)rerenderVisible();}
  function updateSelection(){
   selected=selected.filter(id=>getProduct(id));compareButton.textContent='Համեմատել · '+selected.length;compareButton.disabled=selected.length<2;
-  document.querySelectorAll('[data-dealer-compare]').forEach(b=>{b.setAttribute('aria-pressed',String(selected.includes(b.dataset.dealerCompare)));b.textContent=selected.includes(b.dataset.dealerCompare)?'✓':'⇄';b.title=selected.includes(b.dataset.dealerCompare)?'Համեմատության մեջ':'Համեմատել';});
+  document.querySelectorAll('[data-dealer-compare]').forEach(b=>{b.setAttribute('aria-pressed',String(selected.includes(b.dataset.dealerCompare)));b.textContent=b.classList.contains('sf-compare')?(selected.includes(b.dataset.dealerCompare)?'✓ Համեմատել':'Համեմատել'):(selected.includes(b.dataset.dealerCompare)?'✓':'⇄');b.title=selected.includes(b.dataset.dealerCompare)?'Համեմատության մեջ':'Համեմատել';});
  }
  function toggleCompare(articul){
   if(!getProduct(articul))return;
@@ -264,6 +264,6 @@
   revision++;owner=null;facts={};factNames.clear();details.clear();filters={};selected=[];loading=false;
   for(const d of dialogs){d.close();d.remove();}dialogs.clear();document.body.classList.remove('dealer-showroom-active');notice('');updateSelection();
  }
- window.ZZWS_DEALER={get view(){return view;},decorate,matches,renderFilters,refresh,reset,openProduct,compare,showroom,bundles,clearFilters(){filters={};renderFilters();},facts:()=>facts};
- setView('table');renderFilters();updateSelection();if(catalogLoaded)refresh();
+ window.ZZWS_DEALER={get view(){return view;},setView,toggleCompare,isSelected:articul=>selected.includes(articul),decorate,matches,renderFilters,refresh,reset,openProduct,compare,showroom,bundles,clearFilters(){filters={};renderFilters();},facts:()=>facts};
+ setView('cards');renderFilters();updateSelection();if(catalogLoaded)refresh();
 })();

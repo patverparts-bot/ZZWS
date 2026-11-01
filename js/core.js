@@ -379,6 +379,7 @@ function handleImageError(imgElement) {
         <span class="text-[10px]">📦</span>
         <span class="text-[8px] font-bold text-gray-500 dark:text-gray-400">Նկար չկա</span>
       </div>`;
+    container.insertAdjacentHTML('beforeend',window.ZZWS_STOREFRONT?.ribbons(getProduct(cleanArt))||'');
   }
 }
 function getProductImageHtml(articul, productName) {
@@ -400,6 +401,7 @@ function getProductImageHtml(articul, productName) {
            loading="lazy"
            onload="markProductImageLoaded(this)"
            onerror="handleImageError(this)">
+      ${window.ZZWS_STOREFRONT?.ribbons(getProduct(cleanArt))||''}
     </button>
   `;
 }

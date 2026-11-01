@@ -155,3 +155,20 @@ html[data-manager-open=true] main{max-width:1600px}.manager-toolbar{display:flex
 #dashboardMetrics .dashboard-metric-icon{top:9px;right:9px;font-size:18px;line-height:1}
 
 .offer-editor{max-width:760px}.offer-editor>label{display:block;margin:14px 0;font-weight:600}.offer-editor input:not([type=checkbox]),.offer-editor textarea{display:block;box-sizing:border-box;width:100%;max-width:100%;margin-top:6px}.offer-enabled{display:flex!important;align-items:center;gap:8px}.offer-actions{display:flex;flex-wrap:wrap;gap:10px}.offer-actions button{margin:0;min-height:44px}.offer-history-row{padding:12px 0;border-bottom:1px solid #cbd5e1;overflow-wrap:anywhere}.offer-history-row button{max-width:100%;white-space:normal;text-align:start}.offer-history-row p{margin:4px 0;color:#475569}.offer-actions .danger{background:#b91c1c;color:white}
+#storefrontSettings{margin:16px 0 24px;padding:18px;border:1px solid #d5e0e8;border-radius:5px;background:#f8fafb}#storefrontSettings>summary{font-weight:700;cursor:pointer;color:#075676}#storefrontSettingsForm{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:18px}#storefrontSettingsForm>h2,#storefrontSettingsForm>p,#storefrontSettingsForm>button{grid-column:1/-1}#storefrontSettingsForm>label{display:flex;flex-direction:column;gap:7px;min-width:0}#storefrontSettingsForm fieldset{padding:14px;border:1px solid #d5e0e8;min-width:0;background:white}#storefrontSettingsForm fieldset>label{display:flex;flex-direction:column;gap:7px;margin:12px 0}#storefrontSettingsForm fieldset>label:has(input[type=checkbox]){flex-direction:row;align-items:center}#storefrontSettingsForm textarea{width:100%;resize:vertical}#storefrontSettingsForm p{font-size:12px;color:#52677b;line-height:1.7}#storefrontSettingsForm button[type=submit]{background:#075676;color:white;border-color:#075676;justify-self:start}@media(max-width:650px){#storefrontSettingsForm{grid-template-columns:1fr}#storefrontSettings{padding:12px}#storefrontSettingsForm>label{font-size:12px}}
+/* Notice remains visible throughout the request and after server confirmation. */
+.offer-status{margin:18px 0;padding:18px 20px;border:2px solid #2563eb;border-radius:12px;background:#eff6ff;color:#1e3a8a;font-size:17px;font-weight:650;line-height:1.65;overflow-wrap:anywhere;scroll-margin-block:24px}
+.offer-status[hidden]{display:none}
+.offer-status[data-state=success]{border-color:#15803d;background:#f0fdf4;color:#14532d}
+.offer-status[data-state=error]{border-color:#b91c1c;background:#fef2f2;color:#7f1d1d}
+.offer-status[data-state=loading]::before{content:'';display:inline-block;width:18px;height:18px;margin-inline-end:12px;vertical-align:middle;border:3px solid #bfdbfe;border-top-color:#1d4ed8;border-radius:50%;animation:offer-saving 1s linear infinite}
+.offer-history-row{margin:12px 0;padding:18px;border:1px solid #cbd5e1;border-radius:12px;background:#f8fafc}
+.offer-history-row[data-selected=true]{border:2px solid #2563eb;background:#eff6ff}
+.offer-history-row .offer-state{font-weight:700}
+.offer-history-row .offer-state[data-state=active]{color:#166534}
+.offer-availability{margin-top:12px}.offer-availability>p{font-weight:650}
+.offer-articles{padding:8px 0}.offer-articles summary{cursor:pointer;font-weight:600;overflow-wrap:anywhere}.offer-articles p{padding:10px;background:white;border-radius:6px;white-space:normal;overflow-wrap:anywhere}
+.offer-articles.missing summary{color:#92400e}
+@keyframes offer-saving{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.offer-status[data-state=loading]::before{animation:none}}
+@media(max-width:600px){.offer-status{font-size:16px;padding:14px}.offer-history-row{padding:12px}}

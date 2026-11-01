@@ -6,7 +6,7 @@ import {adminTemplateRoutes} from './admin-templates.mjs';
 import {priceReportResponse} from './price-report.mjs';
 import {validateOperationsReport,operationStatus} from './operations-health.mjs';
 import {catalogControlRoutes,effectiveControls,visiblePopularity,popularityRules} from './catalog-controls.mjs';
-import {storefrontSettings,storefrontDTO} from './storefront.mjs';
+import {storefrontSettings,storefrontDTO,storefrontRanking} from './storefront.mjs';
 import {assistantRoutes} from './assistant-routes.mjs';
 import assistantKnowledge from './assistant-knowledge.json' with {type:'json'};
 import assistantPublicCatalog from './assistant-public-catalog.json' with {type:'json'};
@@ -324,8 +324,8 @@ export async function handle(req:Request){
       const products=project(v.products,user,v.rules,{mainWarehouses:v.mainWarehouses,newDays:storefrontSettings(v.catalogControls).newDays});
       if(path==='catalog'){
         const rules=popularityRules(settings.catalog_controls);
-        const rows=await query(service.rpc('zzws_catalog_popularity',{p_user:user.id,p_days:rules.days}));
-        return json({products,version,updated,controls,account:user,storefront:storefrontDTO(products,rows,settings.catalog_controls),specialOffer:controls.promo?offerDTO(offer,products,user.role==='admin'):null,popularityRules:rules,popularity:visiblePopularity(rows,products,controls,settings.catalog_controls,user.id)});
+        const [rows,banners]=await Promise.all([controls.popular||controls.personalPopular?query(service.rpc('zzws_catalog_popularity',{p_user:user.id,p_days:rules.days})):Promise.resolve([]),storefrontRanking(service,query,products,settings.catalog_controls,user.id,rules.days)]);
+        return json({products,version,updated,controls,account:user,storefront:storefrontDTO(products,banners,settings.catalog_controls),specialOffer:controls.promo?offerDTO(offer,products,user.role==='admin'):null,popularityRules:rules,popularity:visiblePopularity(rows,products,controls,settings.catalog_controls,user.id)});
       }
       const rows=[['Ստացող',user.client,'Տարբերակ',priceVersionLabel(v.created)],['Արտիկուլ','Բրենդ','Կատեգորիա','Անվանում','Մանրածախ','Ձեր գինը','Առկայություն',...(user.role==='admin'?['KP']:[])],
         ...products.map((p:any)=>[p.articul,p.brand,p.category,p.name,p.retail,p.wholesale,p.stockStatus,...(user.role==='admin'?[p.kpPrice]:[])])];

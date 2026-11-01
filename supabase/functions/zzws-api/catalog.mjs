@@ -1,4 +1,5 @@
 import {DEFAULT_MAIN_WAREHOUSES} from './warehouses.mjs';
+import {newProductFlags} from './storefront.mjs';
 import {customerCode} from './client-accounts.mjs';
 import {email,emailRows} from './report-email.mjs';
 import {phoneNumber,phoneNumbers} from './phones.mjs';
@@ -41,7 +42,7 @@ export function inspectPrice(rows){
  catch(e){return {products:[],issues:issues.length?issues:[{row:null,articul:'',message:e.message}]};}
 }
 
-export function project(products,user,storedRules,{forOrder=false,mainWarehouses=DEFAULT_MAIN_WAREHOUSES}={}) {
+export function project(products,user,storedRules,{forOrder=false,mainWarehouses=DEFAULT_MAIN_WAREHOUSES,newDays=7,now=Date.now()}={}) {
   const result=[],admin=user.role==='admin',kp=user.sheet==='KP'&&!admin,domus=/ԴՈՄՈՒՍ|ДОМУՍ|DOMUS/i.test(user.client);
   const main=new Set(mainWarehouses);
   const group=effectiveRules(storedRules)[user.sheet||'Dealers'];
@@ -64,6 +65,7 @@ export function project(products,user,storedRules,{forOrder=false,mainWarehouses
     const item={articul:p.articul,brand:p.brand,category:p.category,name:p.name,retail,wholesale,
       isPromo:retail>0&&p.base>retail,isWholesalePromo:!admin&&selected.source==='kpPromo',hasWholesale:wholesale>0||(admin&&kpPrice>0),
       marginVal:margin(wholesale),stockAvailable:base>=group.stock.availableFrom,stockStatus:admin?entries.filter(([,q])=>q>0).map(([n,q])=>`${n}: ${q}`).join(', '):(base>=group.stock.availableFrom?'Առկա է':'Ճշտել'),hasMainStock:base>0};
+    Object.assign(item,newProductFlags(p,newDays,now));
     if(admin)Object.assign(item,{kpPrice,kpIsPromo:!!p.kpPromo,kpMarginVal:margin(kpPrice),targetWarehousesStock:base});
     if(admin||user.allowResale)item.resaleWholesale=p.ws;
     result.push(item);

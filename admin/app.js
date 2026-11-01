@@ -14,6 +14,7 @@ async function api(path, options = {}) {
   catch(e) { if(e.status === 401) showLogin(); throw e; }
 }
 function showLogin() {
+  window.ZZWS_ADMIN_STOREFRONT?.reset();
   window.ZZWS_OFFERS?.reset();
   window.ZZWS_REPORT_EMAIL?.clearCredentials();
   adminNavigationActive=false;adminHistoryPosition=0;updateAdminBackButton();

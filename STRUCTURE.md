@@ -1,5 +1,44 @@
 # ZZWS file layout
 
+## Authenticated storefront — local draft, not published
+
+The approved first concept is implemented in `js/storefront.js` and `js/storefront.css`.
+After sign-in the home page shows a rotating product banner, permitted categories,
+up to eight in-stock wholesale promotions/special offers, up to eight new products,
+and available brands. Catalogue cards show retail, the viewer's wholesale price and
+the existing margin/DOMUS ratio. Catalogue opens as cards; the table, technical
+filters, comparison, bundles, saved proposals, showroom, cart and orders remain
+available. Retail-only promotions never qualify for the red ribbon/collection.
+Both red and green ribbons appear on a product that meets both conditions.
+
+Migration `20261101092608_storefront_product_arrivals.sql` records `introducedAt`
+inside versioned products during reviewed publication, under the existing draft and
+state locks. Existing SKUs retain their original arrival date; baseline imports
+and price/name changes never create arrivals. Reappearance after absence does.
+Rollback snapshots retain their dates. The default newness window is seven elapsed
+days and is configurable from 1 to 365. No production migration has been applied.
+
+The owner's Filters and purchase marks section includes home-page settings:
+newness duration, carousel interval, ordered pinned SKUs, excluded SKUs, and the
+four bilingual footer sections (terms, delivery, contacts, help). Blank or disabled
+sections and links are omitted. Settings use the existing revision-protected,
+reauthenticated catalog-controls endpoint and are included in existing snapshots.
+
+Automatic banners rank completed/received purchases across clients in the existing
+popularity time window. The service-only storefront ranking RPC filters to the
+viewer's permitted in-stock SKUs before limiting the result. The client receives
+only product IDs and presentation settings, never other buyers, orders or counts.
+Manual pins appear first and are labelled as an editorial choice. Carousel pauses
+for interaction, dialogs, background tabs and reduced-motion preferences. Expiry
+also updates an already-open page. All four footer texts are rendered as plain text.
+
+Validation: `node --test tests/storefront.integration.mjs`, actual-runtime browser
+checks `node tests/ui/storefront.cjs`, and existing dealer, catalogue controls,
+photo/technical, managed-offers, checkout and guides browser suites. Images in
+`output/homepage-preview/` show synthetic local accounts/prices with public product
+photographs. This remains a local review draft; no deployment, real order or real
+account changes were performed.
+
 ## Dashboard: awaiting customer confirmation
 
 A dashboard metric shows all open orders with pending customer approval, including

@@ -165,13 +165,13 @@ filteredProducts = allProducts.filter(p => {
   const matchCategory = !selectedCategories.length || selectedCategories.some(c => p.category.toLowerCase() === c.toLowerCase());
   const matchSearch = !searchQuery || multiSearch.matches.has(p.articul);
   const matchFav = !favOnly || favoritesSet.has(p.articul);
-  const matchPromo = !promoOnly || (p.isPromo || p.isWholesalePromo || p.kpIsPromo);
+  const matchPromo = !promoOnly || (window.ZZWS_STOREFRONT?.isPromo(p) ?? (p.isWholesalePromo || p.kpIsPromo));
   const matchStock = !stockOnly || p.stockAvailable === true || (p.stockAvailable == null && (String(p.stockStatus||'').trim()==='Առկա է'||catalogIsAdmin()&&p.targetWarehousesStock>=3));
   
   // Условие для Ադմինիստրատորа: проверяет наличие хотя бы одной из оптовых цен (KP price или WS price)
   const matchWholesale = !wholesaleOnly || p.hasWholesale;
 
-  return matchBrand && matchCategory && matchSearch && matchFav && matchPromo && matchStock && matchWholesale && (window.ZZWS_DEALER?.matches(p) ?? true);
+  return matchBrand && matchCategory && matchSearch && matchFav && matchPromo && matchStock && matchWholesale && (window.ZZWS_DEALER?.matches(p) ?? true) && (window.ZZWS_STOREFRONT?.matches(p) ?? true);
 });
 
 const priceField=document.getElementById('sortPrice').value||'wholesale';
@@ -338,15 +338,13 @@ if (catalogIsAdmin() && p.retail > 0 && p.wholesale > 0) {
   }
 }
 
-let retailCellHtml = p.retail > 0 ? (p.isPromo ? `<div class="flex flex-col items-end"><span class="text-gray-900 dark:text-white font-medium whitespace-nowrap">${p.retail.toLocaleString((window.ZZWS_I18N?.language==='ru'?'ru-RU':'hy-AM'))} ֏</span><span class="px-1.5 py-0.5 bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 rounded text-[10px] font-bold mt-0.5 border border-red-200 dark:border-red-800 whitespace-nowrap">ԱԿՑԻԱ</span></div>` : `<span class="text-gray-600 dark:text-gray-400 whitespace-nowrap">${p.retail.toLocaleString((window.ZZWS_I18N?.language==='ru'?'ru-RU':'hy-AM'))} ֏</span>`) : '—';
-let wholesaleCellHtml = p.wholesale > 0 ? (p.isWholesalePromo ? `<div class="flex flex-col items-end"><span class="text-gray-900 dark:text-white font-semibold whitespace-nowrap">${p.wholesale.toLocaleString((window.ZZWS_I18N?.language==='ru'?'ru-RU':'hy-AM'))} ֏</span><span class="px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 rounded text-[10px] font-bold mt-0.5 border border-emerald-200 dark:border-emerald-800 whitespace-nowrap">Ակցիա</span></div>` : `<span class="text-gray-900 dark:text-white font-semibold whitespace-nowrap">${p.wholesale.toLocaleString((window.ZZWS_I18N?.language==='ru'?'ru-RU':'hy-AM'))} ֏</span>`) : '—';
+let retailCellHtml = p.retail > 0 ? `<span class="text-gray-600 dark:text-gray-400 whitespace-nowrap">${p.retail.toLocaleString((window.ZZWS_I18N?.language==='ru'?'ru-RU':'hy-AM'))} ֏</span>` : '—';
+let wholesaleCellHtml = p.wholesale > 0 ? `<span class="text-gray-900 dark:text-white font-semibold whitespace-nowrap">${p.wholesale.toLocaleString((window.ZZWS_I18N?.language==='ru'?'ru-RU':'hy-AM'))} ֏</span>` : '—';
 
 let priceTdsHtml = `<td class="text-center">${marginBadge}</td><td class="text-right">${wholesaleCellHtml}</td>`;
 if (catalogIsAdmin()) {
   const kpFmt = p.kpPrice > 0 ? p.kpPrice.toLocaleString((window.ZZWS_I18N?.language==='ru'?'ru-RU':'hy-AM')) + ' ֏' : '';
-  const kpHtml = !kpFmt ? '' : (p.kpIsPromo
-    ? `<div class="flex flex-col items-end"><span class="text-gray-900 dark:text-white font-semibold whitespace-nowrap">${kpFmt}</span><span class="px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 rounded text-[10px] font-bold mt-0.5 border border-emerald-200 dark:border-emerald-800 whitespace-nowrap">Ակցիա</span></div>`
-    : `<span class="text-gray-900 dark:text-white font-semibold whitespace-nowrap">${kpFmt}</span>`);
+  const kpHtml = !kpFmt ? '' : `<span class="text-gray-900 dark:text-white font-semibold whitespace-nowrap">${kpFmt}</span>`;
   priceTdsHtml = `<td class="text-right">${kpHtml}</td><td class="text-center">${kpMarginBadge}</td><td class="text-right">${wholesaleCellHtml}</td><td class="text-center">${wsMarginBadge}</td>`;
 }
 
@@ -388,6 +386,7 @@ window.ZZWS_DEALER?.decorate(tr,p);return tr;
 }
 
 function createCardElement(p) {
+if(window.ZZWS_STOREFRONT)return ZZWS_STOREFRONT.card(p);
 const div = document.createElement('div');
 div.className = 'bg-white dark:bg-gray-800 rounded-xl p-3.5 border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col justify-between gap-3 relative transition-colors duration-200';
 

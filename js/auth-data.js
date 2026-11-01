@@ -11,6 +11,7 @@ async function secureApi(path, options = {}) {
   catch(e) { if (e.status === 401) lockCatalog(); throw e; }
 }
 function lockCatalog() {
+  window.ZZWS_STOREFRONT?.reset();
   window.ZZWS_PRODUCT_TECHNICAL?.reset();
   window.ZZWS_CHECKOUT?.reset();
   window.ZZWS_DEALER?.reset();
@@ -43,6 +44,7 @@ async function acceptIdentity(user) {
   window.ZZWS_CATALOG_VIEW?.start(user);
   window.ZZWS_ENTRY?.navigation(user);
   serverIdentity = user;window.ZZWS_HELP_USER=user; authorizedClient = user.client; userSheetType = user.sheet; clientRowsData = user.rowsList;
+  window.ZZWS_STOREFRONT?.start();
   window.ZZWS_BULLETINS?.start(user);
   window.ZZWS_ADMIN_RESOURCES?.start(user);window.ZZWS_TEAM?.start(user);
   configureSortPrices();
@@ -390,7 +392,7 @@ function priceDateFromRows(rows) {
 
 async function fetchPriceRows() {
   const identity=serverIdentity?.id,context=window.ZZWS_CATALOG_VIEW?.key()||'';const data=window.ZZWS_CATALOG_VIEW?.active()?await ZZWS_CATALOG_VIEW.fetch():await secureApi('catalog');if(identity!==serverIdentity?.id||context!==(window.ZZWS_CATALOG_VIEW?.key()||''))throw {staleCatalog:true};
-  if(data.account?.id===identity){serverIdentity=data.account;window.ZZWS_HELP_USER=data.account;authorizedClient=data.account.client;userSheetType=data.account.sheet;clientRowsData=data.account.rowsList;}window.ZZWS_CATALOG_CONTROLS?.apply(data);return {rows:data.products, dateText:data.updated};
+  if(data.account?.id===identity){serverIdentity=data.account;window.ZZWS_HELP_USER=data.account;authorizedClient=data.account.client;userSheetType=data.account.sheet;clientRowsData=data.account.rowsList;}window.ZZWS_STOREFRONT?.configure(data);window.ZZWS_CATALOG_CONTROLS?.apply(data);return {rows:data.products, dateText:data.updated};
 }
 
 function applyPriceDate(dateText) {
@@ -450,6 +452,7 @@ function parseExcelRows(products, isSilent = false) {
   allProducts = products;
   finalizeDataLoad();
   window.ZZWS_DEALER?.refresh();
+  window.ZZWS_STOREFRONT?.refresh();
   if (isSilent && !document.getElementById('orderModal').classList.contains('hidden')) renderModalItems();
 }
 

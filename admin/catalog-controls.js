@@ -25,7 +25,7 @@
    for(const [value,text] of options){const o=node('option',text);o.value=value;select.append(o);}select.value=values?.[key]===undefined?(target==='global'?'true':'inherit'):String(values[key]);row.append(select);(key.startsWith('tech_')?techFields:root).append(row);
   }
   root.append(techOptions);accountSummary.textContent=target==='global'?'Ընդհանուր կարգավորումներ · անհատական բացառություններ':'Անհատական՝ '+(el('catalogControlsTarget').selectedOptions[0]?.textContent||'');
-  renderRules();resetModel();
+  renderRules();resetModel();window.ZZWS_ADMIN_STOREFRONT?.render(config,revision);
  }
  function busy(value){loading=value;for(const input of el('catalogControls').querySelectorAll('button,select,input'))input.disabled=value;saveEdit.disabled=value||!modelData;auto.disabled=value||!modelData;}
  async function savePopularity(payload){

@@ -1,3 +1,4 @@
+import {validateStorefront} from './storefront.mjs';
 export const technicalControlKeys=['type','widthMax','heightMax','depthMax','installation','capacityMin','volumeMin','placeSettingsMin','spinMin','diagonalMin','drying','inverter','noFrost','resolution','screen','energy','connection'];
 export const controlKeys=['search','brand','category','favorites','promo','stock','wholesale','sorting','popular','personalPopular',...technicalControlKeys.map(k=>'tech_'+k)];
 const object=v=>v&&typeof v==='object'&&!Array.isArray(v);
@@ -69,7 +70,11 @@ export async function catalogControlRoutes(c){
  const p=await body(req);let controls;
  if(p.revision!==state.catalog_controls_revision)fail(409,'Կարգավորումները փոխվել են։ Թարմացրեք և կրկնեք');
  const config=structuredClone(state.catalog_controls||{});
- if(p.kind==='popularityRules'){
+ if(p.kind==='storefront'){
+  try{config.storefront=validateStorefront(p.value);}catch(e){fail(400,e.message);}
+  const v=await current(),known=new Set(v.products.map(p=>p.articul));
+  if([...config.storefront.pinned,...config.storefront.excluded].some(a=>!known.has(a)))fail(400,'Բանների ցանկում կա գնացուցակում չգտնված արտիկուլ');
+ }else if(p.kind==='popularityRules'){
   try{config.popularityRules=validatePopularityRules(p.rules);}catch(e){fail(400,e.message);}
  }else if(p.kind==='popularityEdit'){
   await targetExists(p.target);await modelExists(p.articul);
