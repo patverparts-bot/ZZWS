@@ -21,5 +21,5 @@
   }
   try{await load();}catch(e){message.textContent=e.message;}
  }
- window.ZZWS_TEAM={reset,start(user){reset();if(user.role!=='client')return;actor=user;entry=node('button',user.clientRole==='manager'?'Իմ աշխատակիցները':'Անձնական տվյալներ');entry.id='clientTeamButton';entry.type='button';entry.onclick=open;(document.querySelector('#cabinetModal .cabinet-toolbar')||document.querySelector('#cabinetModal > div'))?.append(entry);},open};
+ window.ZZWS_TEAM={reset,start(user){reset();if(user.role!=='client')return;actor=user;entry=node('button',user.clientRole==='manager'?'Իմ աշխատակիցները':'Անձնական տվյալներ');entry.id='clientTeamButton';entry.type='button';entry.className='header-secondary';entry.setAttribute('aria-haspopup','dialog');entry.setAttribute('aria-controls','clientTeam');entry.onclick=()=>{const account=entry.closest('#storefrontAccount');if(account)account.open=false;open();};const actions=document.querySelector('.catalog-header-actions'),orders=actions?.querySelector('button[onclick="openPersonalCabinet()"]');if(orders)orders.after(entry);else actions?.append(entry);},open};
 })();
