@@ -5,6 +5,7 @@ import {orderPublic} from './order-public.mjs';
 import {statuses,normalizeLines,totalOf,changesBetween,parseConfirmation,parsePastedConfirmation} from './orders.mjs';
 import {deliveryId,ownedDeliverySnapshot} from './delivery-variants.mjs';
 import {buildOrderContext,calculationRetry} from './order-context.mjs';
+export const awaitingCustomerApproval=q=>q.eq('approval->>state','pending').is('received_at',null).in('status',['new','confirmed','in_progress']);
 export async function orderRoutes(c){
  const {path,req,user,service,table,query,body,json:rawJson,file,current,project,rowsFromBuffer,draft,fail}=c;
  const json=(data,status)=>rawJson(orderPublic(data),status);
@@ -142,6 +143,7 @@ export async function orderRoutes(c){
  }
  if(path==='admin/orders'&&req.method==='GET'){
   const params=new URL(req.url).searchParams,status=params.get('status'),before=params.get('before');let q=table('orders').select('*').order('number',{ascending:false}).limit(100);if(status&&statuses[status])q=q.eq('status',status);
+  if(status==='approval_pending')q=awaitingCustomerApproval(q);
   const search=String(params.get('search')||'').replace(/[^\p{L}\p{N} ._-]/gu,'').trim().slice(0,100);if(search){const terms=['customer->>client.ilike.*'+search+'*','customer->>customerCode.ilike.*'+search+'*','delivery->>organization.ilike.*'+search+'*'];if(/^\d+$/.test(search)&&search.length<16)terms.push('number.eq.'+search);q=q.or(terms.join(','));}
   for(const [param,column] of [['from','gte'],['to','lt']]){const date=params.get(param);if(date&&/^\d{4}-\d{2}-\d{2}$/.test(date)){const stamp=new Date(date+'T00:00:00+04:00');if(!Number.isNaN(stamp.valueOf()))q=q[column]('created',new Date(stamp.valueOf()+(param==='to'?86400000:0)).toISOString());}}
   if(before&&/^\d+$/.test(before))q=q.lt('number',before);return json({orders:await query(q)});

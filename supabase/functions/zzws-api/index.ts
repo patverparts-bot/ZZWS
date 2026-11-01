@@ -29,7 +29,7 @@ import { parsePrice, inspectPrice, project, validateProfile, parseUsers } from '
 import { defaultRules, effectiveRules, validateRules, validPassword } from './rules.mjs';
 import { validateMemory } from './memory.mjs';
 import { securityTools } from './security.ts';
-import { orderRoutes } from './order-routes.mjs';
+import { orderRoutes, awaitingCustomerApproval } from './order-routes.mjs';
 import { reconcileDeliveryVariants } from './delivery-variants.mjs';
 import {accountDTO,accountRoutes,activateClient} from './client-accounts.mjs';
 
@@ -377,7 +377,7 @@ export async function handle(req:Request){
       return json({count:products.length,sample:products.slice(0,10),adminBypass:profile.role==='admin'});
     }
     if(req.method==='GET'&&path==='admin/dashboard'){
-      const counts:any={};if(user.permissions.includes('orders:read'))for(const state of ['new','confirmed','in_progress','completed','rejected','received']){const r=await table('orders').select('id',{count:'exact',head:true}).eq('status',state);if(r.error)fail(500,'Չհաջողվեց հաշվել պատվերները');counts[state]=r.count;}
+      const counts:any={};if(user.permissions.includes('orders:read'))await Promise.all(['new','confirmed','in_progress','completed','rejected','received','approval_pending'].map(async state=>{const q=table('orders').select('id',{count:'exact',head:true}),r=await(state==='approval_pending'?awaitingCustomerApproval(q):q.eq('status',state));if(r.error)fail(500,'Չհաջողվեց հաշվել պատվերները');counts[state]=r.count;}));
       const state=await query(table('state').select('version').eq('id',true).single());
       const pv=state.version?await query(table('versions').select('created').eq('id',state.version).maybeSingle()):null;
       return json({counts,priceVersion:state.version,priceLabel:pv?'№'+priceVersionLabel(pv.created):'—',scope:user.adminScope,mfaVerified});

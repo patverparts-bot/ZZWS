@@ -1,5 +1,23 @@
 # ZZWS file layout
 
+## Dashboard: awaiting customer confirmation
+
+A dashboard metric shows all open orders with pending customer approval, including
+orders whose reminders are deferred/snoozed. The amber clock card opens the matching
+order list, clearing old search/date restrictions. The same filter is available in
+the order status selector. A shared query helper ensures the exact count and list
+both require approval.state=pending, no received_at, and new/confirmed/in_progress
+status. The ordinary order-status totals remain independent.
+
+The existing order-summary poller refreshes visible dashboard metrics after order
+changes, so customer acceptance/refusal updates the count automatically. Admin roles
+with order-read permission may view it; price-only and client accounts cannot read
+order metrics. The dashboard's request serial prevents older responses repainting
+newer data. Both complete guides and Armenian/Russian labels explain the counter.
+No schema/native APK change is needed. Tests exercise counts, deferred pending orders,
+matching filters, response transitions, role boundaries, clickable navigation and
+filter resets, automatic refresh, both languages/guides and mobile layout.
+
 ## Custom postponement of approval reminders
 
 The existing Viber approval reminder has a Choose date and time control. The owner
@@ -349,44 +367,14 @@ orders/cart/mobile and three administration/mail integration suites pass; the
 warehouse suite exposes the pre-existing unsupported `admin/warehouses` section.
 Device installation and actual FCM delivery remain unverified.
 
-## ZZWS Partner prototype history — 31 October 2026
+## Android development target — 1 November 2026
 
-`android-partner/` was the source of the separate `am.zzws.partner`
-application (1.0.1, versionCode 10001). It retains the trial's Compose navigation
-and product UI with the existing ZZWS brand assets. Native favourites now share
-versioned account state, checkout selects lines in three stages, history search
-retains its filters for pagination, and product facts use the current offline /
-per-model refresh implementation. Current catalogue controls and purchase badges
-are applied in the native catalogue.
-
-The original native manager activity remains available. Additional functions use
-`PartnerWebActivity` at the fixed website origin, with the current opaque session,
-server permissions, Android document selection/export and printing. The tools
-browser has no JavaScript-to-native interface. Cart handoff checks conflicts and
-unresolved submissions, and reloads account state when returning to native UI.
-
-Firebase has its own Partner Android registration in the existing ZZWS project.
-`supabase/functions/zzws-partner-apk/` implements an independent updater using the
-existing application-session contract and an isolated private storage bucket.
-The original app/package/update channel and the website were not replaced by this
-release. The first Partner APK was delivered through the owner's Drive; no
-initial release manifest was published to the new update bucket yet.
-
-Build with `android-partner/build.ps1`; validate/package with
-`android-partner/package-release.ps1`. Full coverage and build details are in
-`android-partner/README.md`. Release metadata is
-`outputs/ZZWS-Partner-1.0.1-release.json`. The background updater uses Android
-DownloadManager, a persisted fifteen-minute JobScheduler check and a dedicated
-private FileProvider. No Update/Later dialog or browser download is used. Exact
-length, checksum, package/version and signing identity are checked before a
-user-initiated installer action. Foreground checks run every five minutes. The
-production Partner update channel still requires its first owner publication.
-Tests include 77 passed Android cases (one optional live-image request skipped)
-and 18 update-handler cases using the real APK. Earlier isolated full API/SQL and
-six browser handoff checks remain applicable to the unchanged work tools.
-Signature, package, ZIP integrity, absence of private signing files and compiled
-HTTPS-only policy were verified. No physical-device installation or actual FCM
-delivery test was performed: the local emulator could not boot on this host.
+The owner retired and requested deletion of the separate Partner prototype, including
+version 1.0.3. Its source, APK artifacts, build helpers, tests and independent updater
+are removed. Do not restore, build, release or maintain the prototype. All future
+Android work belongs in the primary `android/` application (`am.zzws.admin`),
+which retains the promoted interface and features and the `zzws-apk` update channel.
+Internal Partner-named classes and assets in `android/` serve the primary app.
 
 The canonical Android project now lives in `android/` (7.1.3). Historical `work/*/android` copies are references, not sources for future releases. `android/build.ps1` uses the existing cached Android/JDK/Gradle tools, or `ZZWS_ANDROID_TOOLCHAIN`; signing configuration and DPAPI-protected keys stay in ignored `private-data/`. The local JSON test jar is a cached test dependency in `android/.toolchain/`. No build helper publishes or installs an APK.
 

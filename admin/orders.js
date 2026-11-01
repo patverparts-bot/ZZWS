@@ -197,6 +197,7 @@
  async function poll(){
   if(!running||pollBusy||document.hidden||document.documentElement.dataset.orderRead!=='true')return;const session=pollSession;pollBusy=true;
   try{window.ZZWS_ADMIN_RECEIPTS?.poll();const data=await refreshUnread();if(!data||session!==pollSession)return;const changed=summaryVersion!==String(data.version);
+   if(!el('dashboard').hidden&&changed)await ZZWS_ADMIN_HOME.load();
    if(!el('orders').hidden&&changed){if(busy||el('adminOrderList').getAttribute('aria-busy')==='true')return;await load(false,true);}
    if(session===pollSession)summaryVersion=String(data.version);
   }catch(e){if(e.status===401&&running&&session===pollSession&&typeof showLogin==='function')showLogin();}
