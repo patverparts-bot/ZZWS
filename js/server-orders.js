@@ -1,5 +1,5 @@
 (() => {
- const labels={new:'Նոր',confirmed:'Հաստատված',in_progress:'Ընթացքում',completed:'Առաքված է',rejected:'Մերժված',received:'Ստացված է'};
+ const labels={new:'Նոր',confirmed:'Հաստատված',in_progress:'Ձևակերպված է',completed:'Առաքված է',rejected:'Մերժված',received:'Ստացված է'};
  let owner=null,timer=null,events=[],orders=[],busy=false,loadTicket=0,noticeSeen=new Set(),polling=false;
  const el=id=>document.getElementById(id),money=v=>Number(v||0).toLocaleString('hy-AM')+' ֏';
  const date=v=>new Date(v).toLocaleString('hy-AM',{timeZone:'Asia/Yerevan'});
@@ -104,3 +104,4 @@
  window.ZZWS_ORDERS={start,stop,load,notifications,submit,openApproval};
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll();});
 })();
+

@@ -31,7 +31,7 @@
         case 'order_received':description='Պատվեր №'+info.number+' · '+name(target)+' · ապրանքները ստացել է ամբողջությամբ և առանց վնասվածքների։';break;
         case 'receipt_control_update':description=(info.userId?name(people.get(info.userId)):'Բոլոր հաճախորդները')+' · '+({inherit:'Ընդհանուր կարգավորում',on:'Միացված է',off:'Անջատված է՝ անժամկետ',until:'Ժամանակավորապես անջատված է'}[info.mode]||'Ռեժիմը փոփոխված է')+(info.until?' · մինչև '+date(info.until):'');break;
         case 'order_submit':description='Պատվեր №'+info.number+' ստացվել է և սպասում է հաստատման։';break;
-        case 'order_update':description='Պատվեր №'+info.number+' · տարբերակ '+info.revision+' · '+({new:'Նոր',confirmed:'Հաստատված',in_progress:'Ընթացքում',completed:'Առաքված է',received:'Ստացված է',rejected:'Մերժված'}[info.status]||info.status);break;
+        case 'order_update':description='Պատվեր №'+info.number+' · տարբերակ '+info.revision+' · '+({new:'Նոր',confirmed:'Հաստատված',in_progress:'Ձևակերպված է',completed:'Առաքված է',received:'Ստացված է',rejected:'Մերժված'}[info.status]||info.status);break;
         case 'user_data_clear':description=name(target)+' · '+({all:'Բոլոր աշխատանքային տվյալները',cart:'Ընթացիկ զամբյուղ',savedCarts:'Պահպանված զամբյուղներ',favorites:'Ընտրվածներ',history:'Պատվերների պատմություն',filters:'Ֆիլտրեր',preferences:'Տեսքի կարգավորումներ',draft:'Առաքման տվյալներ'}[info.section]||'Ընտրված տվյալները');break;
         case 'password_setup':description='Օգտատերը սահմանել է իր գաղտնաբառը։ Միայն մուտքանունով մուտքն այլևս հասանելի չէ։';break;
         case 'password_setup_reset':description=name(target)+' · գաղտնաբառը վերակայված է․ հաջորդ մուտքը մուտքանունով է՝ գաղտնաբառի պարտադիր սահմանմամբ։';break;
@@ -52,3 +52,4 @@
   }
   window.ZZWS_AUDIT={describe};
 })();
+

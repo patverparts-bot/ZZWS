@@ -10,20 +10,26 @@ export function mailReady(env){
 export async function sendGmail({job,message,env,createTransport}){
  const user=email(env('ZZWS_GMAIL_USER')||'');
  if(email(message.from)!==user)throw Error('Ուղարկողի հասցեն չի համապատասխանում միացված Gmail հաշվին');
- const to=[...new Set((message.to||[]).map(v=>email(v)))];
- const cc=[...new Set((message.cc||[]).map(v=>email(v)))].filter(v=>!to.includes(v));
- if(!to.length||to.length+cc.length>50)throw Error('Ստացողների սխալ ցանկ');
+ if(!Array.isArray(message.bcc??[]))throw Error('Ստացողների սխալ ցանկ');
+ const to=[...new Set((message.to||[]).map(v=>email(v)))],bcc=[...new Set((message.bcc||[]).map(v=>email(v)))].filter(v=>!to.includes(v));
+ const cc=[...new Set((message.cc||[]).map(v=>email(v)))].filter(v=>!to.includes(v)&&!bcc.includes(v)),authorized=[...to,...cc,...bcc];
+ const separate=Object.hasOwn(message,'envelopeTo');
+ if(separate&&(!Array.isArray(message.envelopeTo)||message.envelopeTo.length!==1))throw Error('Ստացողների սխալ ցանկ');
+ const recipients=separate?message.envelopeTo.map(v=>email(v)):authorized;
+ if(!separate&&!to.length&&!bcc.length||!recipients.length||authorized.length>50||recipients.some(v=>!authorized.includes(v)))throw Error('Ստացողների սխալ ցանկ');
  if(env('ZZWS_ENVIRONMENT')!=='production'){
   const allowed=new Set((env('ZZWS_REPORT_TEST_RECIPIENTS')||'').split(',').filter(Boolean).map(v=>email(v)));
-  if([...to,...cc].some(v=>!allowed.has(v)))throw Error('Փորձարկման հասցեն թույլատրված չէ');
+  if(recipients.some(v=>!allowed.has(v)))throw Error('Փորձարկման հասցեն թույլատրված չէ');
  }
  const replyTo=message.reply_to?email(message.reply_to):undefined;
  const make=createTransport||(await import('npm:nodemailer@10.3.1')).default.createTransport;
  const transport=make({host:'smtp.gmail.com',port:465,secure:true,auth:{user,pass:(env('ZZWS_GMAIL_APP_PASSWORD')||'').replace(/\s/g,'')},connectionTimeout:12000,greetingTimeout:10000,socketTimeout:20000,logger:false,debug:false,tls:{minVersion:'TLSv1.2',rejectUnauthorized:true}});
  try{
-  const result=await transport.sendMail({from:user,to,cc,replyTo,subject:message.subject,text:message.text,messageId:'<zzws-'+String(job.id).replace(/[^a-zA-Z0-9_-]/g,'').slice(0,100)+'@gmail.com>',attachments:(message.attachments||[]).map(a=>({filename:a.filename,content:a.content,encoding:'base64'})),disableFileAccess:true,disableUrlAccess:true});
+  // This adapter uses Gmail SMTP, with routing separate from visible MIME headers.
+  const result=await transport.sendMail({from:user,to,cc,...(separate||bcc.length?{envelope:{from:user,to:recipients}}:{}),replyTo,subject:message.subject,text:message.text,messageId:'<zzws-'+String(job.id).replace(/[^a-zA-Z0-9_-]/g,'').slice(0,100)+'@gmail.com>',attachments:(message.attachments||[]).map(a=>({filename:a.filename,content:a.content,encoding:'base64'})),disableFileAccess:true,disableUrlAccess:true});
   // Partial acceptance cannot safely be retried; do not alter the order automatically.
-  if(result.rejected?.length||result.accepted?.length!==to.length+cc.length)return {result:'unknown'};
+  if(separate||bcc.length){const accepted=new Set((result.accepted||[]).map(v=>email(v)));if(separate&&result.rejected?.some(v=>email(v)===recipients[0])&&!accepted.has(recipients[0]))return {result:'rejected'};if(result.rejected?.length||accepted.size!==recipients.length||recipients.some(v=>!accepted.has(v)))return {result:'unknown'};}
+  else if(result.rejected?.length||result.accepted?.length!==to.length+cc.length)return {result:'unknown'};
   return {result:'accepted',id:String(result.messageId).slice(0,200)};
  }catch(e){
   const beforeData=['CONN','EHLO','HELO','STARTTLS','MAIL FROM','RCPT TO'].includes(e.command)||String(e.command||'').startsWith('AUTH');

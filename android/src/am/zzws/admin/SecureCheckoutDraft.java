@@ -1,0 +1,14 @@
+package am.zzws.admin;
+import android.content.Context;import android.content.SharedPreferences;import android.security.keystore.KeyGenParameterSpec;import android.security.keystore.KeyProperties;import android.util.Base64;
+import java.nio.charset.StandardCharsets;import java.security.KeyStore;import javax.crypto.Cipher;import javax.crypto.KeyGenerator;import javax.crypto.SecretKey;import javax.crypto.spec.GCMParameterSpec;import org.json.JSONObject;
+/** An unsynchronized checkout draft, encrypted and bound to this API/account. */
+final class SecureCheckoutDraft {
+ private static final String ALIAS="zzws_checkout_draft_v1";
+ private static SharedPreferences preferences(Context c){return c.getSharedPreferences("zzws_checkout_drafts",Context.MODE_PRIVATE);}
+ private static SecretKey key()throws Exception{KeyStore s=KeyStore.getInstance("AndroidKeyStore");s.load(null);if(!s.containsAlias(ALIAS)){KeyGenerator g=KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES,"AndroidKeyStore");g.init(new KeyGenParameterSpec.Builder(ALIAS,KeyProperties.PURPOSE_ENCRYPT|KeyProperties.PURPOSE_DECRYPT).setBlockModes(KeyProperties.BLOCK_MODE_GCM).setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE).setKeySize(256).build());g.generateKey();}return (SecretKey)s.getKey(ALIAS,null);}
+ static String encrypt(String endpoint,String user,JSONObject draft,SecretKey secret)throws Exception{Cipher cipher=Cipher.getInstance("AES/GCM/NoPadding");cipher.init(Cipher.ENCRYPT_MODE,secret);cipher.updateAAD((endpoint+"|"+user+"|draft").getBytes(StandardCharsets.UTF_8));return Base64.encodeToString(cipher.getIV(),Base64.NO_WRAP)+":"+Base64.encodeToString(cipher.doFinal(draft.toString().getBytes(StandardCharsets.UTF_8)),Base64.NO_WRAP);}
+ static JSONObject decrypt(String endpoint,String user,String value,SecretKey secret)throws Exception{String[] p=value.split(":",-1);if(p.length!=2)throw new Exception();Cipher cipher=Cipher.getInstance("AES/GCM/NoPadding");cipher.init(Cipher.DECRYPT_MODE,secret,new GCMParameterSpec(128,Base64.decode(p[0],Base64.NO_WRAP)));cipher.updateAAD((endpoint+"|"+user+"|draft").getBytes(StandardCharsets.UTF_8));return new JSONObject(new String(cipher.doFinal(Base64.decode(p[1],Base64.NO_WRAP)),StandardCharsets.UTF_8));}
+ static void save(Context c,String user,JSONObject draft)throws Exception{String value=encrypt(EndpointConfiguration.API,user,draft,key());if(!preferences(c).edit().putString(user,value).commit())throw new Exception("Չհաջողվեց պահպանել պատվերի տվյալների տեղական պատճենը։");}
+ static JSONObject read(Context c,String user)throws Exception{String value=preferences(c).getString(user,"");if(value.isEmpty())return null;try{return decrypt(EndpointConfiguration.API,user,value,key());}catch(Exception e){throw new Exception("Պատվերի տվյալների տեղական պատճենը չի բացվում։");}}
+ static void clear(Context c,String user){preferences(c).edit().remove(user).commit();}
+}

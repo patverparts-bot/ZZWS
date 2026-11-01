@@ -3,8 +3,8 @@ import {sendSmtp,verifySmtp} from './smtp-mail.mjs';
 import {mailConnection,connectionInput} from './mail-connection.mjs';
 import {senderAddress} from './mail-config.mjs';
 import {buildOrderContext} from './order-context.mjs';
-import {email,emailRows,reportRecipients,authorReportRecipients} from './report-email.mjs';
-import {contactEmailRows} from './contacts.mjs';
+import {email,emailRows,emailList} from './report-email.mjs';
+import {reportRecipientPlan,recipientDeliveryDTO} from './report-recipients.mjs';
 import {parseConfirmation,normalizeLines,changesBetween,totalOf} from './orders.mjs';
 const encoder=new TextEncoder(),limit=10*1024*1024;
 export const sha=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',typeof value==='string'?encoder.encode(value):value))).map(b=>b.toString(16).padStart(2,'0')).join('');
@@ -27,7 +27,12 @@ export async function sendReportMail({job,message,env,fetchImpl=fetch}){
  if(mode==='gmail')return sendGmail({job,message,env});
  if(mode==='smtp')return sendSmtp({job,message,env});
  if(mode!=='resend'||!env('RESEND_API_KEY'))throw Error('Էլ․ փոստի ծառայությունը կարգավորված չէ');
- const response=await fetchImpl('https://api.resend.com/emails',{method:'POST',redirect:'error',signal:AbortSignal.timeout(20000),headers:{Authorization:'Bearer '+env('RESEND_API_KEY'),'Content-Type':'application/json','Idempotency-Key':'zzws-report/'+job.id},body:JSON.stringify(message)});
+ const payload={...message};
+ // Resend has no routing envelope separate from visible recipients. Never put a
+ // hidden target into To or resend a primary merely to route a BCC copy.
+ if(payload.envelopeTo?.some(address=>(payload.bcc||[]).includes(address)))return {result:'rejected',reason:'bcc_transport_unsupported'};
+ if(payload.envelopeTo){payload.to=payload.envelopeTo;payload.cc=[];delete payload.envelopeTo;}delete payload.bcc;
+ const response=await fetchImpl('https://api.resend.com/emails',{method:'POST',redirect:'error',signal:AbortSignal.timeout(20000),headers:{Authorization:'Bearer '+env('RESEND_API_KEY'),'Content-Type':'application/json','Idempotency-Key':'zzws-report/'+job.id},body:JSON.stringify(payload)});
  const data=await response.json().catch(()=>null);if(response.ok&&typeof data?.id==='string'&&/^[A-Za-z0-9_-]{1,200}$/.test(data.id))return {result:'accepted',id:data.id};return {result:response.status>=400&&response.status<500?'rejected':'unknown'};
 }
 export async function reportRoutes(c){
@@ -50,7 +55,7 @@ export async function reportRoutes(c){
    const result=await verifySmtp({env});if(!result.ok)fail(400,result.reason==='authentication_failed'?'Փոստի մուտքանունը կամ գաղտնաբառը չի ընդունվել։ Ստուգեք տվյալները։':'Չհաջողվեց միանալ փոստային սերվերին։ Ստուգեք սերվերը, պորտը և հասանելիությունը։');
    return json({ok:true,message:'Կապը և մուտքը հաջողությամբ ստուգված են։ Նամակ չի ուղարկվել։'});
   }
-  if(!Array.isArray(p.cc)||p.cc.length!==3)fail(400,'Լրացրեք երեք CC հասցեները');const cc=p.cc.map(v=>email(v,{optional:true}));
+  if(!Array.isArray(p.cc)||p.cc.length!==3||p.cc.some(v=>typeof v!=='string'||v.length>4096))fail(400,'Ստուգեք պատճենների երեք դաշտերը');const slots=p.cc.map(v=>emailList(v,{max:20}));if(new Set(slots.flat()).size>50)fail(400,'Թույլատրվում է ընդհանուր մինչև 50 ստացող');const cc=slots.map(v=>v.join(', '));
   if(!Object.hasOwn(p,'fromEmail'))return json(await state(await query(service.rpc('zzws_report_settings_save',{p_actor:user.id,p_revision:p.revision,p_cc:cc}))));
   // Persist valid settings independently of transport setup; sending still validates the connected sender.
   const from=email(p.fromEmail,{optional:true});
@@ -65,12 +70,16 @@ export async function reportRoutes(c){
  if(user.role!=='admin'||!user.permissions?.includes('orders:write'))fail(403,'Հասանելիությունն արգելված է');
  const rpc=(name,args)=>query(service.rpc(name,args));
  const getOrder=async id=>{const o=await query(table('orders').select('*').eq('id',id).maybeSingle());if(!o)fail(404,'Պատվերը չի գտնվել');return o;};
- const complete=async(o,j,prepared)=>{if(j.state==='completed')return {accepted:true,completed:true,duplicate:true,orderId:o.id};if(!prepared)return {accepted:true,completed:false,statusPending:true,needsFiles:true,jobId:j.id};try{return await rpc('zzws_report_complete',{p_actor:user.id,p_order:o.id,p_job:j.id,p_lines:prepared.lines,p_total:totalOf(prepared.lines),p_changes:prepared.changes,p_context:prepared.context});}catch{return {accepted:true,completed:false,statusPending:true,jobId:j.id};}};
+ const delivery=(j,data)=>({...data,...(recipientDeliveryDTO(j)?{delivery:recipientDeliveryDTO(j)}:{})});
+ const complete=async(o,j,prepared)=>{if(j.state==='completed')return delivery(j,{accepted:true,completed:true,duplicate:true,orderId:o.id});if(!prepared)return delivery(j,{accepted:true,completed:false,statusPending:true,needsFiles:true,jobId:j.id});try{return delivery(j,await rpc('zzws_report_complete',{p_actor:user.id,p_order:o.id,p_job:j.id,p_lines:prepared.lines,p_total:totalOf(prepared.lines),p_changes:prepared.changes,p_context:prepared.context}));}catch{return delivery(j,{accepted:true,completed:false,statusPending:true,jobId:j.id});}};
+ const rawRows=profile=>Array.from({length:5},(_,i)=>String(Array.isArray(profile?.contacts)?profile.contacts[i]?.email||'':profile?.emailRows?.[i]||''));
+ const defaultCounts=values=>{const specified=values.flatMap(v=>typeof v==='string'?v.split(/[,;]/).map(a=>a.trim()).filter(Boolean):[]),valid=specified.filter(v=>{try{email(v);return true;}catch{return false;}});return {defaultRecipientCount:new Set(valid.map(v=>email(v))).size,invalidDefaultCount:specified.length-valid.length,defaultsConfigured:specified.length===valid.length};};
+ const deliveryStatus=j=>{const d=recipientDeliveryDTO(j);return delivery(j,{found:true,state:j.state,jobId:j.id,attempts:j.attempts,busy:j.state==='sending'&&Date.parse(j.lease_until)>Date.now(),retryable:!!d?.retryCount,continuePending:!!d?.pendingCount,manual:!!d&&!d.pendingCount&&!d.retryCount&&j.state!=='sending'&&j.state!=='accepted'&&j.state!=='completed'});};
  if(path==='admin/orders/report-status'){
-  const p=await body(req),o=await getOrder(p.orderId);let q=table('report_deliveries').select('*').eq('order_id',o.id);q=p.jobId?q.eq('id',p.jobId):q.eq('request_id',p.requestId);const j=await query(q.maybeSingle());if(!j)return json({found:false});if(['accepted','completed'].includes(j.state))return json(await complete(o,j));return json({found:true,state:j.state,jobId:j.id,attempts:j.attempts,busy:j.state==='sending'&&Date.parse(j.lease_until)>Date.now()});
+  const p=await body(req),o=await getOrder(p.orderId);let q=table('report_deliveries').select('*').eq('order_id',o.id);q=p.jobId?q.eq('id',p.jobId):q.eq('request_id',p.requestId);let j=await query(q.maybeSingle());if(!j)return json({found:false});if(j.counts?.deliverySchema===1)j=await rpc('zzws_report_recipient_status',{p_actor:user.id,p_job:j.id});if(['accepted','completed'].includes(j.state))return json(await complete(o,j));return json(deliveryStatus(j));
  }
  if(path==='admin/orders/report-options'){
-  const p=await body(req),o=await getOrder(p.orderId),customer=await query(table('users').select('profile').eq('id',o.user_id).maybeSingle()),s=await settings();return json({recipient:o.customer?.author?.email||'',author:o.customer?.author||null,legacy:!o.customer?.author,rows:o.customer?.author?[]:contactEmailRows(customer?.profile),contactNames:o.customer?.author?[]:customer?.profile.contacts?.map(c=>c.name)||[],defaultsConfigured:s.cc.length===3&&s.cc.every(Boolean),replyTo:user.replyToEmail||'',orderId:o.id,revision:o.revision});
+  const p=await body(req),o=await getOrder(p.orderId),customer=await query(table('users').select('profile').eq('id',o.user_id).maybeSingle()),s=await settings();let prior=await query(table('report_deliveries').select('*').eq('order_id',o.id).eq('order_revision',o.revision).eq('actor_id',user.id).order('created',{ascending:false}).limit(1).maybeSingle());if(prior?.counts?.deliverySchema===1)prior=await rpc('zzws_report_recipient_status',{p_actor:user.id,p_job:prior.id});return json({recipient:o.customer?.author?.email||'',author:o.customer?.author||null,legacy:!o.customer?.author,rows:o.customer?.author?[]:rawRows(customer?.profile),contactNames:o.customer?.author?[]:customer?.profile.contacts?.map(c=>c.name)||[],...defaultCounts(s.cc),replyTo:user.replyToEmail||'',orderId:o.id,revision:o.revision,...(recipientDeliveryDTO(prior)?{delivery:recipientDeliveryDTO(prior),deliveryChoice:prior.counts.choice,requestId:prior.request_id}:{})});
  }
  const bundle=await attachmentBundle(req,rowsFromBuffer),{form,attachments,candidates,bundleHash}=bundle,o=await getOrder(form.get('orderId')),revision=Number(form.get('revision'));
  if(['received','completed','rejected'].includes(o.status))fail(409,'Փակված պատվերի համար նախ նշեք պատճառը և փոխեք կարգավիճակը հատուկ կոճակով');
@@ -97,16 +106,30 @@ export async function reportRoutes(c){
  if(form.get('confirmCustomer')!=='true')fail(400,'Հաստատեք ընտրված հաճախորդին');
  const requestId=String(form.get('requestId'));if(!/^[a-f0-9-]{36}$/i.test(requestId))fail(400,'Ուղարկման սխալ նույնացուցիչ');
  const defaults=form.get('includeDefaults');if(defaults!==null&&!['true','false'].includes(defaults))fail(400,'Ստուգեք լրացուցիչ հասցեների ընտրությունը');const includeDefaults=defaults!=='false';
- const s=await settings(),additional=String(form.get('additionalCC')||'');let recipients;
- if(o.customer?.author)recipients=authorReportRecipients(o.customer.author.email,s.cc,additional,user.replyToEmail,includeDefaults);
- else{const selected=JSON.parse(String(form.get('selectedRows')||'[]')),rows=contactEmailRows(customer?.profile);recipients=reportRecipients(rows,selected,s.cc,additional,user.replyToEmail,includeDefaults);}
+ const retryChoice=form.get('retryRejected');if(retryChoice!==null&&!['true','false'].includes(retryChoice))fail(400,'Ստուգեք կրկնման ընտրությունը');const retryRejected=retryChoice==='true';
+ const s=await settings(),additional=String(form.get('additionalCC')||'');
+ const selectedRows=JSON.parse(String(form.get('selectedRows')||'[]'));
+ const recipients=reportRecipientPlan({...(o.customer?.author?{author:o.customer.author.email||''}:{rows:rawRows(customer?.profile),selected:selectedRows}),automatic:s.cc,additional,replyTo:user.replyToEmail,includeDefaults});
  const {env}=await mailConnection(c,s,{withPassword:true}),mode=env('ZZWS_REPORT_EMAIL_MODE'),from=senderAddress(s,env);
  if(!mailReady(env))fail(503,'Էլ․ փոստի ծառայությունը կարգավորված չէ');
- if(env('ZZWS_ENVIRONMENT')!=='production'&&mode!=='offline'){const allowed=new Set(String(env('ZZWS_REPORT_TEST_RECIPIENTS')||'').split(',').filter(Boolean).map(v=>email(v)));if([...recipients.to,...recipients.cc].some(v=>!allowed.has(v)))fail(403,'Փորձարկման հասցեն թույլատրված չէ');}
- const fingerprint=await sha(JSON.stringify([o.id,bundleHash,index,recipients,from])),counts={transport:['gmail','smtp'].includes(mode)?'smtp':'idempotent',bundleHash,reportIndex:index,files:attachments.length,bytes:attachments.reduce((s,f)=>s+f.size,0),to:recipients.to.length,cc:recipients.cc.length,recipients:{to:recipients.to,cc:recipients.cc},includeDefaults};
+ if(env('ZZWS_ENVIRONMENT')!=='production'&&mode!=='offline'){const allowed=new Set(String(env('ZZWS_REPORT_TEST_RECIPIENTS')||'').split(',').filter(Boolean).map(v=>email(v)));if([...recipients.to,...recipients.cc,...recipients.bcc].some(v=>!allowed.has(v)))fail(403,'Փորձարկման հասցեն թույլատրված չէ');}
+ const fingerprint=await sha(JSON.stringify([o.id,bundleHash,index,recipients,from])),counts={deliverySchema:1,deliveries:recipients.deliveries,choice:{includeDefaults,additionalCC:additional,selectedRows},transport:['gmail','smtp'].includes(mode)?'smtp':'idempotent',bundleHash,reportIndex:index,files:attachments.length,bytes:attachments.reduce((s,f)=>s+f.size,0),to:recipients.to.length,cc:recipients.cc.length,bcc:recipients.bcc.length,recipients:{to:recipients.to,cc:recipients.cc,bcc:recipients.bcc},includeDefaults};
  let j=await rpc('zzws_report_claim',{p_actor:user.id,p_order:o.id,p_revision:revision,p_request:requestId,p_fingerprint:fingerprint,p_counts:counts});
- if(['accepted','completed'].includes(j.state))return json(await complete(o,j,prepared));if(j.busy)return json({busy:true,jobId:j.id});if(j.state!=='sending')return json({manual:true,jobId:j.id,attempts:j.attempts});
- const message={from,to:recipients.to,cc:recipients.cc,reply_to:recipients.replyTo,subject:'Վաճառքի Հաշվետվություն',text:'Պատվեր №'+o.number+'։ Կցված է վաճառքի հաշվետվությունը՝ համեմատության համար։',attachments:attachments.map(f=>({filename:f.name,content:b64(f.data)}))};
+ if(['accepted','completed'].includes(j.state))return json(await complete(o,j,prepared));if(j.busy)return json(deliveryStatus(j));if(j.state!=='sending')return json(j.counts?.deliverySchema===1?deliveryStatus(j):{manual:true,jobId:j.id,attempts:j.attempts});
+ const message={from,to:recipients.to,cc:recipients.cc,bcc:recipients.bcc,reply_to:recipients.replyTo,subject:'Վաճառքի Հաշվետվություն',text:'Պատվեր №'+o.number+'։ Կցված է վաճառքի հաշվետվությունը՝ համեմատության համար։',attachments:attachments.map(f=>({filename:f.name,content:b64(f.data)}))};
+ if(j.counts?.deliverySchema===1){
+  // Bound each Edge request; the UI continues untouched recipients with the same
+  // files/request. Explicit rejected recipients wait for a separate retry choice.
+  const queue=[...j.counts.deliveries.filter(r=>r.state==='pending'),...(retryRejected?j.counts.deliveries.filter(r=>r.state==='retry'):[])].slice(0,8),lease=j.lease;
+  let cursor=0,persistFailed=false;
+  const worker=async()=>{while(cursor<queue.length){const recipient=queue[cursor++];let claim;try{claim=await rpc('zzws_report_recipient_claim',{p_actor:user.id,p_job:j.id,p_lease:lease,p_recipient:recipient.id});}catch{persistFailed=true;continue;}if(!claim.send)continue;
+   let outcome;try{outcome=await sendReportMail({job:{...j,id:j.id+'-'+recipient.id},message:{...message,envelopeTo:[recipient.address]},env});}catch{outcome={result:'unknown'};}
+   try{await rpc('zzws_report_recipient_result',{p_actor:user.id,p_job:j.id,p_lease:lease,p_recipient:recipient.id,p_recipient_lease:claim.recipient.lease,p_result:outcome.result,p_provider:outcome.id||null});}catch{persistFailed=true;}
+  }};
+  await Promise.all(Array.from({length:Math.min(4,queue.length)},worker));
+  if(persistFailed){j=await rpc('zzws_report_recipient_status',{p_actor:user.id,p_job:j.id});return json(deliveryStatus(j));}
+  j=await rpc('zzws_report_recipient_finish',{p_actor:user.id,p_job:j.id,p_lease:lease});if(j.state==='accepted')return json(await complete(o,j,prepared));return json(deliveryStatus(j));
+ }
  let outcome;try{outcome=await sendReportMail({job:j,message,env});}catch{outcome={result:'unknown'};}
  j=await rpc('zzws_report_result',{p_actor:user.id,p_job:j.id,p_lease:j.lease,p_result:outcome.result,p_provider:outcome.id||null});
  if(j.state==='accepted')return json(await complete(o,j,prepared));return json({accepted:false,retryable:j.state==='retry',manual:j.state!=='retry',jobId:j.id,attempts:j.attempts});

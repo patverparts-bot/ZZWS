@@ -1,0 +1,5 @@
+{
+  "name": "zzws-isolated-api-tests",
+  "private": true,
+  "devDependencies": {"@electric-sql/pglite": "0.5.12", "nodemailer": "10.3.1"}
+}

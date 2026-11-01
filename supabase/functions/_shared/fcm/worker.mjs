@@ -7,7 +7,7 @@ export async function runAndroidBatch({store,send,enabled=false,maxJobs=10}){
   const current=await store.rpc('zzws_begin_android',args);if(!current){report.stopped++;break;}
   let result,described=current;
   // Read the summary only after the existing lease and recipient permissions pass.
-  if(current.kind==='order.created'&&store.orderSummary){
+  if(current.kind?.startsWith('order.')&&store.orderSummary){
    try{const summary=await store.orderSummary(current.orderId,current.revision);if(!summary)result={state:'dead'};else described={...current,orderSummary:summary};}
    catch{result={state:'retry',retrySeconds:30};}
   }

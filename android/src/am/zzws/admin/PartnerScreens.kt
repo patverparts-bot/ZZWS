@@ -104,13 +104,20 @@ import java.time.ZoneId
      }
     }
     if(model.deliveryRows.isEmpty())LocalizedText("Առաքման տվյալները պետք է լրացնի պատասխանատու ադմինիստրատորը։",color=MaterialTheme.colorScheme.error)
-    Row{listOf("Առաքում","Ինքնաառաքում").forEach{method->FilterChip(selected=model.method==method,onClick={model.method=method},enabled=!model.busy,label={LocalizedText(method)},modifier=Modifier.padding(end=8.dp))}}
-    if(model.method=="Առաքում")CheckoutInput(model.address,{model.address=it},"Առաքման հասցե",false)
-    CheckoutInput(model.contact,{model.contact=it},"Կոնտակտային անձ",!model.busy&&model.user?.text("role")!="client")
-    OutlinedButton(onClick={val selected=runCatching{LocalDate.parse(model.date)}.getOrDefault(LocalDate.now(ZoneId.of("Asia/Yerevan")));DatePickerDialog(L10n.context(context),{_,year,month,day->model.date=checkoutDate(year,month,day)},selected.year,selected.monthValue-1,selected.dayOfMonth).show()},enabled=!model.busy,modifier=Modifier.fillMaxWidth()){
+    Row{listOf("Առաքում","Ինքնաառաքում").forEach{method->FilterChip(selected=model.method==method,onClick={model.updateDelivery(method=method)},enabled=!model.busy,label={LocalizedText(method)},modifier=Modifier.padding(end=8.dp))}}
+    if(model.method=="Առաքում")CheckoutInput(model.address,{model.updateDelivery(address=it)},"Առաքման հասցե",false)
+    CheckoutInput(model.contact,{model.updateDelivery(contact=it)},"Կոնտակտային անձ",!model.busy&&model.user?.text("role")!="client")
+    OutlinedButton(onClick={val selected=runCatching{LocalDate.parse(model.date)}.getOrDefault(LocalDate.now(ZoneId.of("Asia/Yerevan")));DatePickerDialog(L10n.context(context),{_,year,month,day->model.updateDelivery(date=checkoutDate(year,month,day))},selected.year,selected.monthValue-1,selected.dayOfMonth).show()},enabled=!model.busy,modifier=Modifier.fillMaxWidth()){
      LocalizedText(if(model.date.isBlank())"Ընտրել ամսաթիվը օրացույցից"else"Ամսաթիվ՝ "+model.date)
     }
-    CheckoutInput(model.comment,{model.comment=it},"Մեկնաբանություն",!model.busy)
+    CheckoutInput(model.comment,{model.updateDelivery(comment=it)},"Մեկնաբանություն",!model.busy)
+    if(model.buyer==null&&!model.buyerView){
+     LocalizedText(model.draftSync,fontSize=12.sp)
+     if(model.draftConflict){
+      OutlinedButton(onClick={model.keepCheckoutDraft()},enabled=!model.busy,modifier=Modifier.fillMaxWidth()){LocalizedText("Պահպանել այս սարքի պատվերի տվյալները")}
+      TextButton(onClick={model.reloadCheckoutDraft()},enabled=!model.busy){LocalizedText("Բեռնել կայքի պատվերի տվյալները")}
+     }else TextButton(onClick={model.saveCheckoutDraft()},enabled=!model.busy){LocalizedText("Պահպանել պատվերի տվյալները")}
+    }
     Button(onClick={model.nextCheckout{model.checkoutStep=3}},enabled=!model.busy&&model.selectedLines.isNotEmpty(),modifier=Modifier.fillMaxWidth()){LocalizedText("Թարմացնել գները և ստուգել")}
     TextButton(onClick={model.checkoutStep=1},enabled=!model.busy){LocalizedText("Վերադառնալ կազմին")}
    }

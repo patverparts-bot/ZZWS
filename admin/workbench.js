@@ -1,6 +1,6 @@
 (() => {
  const el=id=>document.getElementById(id),node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;if(cls)n.className=cls;return n;};
- const labels={new:'Նոր',confirmed:'Հաստատված',in_progress:'Ընթացքում',completed:'Առաքված է',received:'Ստացված է',rejected:'Մերժված'};
+ const labels={new:'Նոր',confirmed:'Հաստատված',in_progress:'Ձևակերպված է',completed:'Առաքված է',received:'Ստացված է',rejected:'Մերժված'};
  let epoch=0,lifecycle=0,rows=[],selected=null,timer,key='',orderTools=null,updatedAt=null,refreshing=false,pollTimer=null;
  const mobileBack=node('button','← Պատվերների ցանկ');mobileBack.id='managerMobileBack';mobileBack.type='button';el('manager').querySelector('.manager-layout').before(mobileBack);
  mobileBack.onclick=()=>{
@@ -59,3 +59,4 @@
  document.addEventListener('zzws:admin-order-closed',()=>customer(null));
  window.ZZWS_ADMIN_WORKBENCH={load,mount,reset,customer,start(){clearInterval(pollTimer);pollTimer=setInterval(()=>window.ZZWS_ADMIN_WORKBENCH.poll(),15000);},poll:()=>{if(!document.hidden&&!el('manager').hidden)return load(false,true);}};
 })();
+

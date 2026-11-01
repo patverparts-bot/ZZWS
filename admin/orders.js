@@ -1,5 +1,5 @@
 (() => {
- const statuses={new:'Նոր',confirmed:'Հաստատված',in_progress:'Ընթացքում',completed:'Առաքված է',rejected:'Մերժված',received:'Ստացված է'};
+ const statuses={new:'Նոր',confirmed:'Հաստատված',in_progress:'Ձևակերպված է',completed:'Առաքված է',rejected:'Մերժված',received:'Ստացված է'};
  const el=id=>document.getElementById(id),money=v=>Number(v||0).toLocaleString((window.ZZWS_I18N?.language==='ru'?'ru-RU':'hy-AM'))+' ֏',date=v=>new Date(v).toLocaleString((window.ZZWS_I18N?.language==='ru'?'ru-RU':'hy-AM'),{timeZone:'Asia/Yerevan'});
  let list=[],selected=null,manualRows=[],preview=null,dirty=false,busy=false,timer=null,listEpoch=0,listKey=null,editorEpoch=0,operation=0,searchTimer,activeDialog=null,running=false,pollBusy=false,pollSession=0,summaryEpoch=0,summaryVersion=null,refreshSeconds=5,viewEpoch=0;
  const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;if(cls)n.className=cls;return n;};
@@ -216,3 +216,4 @@
  el('downloadFinalTemplate').onclick=()=>run(()=>download('admin/orders/template','Final-order-template.xlsx'));el('exportServerOrder').onclick=()=>run(()=>download('admin/orders/export','Order-'+selected.number+'.xlsx',{id:selected.id}));
  window.ZZWS_ADMIN_ORDERS={load,start,reset,poll,refreshUnread,setRefreshSeconds,openNotice:id=>open(id),context:()=>selected?{...selected}:null,previewTemplate};
 })();
+

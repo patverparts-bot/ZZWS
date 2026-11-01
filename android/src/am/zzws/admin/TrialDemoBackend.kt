@@ -7,15 +7,15 @@ internal class TrialDemoBackend(private val sample:List<JSONObject>?=null,privat
  val user=JSONObject().put("id","00000000-0000-4000-8000-000000000001").put("login","design-demo").put("client","ZZWS · Դեմո").put("role","client").put("active",true).put("profileRevision",1).put("rowsList",JSONArray().put(JSONObject().put("id","demo-delivery").put("organization","ZZWS Preview").put("address","Երևան · փորձնական հասցե").put("contact","Դեմո օգտատեր")))
  val products:List<JSONObject> by lazy{sample?:AppContext.value.assets.open("trial-products.json").bufferedReader().use{JSONArray(it.readText()).objects()}}
  val offer get()=JSONObject().put("id","demo-offer").put("title","Հատուկ առաջարկներ").put("revision",1).put("articles",JSONArray(published?:products.filter{it.optBoolean("isWholesalePromo")}.map{it.text("articul")}))
- private var memory=JSONObject();private var version=0
+ private val memory=mutableMapOf<String,JSONObject>();private val versions=mutableMapOf<String,Int>()
  private var preferences=JSONObject().put("enabled",false)
  private val orders=initialOrders.map{JSONObject(it.toString())}.toMutableList()
  @Synchronized fun call(path:String,body:JSONObject?):JSONObject {
   return when {
    path=="me"->JSONObject(user.toString())
    path=="catalog"->JSONObject().put("products",JSONArray(products)).put("specialOffer",offer)
-   path=="me/state"&&body==null->JSONObject().put("versions",JSONObject().put("cart",version)).put("data",JSONObject().put("cart",memory))
-   path=="me/state"->{require(body!!.optInt("version")==version);memory=JSONObject(body.getJSONObject("value").toString());version++;JSONObject().put("version",version)}
+   path=="me/state"&&body==null->JSONObject().put("versions",JSONObject(versions.toMap())).put("data",JSONObject(memory.mapValues{JSONObject(it.value.toString())}))
+   path=="me/state"->{val section=body!!.text("section");require(section in listOf("cart","draft"));val version=versions[section]?:0;if(body.optInt("version")!=version)throw ApiClient.ApiError(409,"Դեմո տվյալները փոխվել են");memory[section]=JSONObject(body.getJSONObject("value").toString());versions[section]=version+1;JSONObject().put("version",version+1)}
    path=="me/mobile/preferences"->{if(body!=null)preferences=JSONObject(body.toString());JSONObject(preferences.toString())}
    path=="orders/quote"->{val requested=body!!.getJSONArray("articuls").let{a->(0 until a.length()).map{a.getString(it)}};JSONObject().put("products",JSONArray(products.filter{it.text("articul") in requested})).put("unavailable",JSONArray(requested.filter{c->products.none{it.text("articul")==c}}))}
    path=="orders"&&body!=null->{

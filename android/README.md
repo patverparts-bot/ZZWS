@@ -1,7 +1,7 @@
 # ZZWS — primary Android application
 
-Version 7.1.19 (70119), package `am.zzws.admin`, Android 8+. This is the canonical
-application as of 31 October 2026. All Android development, builds, tests and
+Version 7.1.20 (70120), package `am.zzws.admin`, Android 8+. This is the canonical
+application as of 1 November 2026. All Android development, builds, tests and
 releases belong here. The separate Partner prototype was retired and deleted on
 1 November 2026 at the owner's request; do not restore, build or maintain it.
 Its promoted interface and features remain part of this primary application.
@@ -251,33 +251,48 @@ offers login help rather than promising a self-service password reset.
 
 ## Updates and release
 
-New releases download automatically through DownloadManager, with a start
-message/progress notification and no Update/Later or browser download. A persisted
-JobScheduler check runs roughly every fifteen minutes, subject to Android's
-background limits; active-app checks run every five minutes. Failed downloads
-retry with a fresh signed URL after a fifteen-minute cooldown. Signing out
-cancels downloads and jobs. A separate API client restores the encrypted token
-for background checks without modifying the active UI session.
+Current 7.1.18+ releases offer Update and Later in the foreground reminder.
+Only the user's Update action starts DownloadManager with a short-lived signed
+link; there is no automatic download, recurring background job or embedded
+installer. Android shows transfer progress. The Downloads action opens the
+system downloads list, where the user chooses the APK and follows Android's
+installation controls. A failed transfer can be retried with Update.
 
 Exact length, SHA-256, package, version and installed signing identity are checked
-before a private APK becomes installable. Installation opens only after a user
-tap on the ready notification/profile action, with Android's confirmation and
-unknown-source setting when needed. The primary update service supports active
-client accounts as well as existing authorized administrators. Only an owner with
-a fresh password confirmation can publish. No storage policies were broadened.
+before acknowledging the download receipt. A failed acknowledgement preserves
+the verified APK. The primary update service supports active clients and the
+existing authorized administrators. Only an owner with a fresh password
+confirmation can publish. No storage policies were broadened.
 
 Build: `./android/build.ps1`. Package/verify:
 `python scripts/package-android-review.py`. Release signing uses the existing
-DPAPI-protected key; private credentials never enter the APK. Current artifact:
-`outputs/ZZWS-7.1.10-production.apk`; metadata:
-`outputs/ZZWS-7.1.10-release.json`. The update service is
-`supabase/functions/zzws-apk/` (production version 9, staging version 1).
+DPAPI-protected key; private credentials never enter the APK. Packaging writes
+versioned APK and release metadata files under `outputs/`; use the generated
+metadata to identify the tested artifact. The update service is
+`supabase/functions/zzws-apk/`. Publishing remains a separate action through the
+owner's existing APK form; a code/test run does not change the published manifest.
 
-**The user explicitly chose not to publish the new APK into the update channel yet.**
-The APK is available in the owner's Drive. Existing published APK manifests were
-left unchanged. Publishing the binary later uses the owner's existing APK form.
+## Checkout draft diagnostics — 1 November 2026
+
+The diagnostics candidate persists the selected delivery variant, delivery/pickup
+method, address, recipient, date and comment in the website-compatible versioned
+account draft. Edits also receive an immediate AES-GCM local pending copy bound
+to the account/API, then synchronize after 600 ms. A server conflict retains the
+local draft and offers an explicit local/site choice. Assisted-customer drafts
+do not overwrite the administrator's own draft. Logout, customer switching and
+embedded-tool handoff flush the own-account draft first.
+
+The complete native unit/Robolectric run passed 177 of 178 tests; one optional
+public-image network check was skipped. Twelve new cases cover draft restoration,
+empty fields, removed delivery variants, independent cart rows, website conflicts
+and encryption boundaries. Evidence: `work/full-diagnostics/android-report.md`.
+This is code-level verification; installation and physical-device behavior were
+not exercised. No APK publication follows from these tests.
 
 ## Audit and limits
+
+The following audit counts and API-42 warehouse finding describe the earlier
+7.1.10 audit, rather than the current diagnostics run above.
 
 The server audit uses a freshly downloaded production API 42, executed with
 invented data in isolated SQL. Catalogue/orders/cart/mobile and three admin/mail

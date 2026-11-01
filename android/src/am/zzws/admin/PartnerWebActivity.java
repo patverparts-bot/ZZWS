@@ -68,8 +68,8 @@ public class PartnerWebActivity extends ComponentActivity {
      case ASSISTANT:action="if(window.ZZWS_ASSISTANT){ZZWS_ASSISTANT.open();return true;}";break;
      case TEAM:action="if(window.ZZWS_TEAM){ZZWS_TEAM.open();return true;}";break;
      case SAVED_CARTS:action="if(typeof openOrderModal==='function')openOrderModal();var p=document.getElementById('savedCartsPanel');if(p){p.open=true;p.scrollIntoView();return true;}";break;
-     case TECHNICAL:action="var p=document.getElementById('dealerTechFilters');if(p){p.open=true;p.scrollIntoView();return true;}";break;
-     case SELLER:action="var p=document.getElementById('dealerAdvancedTools');if(p){p.open=true;p.scrollIntoView();return true;}";break;
+     case TECHNICAL:action="if(window.ZZWS_STOREFRONT)ZZWS_STOREFRONT.navigate('catalog');var f=document.getElementById('compactFiltersRow');if(f){f.click();if(f.getAttribute('aria-expanded')!=='true')f.click();}else if(typeof toggleMobileFilters==='function')toggleMobileFilters(true);var p=document.getElementById('dealerTechFilters');if(p){p.open=true;var focus=p.querySelector('select,input,summary');if(focus)focus.focus({preventScroll:true});p.scrollIntoView();return true;}";break;
+     case SELLER:action="if(window.ZZWS_STOREFRONT)ZZWS_STOREFRONT.navigate('catalog');var p=document.getElementById('storefrontTools')||document.getElementById('dealerAdvancedTools');if(p){p.open=true;p.scrollIntoView();return true;}";break;
      default:break;
     }
     if(!action.isEmpty())view.evaluateJavascript("(function(){var n=0;function open(){if(typeof catalogLoaded!=='undefined'&&catalogLoaded){"+action+"}if(n++<40)setTimeout(open,250);}open();})()",null);

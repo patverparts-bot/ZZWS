@@ -27,6 +27,17 @@ public class OrderPushDeliveryRegressionTest {
   Context c=RuntimeEnvironment.getApplication();c.getSharedPreferences("zzws_push",0).edit().clear().putBoolean("enabled",true).putString("userId",owner).commit();ZZWSMessagingService service=Robolectric.buildService(ZZWSMessagingService.class).create().get();
   service.onMessageReceived(message(other));service.onMessageReceived(message(null));assertNull(Shadows.shadowOf(c.getSystemService(NotificationManager.class)).getNotification(event.hashCode()));assertTrue(FirebaseAdapter.accept(c,event,owner));
  }
+ @Test public void everyOrderEventRetainsCustomerCodeNumberActionPrivacyAndDestination(){
+  Context c=RuntimeEnvironment.getApplication();L10n.setLanguage(c,"ru");ZZWSMessagingService service=Robolectric.buildService(ZZWSMessagingService.class).create().get();
+  for(String action:new String[]{"status","changed","comment","requested","approved","declined","deferred","received"}){
+   c.getSharedPreferences("zzws_push",0).edit().clear().putBoolean("enabled",true).putString("userId",owner).commit();
+   String kind="comment".equals(action)?"order.comment":"changed".equals(action)?"order.changed":"order.status";
+   RemoteMessage.Builder b=new RemoteMessage.Builder("test-sender").addData("eventId",event).addData("kind",kind).addData("orderId",order).addData("userId",owner).addData("customerName","Նոր աշխարհ").addData("customerCode","610000").addData("orderNumber","18").addData("orderTotal","1015000");
+   if("requested".equals(action)||"approved".equals(action)||"declined".equals(action)||"deferred".equals(action))b.addData("approvalAction",action);if("deferred".equals(action))b.addData("reviewMinutes","12");if("received".equals(action))b.addData("orderStatus","received");if("status".equals(action))b.addData("orderStatus","in_progress");
+   RemoteMessage m=b.build();service.onMessageReceived(m);Notification n=Shadows.shadowOf(c.getSystemService(NotificationManager.class)).getNotification(event.hashCode());assertNotNull(action,n);assertTrue(n.extras.getCharSequence(Notification.EXTRA_TITLE).toString().contains("№18"));String body=n.extras.getCharSequence(Notification.EXTRA_TEXT).toString();assertTrue(action,body.contains("Նոր աշխարհ · 610000"));if("deferred".equals(action))assertTrue(body.contains("12"));if("declined".equals(action))assertTrue(body.contains("отказался"));if("status".equals(action))assertTrue(body.contains("Оформлен"));assertEquals(Notification.VISIBILITY_PRIVATE,n.visibility);assertEquals(order,Shadows.shadowOf(n.contentIntent).getSavedIntent().getStringExtra("zzws_order"));
+   service.onMessageReceived(m);assertSame(n,Shadows.shadowOf(c.getSystemService(NotificationManager.class)).getNotification(event.hashCode()));
+  }
+ }
  @Test public void logoutPermissionAndAccountSwitchAreCheckedBeforeMarkingTheEventSeen(){
   Context c=RuntimeEnvironment.getApplication();android.content.SharedPreferences p=c.getSharedPreferences("zzws_push",0);p.edit().clear().putBoolean("enabled",false).putString("userId",owner).commit();assertFalse(FirebaseAdapter.accept(c,event,owner));p.edit().putBoolean("enabled",true).putString("userId",other).commit();assertFalse(FirebaseAdapter.accept(c,event,owner));assertTrue(FirebaseAdapter.accept(c,event,other));assertFalse(FirebaseAdapter.accept(c,event,other));
  }

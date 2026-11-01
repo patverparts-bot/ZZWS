@@ -8,15 +8,34 @@ test('new-order projection includes only the client name, order number and total
  assert.deepEqual(orderSummary({number:18,total:1015000,customer:{client:' Test\nLTD ',author:{email:'PRIVATE_EMAIL'}},lines:[{cost:10}]}),summary);
  for(const value of [null,{}, {number:18,total:-1,customer:{client:'Test'}},{number:18,total:Infinity,customer:{client:'Test'}},{number:18,total:10,customer:{client:''}}])assert.equal(orderSummary(value),null);
 });
-test('the amount and company come from the immutable creation event at the leased revision',async()=>{
+test('the amount and company come from the immutable event at the leased revision for every event type',async()=>{
  const filters={},client={from(table){assert.equal(table,'zzws_order_activity');return {select(columns){assert.equal(columns,'order_number,customer,snapshot');return this;},eq(key,value){filters[key]=value;return this;},async maybeSingle(){return {data:{order_number:18,customer:{client:'Test LTD'},snapshot:{total:1015000}},error:null};}};}};
- assert.deepEqual(await readOrderSummary(client,id,1),summary);assert.deepEqual(filters,{order_id:id,revision:1,event_type:'order.created'});
+ assert.deepEqual(await readOrderSummary(client,id,1),summary);assert.deepEqual(filters,{order_id:id,revision:1});
 });
-test('FCM sends the bounded summary only for its authorized recipient and new-order kind',async()=>{
+test('FCM sends bounded customer identity for every order notification only to the authorized recipient',async()=>{
  let packet,calls=0;const send=fcmTransport({projectId:'zzws-test',enabled:true,accessToken:async()=>'test-token',fetchImpl:async(url,request)=>{calls++;packet=JSON.parse(request.body);return {status:200,json:async()=>({name:'projects/zzws-test/messages/test'})};}});
  assert.equal((await send({...job,orderSummary:{...summary,author:'PRIVATE_AUTHOR'},privateKey:'PRIVATE_SECRET'})).state,'sent');assert.equal(packet.message.data.customerName,'Test LTD');assert.equal(packet.message.data.orderNumber,'18');assert.equal(packet.message.data.orderTotal,'1015000');assert.equal(packet.message.data.userId,id);assert.equal(packet.message.notification,undefined);assert.ok(!JSON.stringify(packet).includes('PRIVATE_'));
  for(const change of [{userId:undefined},{orderSummary:{...summary,total:NaN}},{orderSummary:{...summary,customerName:'spoof\nmessage'}}])assert.equal((await send({...job,orderSummary:summary,...change})).state,'dead');assert.equal(calls,1);
- await send({...job,kind:'order.status',orderSummary:summary});assert.equal(packet.message.data.customerName,undefined);assert.equal(packet.message.data.orderTotal,undefined);
+ for(const kind of ['order.created','order.status','order.changed','order.comment']){
+  await send({...job,kind,orderSummary:{...summary,customerCode:'610000',status:'received',author:'PRIVATE_AUTHOR'}});assert.equal(packet.message.data.customerName,'Test LTD');assert.equal(packet.message.data.customerCode,'610000');assert.equal(packet.message.data.orderNumber,'18');assert.equal(packet.message.data.orderStatus,'received');assert.ok(!JSON.stringify(packet).includes('PRIVATE_'));
+ }
+ for(const approvalAction of ['requested','approved','declined','deferred']){await send({...job,kind:'order.status',approvalAction,...(approvalAction==='deferred'?{reviewMinutes:12}:{}),orderSummary:{...summary,customerCode:'610000'}});assert.equal(packet.message.data.customerCode,'610000');assert.equal(packet.message.data.approvalAction,approvalAction);assert.equal(packet.message.data.orderNumber,'18');}
+ assert.equal((await send({...job,orderSummary:{...summary,customerCode:'injected\ncode'}})).state,'dead');
+ assert.equal((await send({...job,orderSummary:{...summary,status:'injected-status'}})).state,'dead');
+ await send({...job,kind:'catalog.offers',orderSummary:summary});assert.equal(packet.message.data.customerName,undefined);
+});
+
+test('identity projection preserves leading zero customer codes and never includes contacts or line data',()=>{
+ assert.deepEqual(orderSummary({number:18,total:1,status:'confirmed',customer:{client:'Test LTD',customerCode:'00610000',person:{email:'PRIVATE'},author:{email:'PRIVATE'}},lines:['PRIVATE']}),{customerName:'Test LTD',number:18,total:1,customerCode:'00610000',status:'confirmed'});
+ for(const customerCode of ['bad\ncode',42,'x'.repeat(101)])assert.equal(orderSummary({number:18,total:1,customer:{client:'Test LTD',customerCode}}),null);
+});
+
+test('worker adds per-revision identity to status, comment, approval, defer and receipt order events',async()=>{
+ for(const kind of ['order.status','order.changed','order.comment']){
+  let claimed=false,seen,reads=0;const current={...job,kind,revision:3,approvalAction:'deferred',reviewMinutes:12};
+  const store={rpc:async name=>name==='zzws_claim_android'?(claimed?null:(claimed=true,current)):name==='zzws_begin_android'?current:true,orderSummary:async(order,revision)=>{assert.equal(order,id);assert.equal(revision,3);reads++;return {...summary,customerCode:'610000',status:'received'};}};
+  const r=await runAndroidBatch({store,send:async value=>{seen=value;return {state:'sent'};},enabled:true});assert.equal(r.sent,1);assert.equal(reads,1);assert.equal(seen.orderSummary.customerCode,'610000');assert.equal(seen.approvalAction,'deferred');
+ }
 });
 test('worker reads a summary only after the existing recipient/lease gate permits delivery',async()=>{
  let claims=0,reads=0,seen;const acknowledgements=[];

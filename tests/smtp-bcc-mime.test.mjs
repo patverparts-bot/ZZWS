@@ -1,0 +1,25 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {createRequire} from 'node:module';import {fileURLToPath} from 'node:url';import path from 'node:path';import fs from 'node:fs';
+import {sendSmtp} from '../supabase/functions/zzws-api/smtp-mail.mjs';import {sendGmail} from '../supabase/functions/zzws-api/gmail-mail.mjs';
+const require=createRequire(import.meta.url);let entry;try{entry=require.resolve('nodemailer');}catch(error){if(error.code!=='MODULE_NOT_FOUND')throw error;entry=process.env.ZZWS_NODEMAILER||fileURLToPath(new URL('../work/full-diagnostics/mail-fixture/node_modules/nodemailer',import.meta.url));}
+const nodemailer=require(entry);let directory=path.dirname(require.resolve(entry)),metadata;for(let i=0;i<5;i++){const candidate=path.join(directory,'package.json');if(fs.existsSync(candidate)){const value=require(candidate);if(value.name==='nodemailer'){metadata=value;break;}}directory=path.dirname(directory);}assert.equal(metadata?.version,'10.3.1','MIME verification must use the same pinned Nodemailer as production');
+const config={ZZWS_REPORT_EMAIL_MODE:'smtp',ZZWS_ENVIRONMENT:'production',ZZWS_SMTP_HOST:'mail.example.am',ZZWS_SMTP_PORT:'587',ZZWS_SMTP_USER:'sender@example.am',ZZWS_SMTP_PASSWORD:'synthetic-password',ZZWS_SMTP_FROM:'sender@example.am',ZZWS_GMAIL_USER:'sender@example.am',ZZWS_GMAIL_APP_PASSWORD:'synthetic password'};
+const env=n=>config[n],base={from:'sender@example.am',to:['main@example.am'],cc:['visible@example.am'],bcc:['hidden1@example.am','hidden2@example.am'],reply_to:'reply@example.am',subject:'Synthetic privacy report',text:'Report body',attachments:[{filename:'report.xlsx',content:'dGVzdA=='}]};
+const headers=raw=>raw.split(/\r?\n\r?\n/)[0].replace(/\r?\n[ \t]+/g,' ');
+for(const [name,send]of [['SMTP',sendSmtp],['Gmail SMTP',sendGmail]]){
+ test(name+' generated MIME keeps every BCC address out of all recipient headers and every copy body',async()=>{
+  const artifacts=[];const createTransport=()=>{const composer=nodemailer.createTransport({streamTransport:true,buffer:true,newline:'windows'});return {sendMail:async mail=>{assert.equal(Object.hasOwn(mail,'bcc'),false);const info=await composer.sendMail(mail);artifacts.push({mail,info,raw:info.message.toString('utf8')});return {...info,accepted:info.envelope.to,rejected:[]};},close(){composer.close();}};};
+  for(const [index,target]of [...base.to,...base.cc,...base.bcc].entries())assert.equal((await send({job:{id:'mime-job-r'+index},message:{...base,envelopeTo:[target]},env,createTransport})).result,'accepted');
+  assert.deepEqual(artifacts.map(a=>a.info.envelope.to),[['main@example.am'],['visible@example.am'],['hidden1@example.am'],['hidden2@example.am']]);
+  for(const {raw}of artifacts){const head=headers(raw);assert.match(head,/^To: main@example\.am$/m);assert.match(head,/^Cc: visible@example\.am$/m);assert.doesNotMatch(head,/^Bcc:/im);for(const hidden of base.bcc)assert.equal(raw.toLowerCase().includes(hidden),false,'Hidden address leaked into MIME sent to another or its own recipient');assert.match(raw,/filename=report\.xlsx|filename="report\.xlsx"/);assert.match(raw,/dGVzdA==/);}
+ });
+ test(name+' BCC-only generated MIME has no To, Cc or Bcc target header while its envelope still delivers to the hidden target',async()=>{
+  let artifact;const composer=nodemailer.createTransport({streamTransport:true,buffer:true});
+  try{const result=await send({job:{id:'bcc-only-mime'},message:{...base,to:[],cc:[],bcc:['hidden1@example.am'],envelopeTo:['hidden1@example.am']},env,createTransport:()=>({sendMail:async mail=>{artifact=await composer.sendMail(mail);return {...artifact,accepted:artifact.envelope.to,rejected:[]};},close(){}})});assert.equal(result.result,'accepted');const raw=artifact.message.toString('utf8');assert.deepEqual(artifact.envelope.to,['hidden1@example.am']);assert.doesNotMatch(headers(raw),/^(?:To|Cc|Bcc):/im);assert.equal(raw.includes('hidden1@example.am'),false);}finally{composer.close();}
+ });
+ test(name+' unknown primary DATA result does not prevent an independent private BCC MIME submission',async()=>{
+  const artifacts=[];const createTransport=()=>{const composer=nodemailer.createTransport({streamTransport:true,buffer:true});return {sendMail:async mail=>{const info=await composer.sendMail(mail);artifacts.push(info);if(info.envelope.to[0]==='main@example.am')throw Object.assign(Error('Synthetic final DATA acknowledgement loss'),{command:'DATA',code:'ETIMEDOUT',accepted:['main@example.am']});return {...info,accepted:info.envelope.to,rejected:[]};},close(){composer.close();}};};
+  assert.equal((await send({job:{id:'unknown-main-r0'},message:{...base,envelopeTo:['main@example.am']},env,createTransport})).result,'unknown');
+  assert.equal((await send({job:{id:'unknown-main-r2'},message:{...base,envelopeTo:['hidden1@example.am']},env,createTransport})).result,'accepted');
+  assert.deepEqual(artifacts.map(a=>a.envelope.to),[['main@example.am'],['hidden1@example.am']]);for(const info of artifacts){const raw=info.message.toString('utf8');assert.doesNotMatch(headers(raw),/^Bcc:/im);assert.ok(base.bcc.every(address=>!raw.includes(address)));}
+ });
+}

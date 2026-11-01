@@ -33,15 +33,23 @@ public class UserUpdateDownloadRegressionTest {
  @Test public void updateButtonEnqueuesTheExactApkOnceWithoutOpeningAWebsite()throws Exception{
   JSONObject previous=AppSession.user;String token=AppSession.api.sessionToken();
   try(ActivityController<Activity> controller=Robolectric.buildActivity(Activity.class).setup()){
+   VersionReminder.reset();
    Activity a=controller.get();a.getSharedPreferences(UserUpdateDownload.PREFS,0).edit().clear().commit();AppSession.user=new JSONObject().put("id","test-owner");AppSession.api.restoreToken(new String(new char[64]).replace('\0','b'));
+   assertFalse("Default destination fixture must be absent",new java.io.File(a.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS),"ZZWS-7.1.19-production.apk").exists());
    AtomicInteger requests=new AtomicInteger();UserUpdateDownload.LinkProvider provider=code->{assertEquals(BuildConfig.VERSION_CODE+1L,code);requests.incrementAndGet();return new JSONObject().put("url",link()).put("downloadId","00000000-0000-4000-8000-000000000001");};
-   VersionReminder.prompt(a,release(),()->UserUpdateDownload.start(a,release(),provider,api));DownloadManager dm=a.getSystemService(DownloadManager.class);
+   assertTrue("A fresh update prompt must open",VersionReminder.prompt(a,release(),()->UserUpdateDownload.start(a,release(),provider,api)));DownloadManager dm=a.getSystemService(DownloadManager.class);
    try(Cursor rows=dm.query(new DownloadManager.Query())){assertEquals(0,rows.getCount());}
-   ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).performClick();idle(a);
-   long id=a.getSharedPreferences(UserUpdateDownload.PREFS,0).getLong("id",-1);assertTrue(id>=0);assertTrue(UserUpdateDownload.owns(a,id));assertFalse(UserUpdateDownload.owns(a,id+1));
+   ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).performClick();
+   // AlertDialog posts its positive listener to the main queue. Run it before
+   // queuing the worker barrier, otherwise the barrier can overtake the send.
+   Shadows.shadowOf(android.os.Looper.getMainLooper()).idle();idle(a);
+   assertEquals("Update action must request its link before the worker barrier completes",1,requests.get());
+   long id=a.getSharedPreferences(UserUpdateDownload.PREFS,0).getLong("id",-1);
+   assertTrue("DownloadManager id was not persisted; latest notice: "+org.robolectric.shadows.ShadowToast.getTextOfLatestToast(),id>=0);
+   assertTrue("Saved download must belong to this attempt",UserUpdateDownload.owns(a,id));assertFalse(UserUpdateDownload.owns(a,id+1));
    try(Cursor rows=dm.query(new DownloadManager.Query().setFilterById(id))){assertTrue(rows.moveToFirst());assertEquals(link(),rows.getString(rows.getColumnIndexOrThrow(DownloadManager.COLUMN_URI)));}
    org.robolectric.shadows.ShadowDownloadManager.ShadowRequest request=Shadows.shadowOf(Shadows.shadowOf(dm).getRequest(id));
-   assertEquals("application/vnd.android.package-archive",request.getMimeType());assertEquals(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED,request.getNotificationVisibility());assertFalse(request.getAllowedOverRoaming());assertTrue(request.getRequestHeaders().isEmpty());assertTrue(request.getDestination().toString().endsWith("ZZWS-7.1.19-production.apk"));
+   assertEquals("application/vnd.android.package-archive",request.getMimeType());assertEquals(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED,request.getNotificationVisibility());assertFalse(request.getAllowedOverRoaming());assertTrue("APK downloads must not carry account headers: "+request.getRequestHeaders(),request.getRequestHeaders().isEmpty());assertTrue("Unexpected APK destination: "+request.getDestination(),request.getDestination().toString().endsWith("ZZWS-7.1.19-production.apk"));
    request.setStatus(DownloadManager.STATUS_RUNNING);UserUpdateDownload.start(a,release(),provider,api);idle(a);assertEquals(1,Shadows.shadowOf(dm).getRequestCount());
    assertEquals(1,requests.get());assertNull(Shadows.shadowOf(a).getNextStartedActivity());
    dm.remove(id);

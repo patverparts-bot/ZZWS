@@ -5,6 +5,11 @@
   const fields=['organizationSelect','deliveryMethodInput','deliveryDateInput','deliveryAddressInput','contactPersonInput','orderCommentInput'];
   let owner=null,versions={},baseline={},pending={},timer=null,busy=false,ready=false,pollAt=0,suspended=false,clearedUntil=0;
   const copy=v=>JSON.parse(JSON.stringify(v));
+  const sameValue=(a,b)=>{
+    if(a===b)return true;
+    if(!a||!b||typeof a!=='object'||typeof b!=='object'||Array.isArray(a)!==Array.isArray(b))return false;
+    const keys=Object.keys(a);return keys.length===Object.keys(b).length&&keys.every(k=>Object.hasOwn(b,k)&&sameValue(a[k],b[k]));
+  };
   const key=()=>`zzws_pending_${owner}`;
   const cache=(section,fallback)=>{try{return JSON.parse(localStorage.getItem('zigzag_'+suffix[section]+'_'+userStorageId())||JSON.stringify(fallback));}catch{return fallback;}};
   const banner=(message,error=false)=>{let box=document.getElementById('memoryStatus');if(!box){box=document.createElement('p');box.id='memoryStatus';box.setAttribute('role','status');document.getElementById('welcomeMsg').after(box);}box.textContent=message;box.classList.toggle('sync-error',error);};
@@ -41,6 +46,11 @@
       pending[section]={value:copy(values[section]),version};baseline[section]=copy(values[section]);
     }persist();
   }
+  function acknowledge(section,item,version){
+    versions[section]=version;
+    if(sameValue(pending[section]?.value,item.value))delete pending[section];
+    else if(pending[section])pending[section].version=version;
+  }
   async function flush(){
     if(busy||!ready||!serverIdentity||owner!==serverIdentity.id)return;
     capture();busy=true;const activeOwner=owner;
@@ -51,12 +61,13 @@
         try{
           const result=await ZZWS.json('me/state',{method:'POST',body:JSON.stringify({section,...item})});
           if(owner!==activeOwner)return;
-          versions[section]=result.version;
-          if(JSON.stringify(pending[section]?.value)===JSON.stringify(item.value))delete pending[section];
-          else if(pending[section])pending[section].version=result.version;
+          acknowledge(section,item,result.version);
         }catch(e){
+          if(owner!==activeOwner)return;
           if(e.status===409){
             if(e.data.cleared){delete pending[section];versions[section]=e.data.version;suspended=true;apply(section,e.data.value);baseline[section]=read()[section];suspended=false;clearedUntil=Date.now()+30000;persist();continue;}
+            // An earlier request may have committed before reload or a lost response.
+            if(sameValue(e.data.value,item.value)){acknowledge(section,item,e.data.version);persist();continue;}
             const label={cart:'զամբյուղ',favorites:'ընտրվածներ',history:'պատմություն',filters:'ֆիլտրեր',preferences:'կարգավորումներ',draft:'պատվերի տվյալներ'}[section];
             suspended=true;
             const keep=confirm('Այլ սարքում փոփոխվել են՝ '+label+'։ Լավ՝ այս սարքի տվյալներով փոխարինել սերվերի տվյալները։ Չեղարկել՝ բեռնել սերվերի տվյալները։');

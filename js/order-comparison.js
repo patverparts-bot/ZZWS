@@ -58,7 +58,8 @@
   if(d.deliveryChanged)return {text:'Առաքման տվյալները փոխվել են',changed:true};
   if(d.kind==='closed_order_reopened')return {text:'Պատվերը վերաբացվել է',changed:false};
   if(d.kind==='created_by_admin')return {text:'Նոր պատվեր՝ ադմինիստրատորից',changed:false};
-  return {text:({confirmed:'Պատվերը հաստատված է',in_progress:'Պատվերը մշակվում է',completed:'Պատվերը առաքված է',rejected:'Պատվերը մերժված է',received:'Ստացումը հաստատված է',new:'Պատվերը ստացված է'})[d.status]||'Նոր ծանուցում պատվերի մասին',changed:false};
+  return {text:({confirmed:'Պատվերը հաստատված է',in_progress:'Պատվերը ձևակերպված է',completed:'Պատվերը առաքված է',rejected:'Պատվերը մերժված է',received:'Ստացումը հաստատված է',new:'Պատվերը ստացված է'})[d.status]||'Նոր ծանուցում պատվերի մասին',changed:false};
  }
  window.ZZWS_ORDER_COMPARE={model,render,totals,renderTotal,hasLineChanges,confirmationCustomer,eventNotice};
 })();
+

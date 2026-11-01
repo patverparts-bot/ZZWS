@@ -50,7 +50,7 @@ test('client teams: invitation, personal credentials, shared prices, isolated ca
    const preview=await ok('admin/orders/report-preview',owner,form()),send=form();send.set('expiry',preview.expiry);send.set('proof',preview.proof);send.set('confirmCustomer','true');send.set('requestId',crypto.randomUUID());send.set('includeDefaults',String(defaults));send.set('additionalCC',additional);send.set('selectedRows','[4]');
    const r=await ok('admin/orders/report-send',owner,send);assert.equal(r.accepted,true);assert.equal(r.completed,true);return runtime.reportEmails.at(-1);
   }
-  const sent=await report(order,true,'extra@example.am; second@example.am, EXTRA@example.am');assert.deepEqual(sent.to,['karen@example.am']);assert.deepEqual(sent.cc,[...cc,'extra@example.am','second@example.am']);
+  const sent=await report(order,true,'extra@example.am; second@example.am, EXTRA@example.am');assert.deepEqual(sent.to,['karen@example.am']);assert.deepEqual(sent.cc,[...cc.slice(0,2),'extra@example.am','second@example.am']);assert.deepEqual(sent.bcc,[cc[2]]);
   const sent2=await report(order2,false);assert.deepEqual(sent2.to,['david@example.am']);assert.deepEqual(sent2.cc,[]);
   const counts=(await runtime.db.query('select counts from zzws_report_deliveries where order_id=$1',[order.id])).rows[0].counts;assert.deepEqual(counts.recipients.to,['karen@example.am']);assert.equal(counts.includeDefaults,true);
   // Import by business code must retain the person's chosen login and existing user ID.

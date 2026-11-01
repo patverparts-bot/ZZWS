@@ -223,7 +223,7 @@ class UnifiedActivity:ComponentActivity(){
  }},confirmButton={TextButton(onClick=close,enabled=!model.busy){OneLineLabel("Փակել",13)}})
  switchBuyer?.let{action->AlertDialog(onDismissRequest={switchBuyer=null},title={LocalizedText("Փոխե՞լ պատվիրատուին")},text={LocalizedText("Ընթացիկ հաճախորդի զամբյուղը կմաքրվի։ Չուղարկված պատվեր չի ստեղծվի։")},confirmButton={TextButton(onClick={switchBuyer=null;action()}){LocalizedText("Փոխել")}},dismissButton={TextButton(onClick={switchBuyer=null}){LocalizedText("Չեղարկել")}})}
 }
-internal fun statusLabel(value:String)=mapOf("new" to "Նոր","confirmed" to "Հաստատված","in_progress" to "Ընթացքում","completed" to "Առաքված է","rejected" to "Մերժված","received" to "Ստացված է")[value]?:"Փոփոխված"
+internal fun statusLabel(value:String)=mapOf("new" to "Նոր","confirmed" to "Հաստատված","in_progress" to "Ձևակերպված է","completed" to "Առաքված է","rejected" to "Մերժված","received" to "Ստացված է")[value]?:"Փոփոխված"
 internal fun notificationOptions(user:JSONObject?):List<Pair<String,String>>{
  val options=mutableListOf("enabled" to "Միացնել ծանուցումները")
  val orderAdmin=user?.text("role")=="admin"&&user.optBoolean("mobileAdminEnabled")&&user.permission("orders:read")

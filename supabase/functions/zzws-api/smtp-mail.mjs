@@ -17,20 +17,28 @@ export async function verifySmtp({env,createTransport}){
 export async function sendSmtp({job,message,env,createTransport}){
  const config=smtpConfiguration(env),from=email(message.from);
  if(from!==config.from)throw Error('Ուղարկողի հասցեն չի համապատասխանում միացված փոստային հաշվին');
- const to=[...new Set((message.to||[]).map(v=>email(v)))],cc=[...new Set((message.cc||[]).map(v=>email(v)))].filter(v=>!to.includes(v));
- if(!to.length||to.length+cc.length>50)throw Error('Ստացողների սխալ ցանկ');
+ if(!Array.isArray(message.bcc??[]))throw Error('Ստացողների սխալ ցանկ');
+ const to=[...new Set((message.to||[]).map(v=>email(v)))],bcc=[...new Set((message.bcc||[]).map(v=>email(v)))].filter(v=>!to.includes(v)),cc=[...new Set((message.cc||[]).map(v=>email(v)))].filter(v=>!to.includes(v)&&!bcc.includes(v));
+ const authorized=[...to,...cc,...bcc];
+ const separate=Object.hasOwn(message,'envelopeTo');
+ if(separate&&(!Array.isArray(message.envelopeTo)||message.envelopeTo.length!==1))throw Error('Ստացողների սխալ ցանկ');
+ const recipients=separate?message.envelopeTo.map(v=>email(v)):authorized;
+ if(!separate&&!to.length&&!bcc.length||!recipients.length||authorized.length>50||recipients.some(v=>!authorized.includes(v)))throw Error('Ստացողների սխալ ցանկ');
  if(env('ZZWS_ENVIRONMENT')!=='production'){
   const allowed=new Set((env('ZZWS_REPORT_TEST_RECIPIENTS')||'').split(',').map(v=>v.trim()).filter(Boolean).map(v=>email(v)));
-  if([...to,...cc].some(v=>!allowed.has(v)))throw Error('Փորձարկման հասցեն թույլատրված չէ');
+  if(recipients.some(v=>!allowed.has(v)))throw Error('Փորձարկման հասցեն թույլատրված չէ');
  }
  const replyTo=message.reply_to?email(message.reply_to):undefined;
  const make=createTransport||(await import('npm:nodemailer@10.3.1')).default.createTransport;
  const transport=make({host:config.host,port:config.port,secure:config.security==='tls',requireTLS:true,authMethod:'LOGIN',auth:{user:config.user,pass:config.pass},connectionTimeout:12000,greetingTimeout:10000,socketTimeout:20000,logger:false,debug:false,tls:{minVersion:'TLSv1.2',rejectUnauthorized:true,servername:config.host}});
  const messageId='<zzws-'+String(job.id).replace(/[^a-zA-Z0-9_-]/g,'').slice(0,100)+'@'+from.split('@')[1]+'>';
  try{
-  const result=await transport.sendMail({from,to,cc,replyTo,subject:message.subject,text:message.text,messageId,attachments:(message.attachments||[]).map(a=>({filename:a.filename,content:a.content,encoding:'base64'})),disableFileAccess:true,disableUrlAccess:true});
+  // Hidden recipients exist only in the SMTP envelope. Never give them to the
+  // MIME composer as Bcc, including when composing a copy for another recipient.
+  const result=await transport.sendMail({from,to,cc,...(separate||bcc.length?{envelope:{from,to:recipients}}:{}),replyTo,subject:message.subject,text:message.text,messageId,attachments:(message.attachments||[]).map(a=>({filename:a.filename,content:a.content,encoding:'base64'})),disableFileAccess:true,disableUrlAccess:true});
   const accepted=new Set((result.accepted||[]).map(v=>email(v)));
-  if(result.rejected?.length||accepted.size!==to.length+cc.length||[...to,...cc].some(v=>!accepted.has(v)))return {result:'unknown'};
+  if(separate&&result.rejected?.some(v=>email(v)===recipients[0])&&!accepted.has(recipients[0]))return {result:'rejected'};
+  if(result.rejected?.length||accepted.size!==recipients.length||recipients.some(v=>!accepted.has(v)))return {result:'unknown'};
   return {result:'accepted',id:messageId.slice(0,200)};
  }catch(e){
   const beforeData=['CONN','EHLO','HELO','STARTTLS','MAIL FROM','RCPT TO'].includes(e.command)||String(e.command||'').startsWith('AUTH');

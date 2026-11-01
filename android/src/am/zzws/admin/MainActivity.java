@@ -7,7 +7,7 @@ public class MainActivity extends ComponentActivity {
  private ProgressBar loading;private LinearLayout orderRows;private String orderListFingerprint="";private volatile long pollDelayMs=5000;private LinearLayout root,content;private TextView notice;private final ApiClient api=AppSession.api;private final ExecutorService executor=Executors.newSingleThreadExecutor();private final Handler timer=new Handler(Looper.getMainLooper());
  private DemoStore demo;private boolean demoMode=false,logged=false,write=false,busy=false,destroyed=false;private String selectedId="",search="",statusFilter="";private JSONObject selected;private String currentScreen="login",fromDate="",toDate="";private boolean baseline=false;private final java.util.LinkedHashSet<String> seenEvents=new java.util.LinkedHashSet<>();
  private static final int NAVY=Color.rgb(15,23,42),BLUE=Color.rgb(37,99,235),MUTED=Color.rgb(100,116,139);
- private static final String[] KEYS={"new","confirmed","in_progress","completed","rejected","received"};private static final String[] LABELS={"Նոր","Հաստատված","Ընթացքում","Առաքված է","Մերժված","Ստացված է"};
+ private static final String[] KEYS={"new","confirmed","in_progress","completed","rejected","received"};private static final String[] LABELS={"Նոր","Հաստատված","Ձևակերպված է","Առաքված է","Մերժված","Ստացված է"};
  @Override protected void onResume(){super.onResume();VersionReminder.resume(this);}
  @Override protected void onPause(){VersionReminder.pause(this);super.onPause();}
  @Override public void onCreate(Bundle state){super.onCreate(state);L10n.initialize(this);L10n.attach(this);getOnBackPressedDispatcher().addCallback(this,new OnBackPressedCallback(true){@Override public void handleOnBackPressed(){navigateBack();}});if(!AppSession.canAdmin()){finish();return;}String requested=getIntent().getStringExtra("zzws_status");if(java.util.Arrays.asList(KEYS).contains(requested))statusFilter=requested;verify();}
@@ -64,7 +64,7 @@ public class MainActivity extends ComponentActivity {
   query.setOnEditorActionListener((v,action,event)->{if(action==android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH&&!busy){search=query.getText().toString().trim();list();return true;}return false;});
   button("Որոնել",()->{search=query.getText().toString().trim();list();});button("Զտիչներ",this::filters);
   HorizontalScrollView chips=new HorizontalScrollView(this);LinearLayout strip=new LinearLayout(this);chips.setHorizontalScrollBarEnabled(false);chips.addView(strip);
-  String[] keys={"","new","in_progress","completed"};String[] labels={"Բոլորը","Նոր","Ընթացքում","Առաքված"};
+  String[] keys={"","new","in_progress","completed"};String[] labels={"Բոլորը","Նոր","Ձևակերպված է","Առաքված"};
   for(int i=0;i<keys.length;i++){final String key=keys[i];TextView chip=text(labels[i],13);chip.setPadding(dp(12),dp(10),dp(12),dp(10));chip.setBackground(panel(key.equals(statusFilter)?BLUE:Color.WHITE,10));chip.setTextColor(key.equals(statusFilter)?Color.WHITE:NAVY);chip.setOnClickListener(v->{if(!busy){statusFilter=key;list();}});LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-2,-2);lp.setMargins(0,0,dp(6),0);strip.addView(chip,lp);}
   content.addView(chips);orderRows=new LinearLayout(this);orderRows.setOrientation(LinearLayout.VERTICAL);content.addView(orderRows);navigation("Պատվերներ");
   task(()->demoMode?filteredDemo():api.call("GET",listPath(),null).getJSONArray("orders"),value->renderOrderRows((JSONArray)value));
