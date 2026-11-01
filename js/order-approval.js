@@ -6,25 +6,28 @@
  function render(order,root,onChanged){
   const offer=order.approval;if(!offer?.id)return;
   const box=node('section',null,'order-approval');box.dataset.approvalId=offer.id;box.dataset.approvalState=offer.state;box.append(node('h3',labels[offer.state]||''));
+  window.ZZWS_ORDER_ACTORS?.actor(box,offer.response?.actor,'Պատասխանը ուղարկել է՝ ');
+  if(offer.state==='pending')window.ZZWS_ORDER_ACTORS?.actor(box,offer.deferredBy,'Ժամանակ է խնդրել՝ ');
   if(offer.state!=='pending'){
    const rejected=offer.response?.declinedArticuls||[];if(rejected.length)box.append(node('p','Հաճախորդի մերժած ապրանքները՝ '+rejected.join(', ')));
    root.append(box);return;
   }
-  if(order.user_id&&typeof serverIdentity!=='undefined'&&order.user_id!==serverIdentity?.id){box.append(node('p','Պատասխանը կարող է ուղարկել պատվերը կազմած աշխատակիցը։'));root.append(box);return;}
+  if(!window.ZZWS_ORDER_ACTORS?.canRespond(typeof serverIdentity==='undefined'?null:serverIdentity,order)){box.append(node('p','Պատասխանը կարող է ուղարկել պատվերի հեղինակը կամ հաճախորդի գլխավոր մենեջերը։'));root.append(box);return;}
+  window.ZZWS_ORDER_ACTORS.onBehalf(box,serverIdentity,order);
   box.append(node('p','Ադմինիստրատորն առաջարկել է փոփոխություններ։ Ստուգեք քանակը, գինը և հեռացված ապրանքները։ Ցանկից կարող եք հանել ցանկացած ապրանք և հաստատել մնացածը կամ հրաժարվել ամբողջ պատվերից։'));
   const comparison=ZZWS_ORDER_COMPARE.render(offer.beforeLines||order.lines,offer.lines||[]);box.append(comparison);
   if(offer.comment)box.append(node('p',offer.comment));
   const choices=node('div',null,'approval-choices'),total=node('p'),actions=node('div',null,'approval-actions'),accept=node('button','Հաստատել ընտրված ապրանքները'),reject=node('button','Հրաժարվել ամբողջ պատվերից'),message=node('p');
   accept.type=reject.type='button';accept.dataset.approvalAccept='';reject.dataset.approvalReject='';reject.className='approval-reject';message.setAttribute('role','status');message.setAttribute('aria-live','polite');
-  let busy=false;const declined=new Set(),rows=offer.lines||[],session=sessionStorage.getItem('zzws_session_v3');
+  let busy=false,deferInput=null,deferButton=null;const declined=new Set(),rows=offer.lines||[],session=sessionStorage.getItem('zzws_session_v3');
   const current=()=>box.isConnected&&sessionStorage.getItem('zzws_session_v3')===session;
   const selected=()=>rows.filter(r=>!declined.has(r.articul));
-  function update(){total.textContent='Հաստատվող գումար՝ '+money(selected().reduce((s,r)=>s+r.qty*r.unitPrice,0));accept.disabled=busy||(rows.length>0&&!selected().length);reject.disabled=busy;for(const input of choices.querySelectorAll('input'))input.disabled=busy;}
+  function update(){total.textContent='Հաստատվող գումար՝ '+money(selected().reduce((s,r)=>s+r.qty*r.unitPrice,0));accept.disabled=busy||(rows.length>0&&!selected().length);reject.disabled=busy;if(deferInput)deferInput.disabled=busy;if(deferButton)deferButton.disabled=busy;for(const input of choices.querySelectorAll('input'))input.disabled=busy;}
   for(const row of rows){const line=node('label',null,'approval-choice'),input=node('input');input.type='checkbox';input.checked=true;input.dataset.approvalArticul=row.articul;input.onchange=()=>{if(input.checked)declined.delete(row.articul);else declined.add(row.articul);update();};line.append(input,node('span',''+row.articul+' · '+row.name+' · '+row.qty+' × '+money(row.unitPrice)));choices.append(line);}
   async function respond(decision){
    if(busy||!current())return;
    const question=decision==='reject'?'Հրաժարվե՞լ ամբողջ պատվերից։':'Հաստատե՞լ միայն ընտրված ապրանքները՝ նշված քանակներով և գներով։';if(!confirm(question))return;
-   const payload={orderId:order.id,revision:order.revision,proposalId:offer.id,decision,declinedArticuls:decision==='reject'?[]:[...declined].sort()},key='zzws_approval_'+order.id+'_'+offer.id,fingerprint=JSON.stringify(payload);let saved;
+   const payload={orderId:order.id,revision:order.revision,proposalId:offer.id,decision,declinedArticuls:decision==='reject'?[]:[...declined].sort()},key='zzws_approval_'+serverIdentity.id+'_'+order.id+'_'+offer.id,fingerprint=JSON.stringify(payload);let saved;
    try{saved=JSON.parse(sessionStorage.getItem(key)||'null');}catch{}
    if(saved&&saved.fingerprint!==fingerprint){message.textContent='Նախորդ պատասխանի արդյունքը դեռ անհայտ է։ Թարմացրեք պատվերը։';return;}
    if(!saved)saved={fingerprint,requestId:crypto.randomUUID()};sessionStorage.setItem(key,JSON.stringify(saved));busy=true;update();message.textContent='Պատասխանը ուղարկվում է…';
@@ -32,7 +35,13 @@
    catch(e){if([400,403,409].includes(e.status))sessionStorage.removeItem(key);if(current())message.textContent=ZZWS.message(e);}
    finally{busy=false;if(current())update();}
   }
-  accept.onclick=()=>respond('accept');reject.onclick=()=>respond('reject');actions.append(accept,reject);box.append(choices,total,actions,message);root.append(box);update();
+  accept.onclick=()=>respond('accept');reject.onclick=()=>respond('reject');actions.append(accept,reject);box.append(choices,total,actions);
+  if(window.ZZWS_ORDER_ACTORS.actingForAuthor(serverIdentity,order)){
+   const group=node('div',null,'approval-actions approval-primary-defer'),label=node('label','Րոպեներ՝ 1-ից 60');deferInput=node('input');deferInput.type='number';deferInput.min='1';deferInput.max='60';deferInput.step='1';deferInput.value='5';deferInput.style.maxWidth='6em';deferInput.dataset.approvalDeferMinutes='';label.append(deferInput);deferButton=node('button','Ժամանակ խնդրել դիտարկման համար');deferButton.type='button';deferButton.dataset.approvalDefer='';
+   deferButton.onclick=async()=>{if(busy||!current()||!deferInput.reportValidity())return;const minutes=Number(deferInput.value);if(!Number.isInteger(minutes)||minutes<1||minutes>60)return;const payload={orderId:order.id,revision:order.revision,proposalId:offer.id,minutes},key='zzws_approval_defer_primary_'+serverIdentity.id+'_'+order.id+'_'+offer.id,fingerprint=JSON.stringify(payload);let saved;try{saved=JSON.parse(sessionStorage.getItem(key)||'null');}catch{}if(saved&&saved.fingerprint!==fingerprint){message.textContent='Նախորդ պատասխանի արդյունքը դեռ անհայտ է։ Թարմացրեք պատվերը։';return;}if(!saved)saved={fingerprint,requestId:crypto.randomUUID()};sessionStorage.setItem(key,JSON.stringify(saved));busy=true;update();message.textContent='Պատասխանը ուղարկվում է…';try{await ZZWS.json('orders/approval-defer',{method:'POST',body:JSON.stringify({...payload,requestId:saved.requestId})});sessionStorage.removeItem(key);document.dispatchEvent(new Event('zzws:approval-response'));if(current())await onChanged();}catch(e){if([400,403,409].includes(e.status))sessionStorage.removeItem(key);if(current())message.textContent=ZZWS.message(e);}finally{busy=false;if(current())update();}};
+   group.append(label,deferButton);box.append(group);
+  }
+  box.append(message);root.append(box);update();
  }
  window.ZZWS_ORDER_APPROVAL={label,render};
 })();

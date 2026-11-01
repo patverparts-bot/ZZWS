@@ -76,7 +76,7 @@ class UnifiedActivity:ComponentActivity(){
  BackHandler(model.user!=null&&model.screen!="home"){if(model.screen=="catalog"&&!model.catalogSections&&model.control("category"))model.showDepartments()else model.screen=mainBackDestination(model.screen)}
  val catalogue=model.user!=null&&usesCatalogChrome(model.screen)
  Scaffold(topBar={if(model.user!=null&&!catalogue)RetailHeader(model)},bottomBar={if(model.user!=null){
-  if(catalogue)CatalogBottomBar(CatalogDockState(searchEnabled=model.control("search"),filtersEnabled=listOf("category","brand","stock","promo","sorting").any{model.control(it)},filters=CatalogFilters(model.brands.toSet(),model.categories.toSet(),model.onlyAvailable,model.onlyPromo,model.sort).activeCount,searchActive=model.query.isNotBlank(),comparisons=PartnerLibrary.comparison.size,cartQuantity=model.cart.values.sum()),onDepartments={model.showDepartments()},onFilters={filters=true},onSearch={catalogSearch=true},onCompare={compareDialog=true},onCart={model.screen="cart"},onMenu={appMenu=true})
+  if(catalogue)CatalogBottomBar(CatalogDockState(searchEnabled=model.control("search"),filtersEnabled=model.user?.text("role")=="admin"&&model.control("wholesale")||listOf("category","brand","stock","promo","sorting").any{model.control(it)},filters=CatalogFilters(model.brands.toSet(),model.categories.toSet(),model.onlyAvailable,model.onlyPromo,model.sort,model.onlyWholesale&&model.user?.text("role")=="admin"&&model.control("wholesale")).activeCount,searchActive=model.query.isNotBlank(),comparisons=PartnerLibrary.comparison.size,cartQuantity=model.cart.values.sum()),onDepartments={model.showDepartments()},onFilters={filters=true},onSearch={catalogSearch=true},onCompare={compareDialog=true},onCart={model.screen="cart"},onMenu={appMenu=true})
   else RetailNavigation(model)
  }},snackbarHost={SnackbarHost(messages)}){padding->Box(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)){
  Column(Modifier.fillMaxSize()){
@@ -154,6 +154,7 @@ class UnifiedActivity:ComponentActivity(){
   var acknowledged by rememberSaveable(target.userId,target.orderId,target.revision){mutableStateOf(false)}
   AlertDialog(onDismissRequest={model.cancelReceipt()},title={LocalizedText("Հաստատել ստացումը · №${target.number}")},
    text={Column(Modifier.heightIn(max=360.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(12.dp)){
+    if(target.actingForAuthor)LocalizedText(COMPANY_ORDER_ACTION_CAPTION)
     LocalizedText("Վստա՞հ եք, որ այս պատվերի բոլոր ապրանքները ստացել եք ամբողջությամբ և առանց վնասվածքների։")
     Row(Modifier.fillMaxWidth().toggleable(value=acknowledged,enabled=!model.busy,role=androidx.compose.ui.semantics.Role.Checkbox,onValueChange={acknowledged=it}).heightIn(min=48.dp),verticalAlignment=Alignment.CenterVertically){
      Checkbox(checked=acknowledged,onCheckedChange=null,enabled=!model.busy)
@@ -168,9 +169,9 @@ class UnifiedActivity:ComponentActivity(){
  if(confirmReloadCart)AlertDialog(onDismissRequest={confirmReloadCart=false},title={LocalizedText("Բեռնե՞լ սերվերի զամբյուղը")},text={LocalizedText("Այս սարքի զամբյուղը կփոխարինվի կայքում պահպանված տարբերակով։")},confirmButton={Button(onClick={confirmReloadCart=false;model.reloadServerCart()}){LocalizedText("Բեռնել")}},dismissButton={TextButton(onClick={confirmReloadCart=false}){LocalizedText("Չեղարկել")}})
  if(model.errorDialog.isNotBlank())AlertDialog(onDismissRequest={model.errorDialog=""},title={LocalizedText("Գործողությունը չի ավարտվել")},text={LocalizedText(model.errorDialog)},confirmButton={TextButton(onClick={model.errorDialog=""}){LocalizedText("Փակել")}})
  model.successOrder?.let{number->AlertDialog(onDismissRequest={model.successOrder=null},title={LocalizedText(if(model.demo)"Դեմո պատվեր №$number"else"Պատվեր №$number ուղարկված է")},text={LocalizedText(if(model.demo)"Դեմո պատվերը պահպանվել է միայն հավելվածի ընթացիկ ցուցադրման մեջ։ Իրական պատվեր չի ուղարկվել։"else"Պատվերը պահպանվել է սերվերում և հասանելի է ադմինիստրատորին։ Սպասեք պատասխանատուի հաստատմանը։")},confirmButton={TextButton(onClick={model.successOrder=null}){LocalizedText("Դիտել պատվերը")}})}
- if(filters)CatalogFiltersDialog(enabled={model.control(it)},isPromotion={model.promotion(it)!=null},products=model.catalogProducts,query=model.query,initial=CatalogFilters(model.brands.toSet(),model.categories.toSet(),model.onlyAvailable,model.onlyPromo,model.sort),onDismiss={filters=false},onApply={draft->
+ if(filters)CatalogFiltersDialog(allowWholesale=model.user?.text("role")=="admin"&&model.control("wholesale"),enabled={model.control(it)},isPromotion={model.promotion(it)!=null},products=model.catalogProducts,query=model.query,initial=CatalogFilters(model.brands.toSet(),model.categories.toSet(),model.onlyAvailable,model.onlyPromo,model.sort,model.onlyWholesale&&model.user?.text("role")=="admin"&&model.control("wholesale")),onDismiss={filters=false},onApply={draft->
   model.brands.clear();model.brands.addAll(draft.brands);model.categories.clear();model.categories.addAll(draft.categories)
-  model.onlyAvailable=draft.onlyAvailable;model.onlyPromo=draft.onlyPromo;model.sort=draft.sort;model.applyCatalogFilters();filters=false
+  model.onlyAvailable=draft.onlyAvailable;model.onlyPromo=draft.onlyPromo;model.changeOnlyWholesale(draft.onlyWholesale);model.sort=draft.sort;model.applyCatalogFilters();filters=false
  })
  product?.let{p->RetailProductDetails(p,model){product=null}}
  if(compareDialog)RetailComparison(model){compareDialog=false}

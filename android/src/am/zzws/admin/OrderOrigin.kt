@@ -27,6 +27,10 @@ internal fun orderOriginFields(order:JSONObject):List<OrderOriginField>{
     else->addField("","Ուղարկողի անունը չի պահպանվել։")}
   }
   addField("Հաճախորդի կոդ՝",customer.text("customerCode"))
+  fun addActor(label:String,actor:JSONObject?){if(actor==null)return;addField(label,name(actor));if(actor.optBoolean("actingForAuthor"))addField("","Գործողությունը կատարել է ընկերության գլխավոր օգտատերը՝ աշխատակցի փոխարեն։")}
+  addActor("Հաճախորդի պատասխանը գրանցել է՝",order.optJSONObject("approval")?.optJSONObject("response")?.optJSONObject("actor"))
+  addActor("Դիտարկման ժամանակ է խնդրել՝",order.optJSONObject("approval")?.optJSONObject("deferredBy"))
+  addActor("Ստացումը հաստատել է՝",order.optJSONObject("receipt")?.optJSONObject("actor"))
   addField("Կազմակերպություն՝",delivery.text("organization"))
   addField("Հեռախոս՝",author.text("phone"))
   addField("Էլ․ փոստ՝",author.text("email"))

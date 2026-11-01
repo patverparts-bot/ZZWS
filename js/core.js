@@ -227,6 +227,23 @@ function checkDeliveryBadge() {
   }
 }
 
+function loadWholesaleOnlyFilter() {
+  const input=document.getElementById('wholesaleOnlyFilter');if(!input)return;
+  let enabled=false;try{enabled=localStorage.getItem('zigzag_wholesale_only_'+userStorageId())==='1';}catch{}
+  input.checked=isAdminUser()&&enabled&&window.ZZWS_CATALOG_CONTROLS?.enabled('wholesale')!==false;
+}
+
+function storeWholesaleOnlyFilter(value) {
+  const input=document.getElementById('wholesaleOnlyFilter');const enabled=isAdminUser()&&value===true;
+  if(input)input.checked=enabled;
+  if(isAdminUser())try{localStorage.setItem('zigzag_wholesale_only_'+userStorageId(),enabled?'1':'0');}catch{}
+}
+
+function changeWholesaleOnlyFilter() {
+  storeWholesaleOnlyFilter(document.getElementById('wholesaleOnlyFilter')?.checked===true);
+  resetAndRender();
+}
+
 function saveFiltersToStorage() {
   if (!authorizedClient) return;
   try {
@@ -255,6 +272,7 @@ function resetCatalogFiltersOnOpen() {
   for(const id of ['searchInput','brandInput','categoryInput'])document.getElementById(id).value='';
   for(const [id,value]of [['sortBy','default'],['sortPrice','wholesale'],['sortColumn','wholesale']])document.getElementById(id).value=value;
   for(const id of ['favOnlyFilter','promoOnlyFilter','stockOnlyFilter','wholesaleOnlyFilter'])document.getElementById(id).checked=false;
+  loadWholesaleOnlyFilter();
   document.getElementById('clearSearchBtn').classList.add('hidden');
   try{localStorage.removeItem('zigzag_filters_'+userStorageId());}catch{}
   if(window.ZZWS_CATALOG_VIEW?.active())ZZWS_CATALOG_VIEW.rememberFilters({});
@@ -296,11 +314,9 @@ function loadSavedFilters() {
       if (f.stockOnly !== undefined) {
         document.getElementById('stockOnlyFilter').checked = f.stockOnly;
       }
-      if (f.wholesaleOnly !== undefined && document.getElementById('wholesaleOnlyFilter')) {
-        document.getElementById('wholesaleOnlyFilter').checked = f.wholesaleOnly;
-      }
     }
 
+    loadWholesaleOnlyFilter();
     const openState = localStorage.getItem('zigzag_filters_open_' + userStorageId());
     if (openState === '1') {
       toggleMobileFilters(true);
@@ -319,7 +335,7 @@ function clearAllFilters() {
   document.getElementById('favOnlyFilter').checked = false;
   document.getElementById('promoOnlyFilter').checked = false;
   document.getElementById('stockOnlyFilter').checked = false;
-  if (document.getElementById('wholesaleOnlyFilter')) document.getElementById('wholesaleOnlyFilter').checked = false;
+  storeWholesaleOnlyFilter(false);
   document.getElementById('searchInput').value = '';
   document.getElementById('clearSearchBtn').classList.add('hidden');
   
@@ -408,4 +424,5 @@ function getProductImageHtml(articul, productName) {
     </button>
   `;
 }
+
 

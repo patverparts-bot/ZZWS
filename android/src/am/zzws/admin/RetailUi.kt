@@ -85,7 +85,7 @@ private fun categoryIcon(category:String):String{val x=category.lowercase();retu
  val currentDepartment=catalogDepartments.find{it.id==model.department}
  val title=if(favorites)"Ընտրյալներ"else if(sections)"Բաժիններ"else if(model.offerCollection)"Հատուկ առաջարկներ"else currentDepartment?.title?:"Բոլոր ապրանքները"
  val grid=rememberLazyGridState()
- LaunchedEffect(model.query,model.department,sections,favorites,model.brands.toList(),model.categories.toList(),model.onlyPromo,model.onlyAvailable,model.sort,model.offerCollection){grid.scrollToItem(0)}
+ LaunchedEffect(model.query,model.department,sections,favorites,model.brands.toList(),model.categories.toList(),model.onlyPromo,model.onlyAvailable,model.onlyWholesale,model.sort,model.offerCollection){grid.scrollToItem(0)}
  LazyVerticalGrid(columns=GridCells.Adaptive(if(sections)148.dp else 158.dp),state=grid,modifier=Modifier.fillMaxSize().testTag("catalog-products-grid"),contentPadding=PaddingValues(start=14.dp,end=14.dp,top=8.dp,bottom=14.dp),horizontalArrangement=Arrangement.spacedBy(10.dp),verticalArrangement=Arrangement.spacedBy(10.dp)){
   // Context is part of the scrolling grid, never a pinned toolbar above products.
   item(key="catalog-context",span={GridItemSpan(maxLineSpan)}){

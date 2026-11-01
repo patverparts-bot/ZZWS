@@ -42,7 +42,7 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
  var orderSearch by mutableStateOf("");var orderFrom by mutableStateOf("");var orderTo by mutableStateOf("")
  private var appliedOrderFilter=Triple("","","")
  var demo by mutableStateOf(false);private set
- fun enterDemo(){if(busy)return;reset();AppSession.clear();demo=true;user=trialBackend.user;products=trialBackend.products.map(::Product);publishedOffer=trialBackend.offer;subscriptions=JSONObject().put("enabled",false);setDelivery(0,false);date=java.time.LocalDate.now(java.time.ZoneId.of("Asia/Yerevan")).toString();draftReady=true;screen="home";cartSync="Դեմո · փոփոխությունները միայն այս սարքում են"}
+ fun enterDemo(){if(busy)return;reset();AppSession.clear();demo=true;user=trialBackend.user;onlyWholesale=CatalogWholesalePreference.read(AppContext.value,EndpointConfiguration.API,user);products=trialBackend.products.map(::Product);publishedOffer=trialBackend.offer;subscriptions=JSONObject().put("enabled",false);setDelivery(0,false);date=java.time.LocalDate.now(java.time.ZoneId.of("Asia/Yerevan")).toString();draftReady=true;screen="home";cartSync="Դեմո · փոփոխությունները միայն այս սարքում են"}
  var catalogControls by mutableStateOf(JSONObject());private set
  var popularity by mutableStateOf(JSONObject());private set
  private var catalogVersion=""
@@ -66,6 +66,8 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
  fun searchCatalog(text:String){if(screen!="catalog"||query.isBlank()&&text.isNotBlank())showAllProducts();query=text;catalogSections=false;screen="catalog"}
  fun applyCatalogFilters(){catalogSections=false;screen="catalog"}
  var onlyAvailable by mutableStateOf(false);var onlyPromo by mutableStateOf(false);var sort by mutableStateOf(0)
+ var onlyWholesale by mutableStateOf(false);private set
+ fun changeOnlyWholesale(value:Boolean){onlyWholesale=CatalogWholesalePreference.save(AppContext.value,EndpointConfiguration.API,user,value)}
  val cart=mutableStateMapOf<String,Int>()
  val cartSelection=mutableStateMapOf<String,Boolean>()
  var checkoutStep by mutableStateOf(1)
@@ -102,7 +104,7 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
  fun promotion(p:Product)=promotionKind(p,user?.text("role")=="admin",priceMode,buyerView)
  val specialOffers by derivedStateOf{if(control("promo"))publishedOfferProducts(products,publishedOffer,user?.text("role")=="admin",priceMode,buyerView)else emptyList()}
  val catalogProducts get()=if(offerCollection)specialOffers else departmentProducts
- val filtered by derivedStateOf{if(onlyPromo&&!control("promo"))emptyList()else visibleProducts(catalogProducts,if(control("search"))query else "",if(control("brand"))brands.toSet()else emptySet(),if(control("category"))categories.toSet()else emptySet(),control("stock")&&onlyAvailable,onlyPromo,if(control("sorting"))sort else 0,::unit){promotion(it)!=null}}
+ val filtered by derivedStateOf{if(onlyPromo&&!control("promo"))emptyList()else visibleProducts(wholesalePricedProducts(catalogProducts,onlyWholesale&&control("wholesale"),user?.text("role")=="admin"),if(control("search"))query else "",if(control("brand"))brands.toSet()else emptySet(),if(control("category"))categories.toSet()else emptySet(),control("stock")&&onlyAvailable,onlyPromo,if(control("sorting"))sort else 0,::unit){promotion(it)!=null}}
  val brandOptions get()=brandChoices(departmentProducts,categories.toSet(),brands.toSet())
  val categoryOptions get()=categoryChoices(departmentProducts,brands.toSet(),categories.toSet())
  fun unit(p:Product)=if(screen=="cart")quotedProducts[p.code]?.let{nativePrice(it,user?.text("role")=="admin",priceMode,buyer!=null)}?:if(buyer!=null)0.0 else nativePrice(p,user?.text("role")=="admin",priceMode,false) else nativePrice(p,user?.text("role")=="admin",priceMode,buyerView)
@@ -111,7 +113,7 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
  private fun restoreSession()=run{val restored=withContext(Dispatchers.IO){AppSession.restore()};if(restored)completeLogin()}
  private fun run(work:suspend ()->Unit){if(busy)return;busy=true;notice="";errorDialog="";viewModelScope.launch{try{work()}catch(e:Exception){if(e is CancellationException)throw e;if(e is ApiClient.ApiError&&e.status==401){reset();AppSession.clear()};notice=e.message?:"Գործողությունը չի կատարվել";errorDialog=notice}finally{busy=false}}}
  private suspend fun call(path:String,body:JSONObject?=null):JSONObject=withContext(Dispatchers.IO){gate.withLock{if(demo)trialBackend.call(path,body)else AppSession.api.call(if(body==null)"GET" else "POST",path,body)}}
- private fun reset(){++draftEpoch;draftReady=false;draftDirty=false;draftVersion=0;draftConflict=false;draftSync="";deliveryIndex=0;method="Առաքում";approvalRequests.clear();approvalDefers.clear();approvalReminder=null;approvalLastShown=null;approvalPolling=false;catalogVersion="";catalogLoadedAt=0;department="";catalogSections=true;offerCollection=false;publishedOffer=null;demo=false;orderSearch="";orderFrom="";orderTo="";appliedOrderFilter=Triple("","","");cartSelection.clear();checkoutStep=1;checkoutProof="";webHandoff=false;PartnerLibrary.clear();catalogControls=JSONObject();popularity=JSONObject();++cartEpoch;cartDirty=false;cartVersion=0;cartConflict=false;cartSync="";PushHooks.detach(AppContext.value,AppSession.api);NotificationBridge.clear(AppContext.value);user=null;products=emptyList();orders=emptyList();order=null;buyer=null;catalogBuyer=null;quotedProducts=emptyMap();customers=emptyList();cart.clear();brands.clear();categories.clear();query="";onlyAvailable=false;onlyPromo=false;sort=0;challenge="";screen="home";frozenRequest=null;requestId=null;checkoutReady=false;address="";contact="";date="";comment="";priceMode="WS";subscriptions=null;management=null;successOrder=null;receiptConfirmation=null;errorDialog=""}
+ private fun reset(){++draftEpoch;draftReady=false;draftDirty=false;draftVersion=0;draftConflict=false;draftSync="";deliveryIndex=0;method="Առաքում";approvalRequests.clear();approvalDefers.clear();approvalReminder=null;approvalLastShown=null;approvalPolling=false;catalogVersion="";catalogLoadedAt=0;department="";catalogSections=true;offerCollection=false;publishedOffer=null;demo=false;orderSearch="";orderFrom="";orderTo="";appliedOrderFilter=Triple("","","");cartSelection.clear();checkoutStep=1;checkoutProof="";webHandoff=false;PartnerLibrary.clear();catalogControls=JSONObject();popularity=JSONObject();++cartEpoch;cartDirty=false;cartVersion=0;cartConflict=false;cartSync="";PushHooks.detach(AppContext.value,AppSession.api);NotificationBridge.clear(AppContext.value);user=null;products=emptyList();orders=emptyList();order=null;buyer=null;catalogBuyer=null;quotedProducts=emptyMap();customers=emptyList();cart.clear();brands.clear();categories.clear();query="";onlyAvailable=false;onlyPromo=false;onlyWholesale=false;sort=0;challenge="";screen="home";frozenRequest=null;requestId=null;checkoutReady=false;address="";contact="";date="";comment="";priceMode="WS";subscriptions=null;management=null;successOrder=null;receiptConfirmation=null;errorDialog=""}
  fun login(login:String,password:String)=run{
   reset();AppSession.clear()
   withContext(Dispatchers.IO){AppSession.api.configure(EndpointConfiguration.API,EndpointConfiguration.PUBLIC_KEY)}
@@ -121,7 +123,7 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
  fun mfa(code:String)=run{call("login/mfa",JSONObject().put("challengeToken",challenge).put("code",code));completeLogin()}
  fun cancelAccountProfile()=run{try{call("logout",JSONObject())}finally{AppSession.clear();reset()}}
  fun saveAccountPerson(firstName:String,lastName:String,phone:String,email:String)=run{call("account/profile",JSONObject().put("firstName",firstName).put("lastName",lastName).put("phone",phone).put("email",email));completeLogin()}
- private suspend fun completeLogin(){val me=call("me");if(me.optBoolean("needsProfileSetup")&&!me.optBoolean("needsPasswordSetup")){user=me;AppSession.user=me;return};if(me.optBoolean("needsPasswordSetup")){AppSession.clear();throw Exception("Նախ կայքում բացեք հրավերի հղումը և սահմանեք նոր գաղտնաբառը։")};try{call("me/mobile/session",JSONObject())}catch(e:ApiClient.ApiError){if(e.status!=404)throw e};withContext(Dispatchers.IO){AppSession.remember()};user=me;AppSession.user=me;challenge="";loadCatalog();setDelivery(0,false);loadServerCart(true);frozenRequest=withContext(Dispatchers.IO){SecurePendingOrder.read(AppContext.value,me.text("id"))};if(frozenRequest!=null){screen="cart";notice="Նախորդ ուղարկումը պետք է ստուգել։ Նույն ուղարկումը կրկնօրինակ չի ստեղծի։"};subscriptions=call("me/mobile/preferences")}
+ private suspend fun completeLogin(){val me=call("me");if(me.optBoolean("needsProfileSetup")&&!me.optBoolean("needsPasswordSetup")){user=me;AppSession.user=me;return};if(me.optBoolean("needsPasswordSetup")){AppSession.clear();throw Exception("Նախ կայքում բացեք հրավերի հղումը և սահմանեք նոր գաղտնաբառը։")};try{call("me/mobile/session",JSONObject())}catch(e:ApiClient.ApiError){if(e.status!=404)throw e};withContext(Dispatchers.IO){AppSession.remember()};user=me;AppSession.user=me;onlyWholesale=CatalogWholesalePreference.read(AppContext.value,EndpointConfiguration.API,user);challenge="";loadCatalog();setDelivery(0,false);loadServerCart(true);frozenRequest=withContext(Dispatchers.IO){SecurePendingOrder.read(AppContext.value,me.text("id"))};if(frozenRequest!=null){screen="cart";notice="Նախորդ ուղարկումը պետք է ստուգել։ Նույն ուղարկումը կրկնօրինակ չի ստեղծի։"};subscriptions=call("me/mobile/preferences")}
  private suspend fun loadServerCart(includeDraft:Boolean=false){val state=call("me/state");cartVersion=state.optJSONObject("versions")?.optInt("cart")?:0;cart.clear();cart.putAll(memoryQuantities(state.optJSONObject("data")?.optJSONObject("cart")));cartDirty=false;cartConflict=false;PartnerLibrary.load(user?.text("id").orEmpty());PartnerLibrary.accept(favoriteList(state.optJSONObject("data")?.optJSONArray("favorites")));cartSync="Զամբյուղը համաժամացված է սերվերի հետ";if(includeDraft)loadCheckoutDraft(state)}
  private fun checkoutDraft()=CheckoutDraft(deliveryRows.getOrNull(deliveryIndex)?.text("id").orEmpty(),method,address,contact,date,comment)
  private fun applyCheckoutDraft(value:JSONObject?){val restored=restoreCheckoutDraft(value,deliveryRows);deliveryIndex=restored.index;method=restored.value.method;address=restored.value.address;contact=restored.value.contact;date=restored.value.date;comment=restored.value.comment;checkoutReady=false;checkoutProof=""}
@@ -274,13 +276,21 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
   finally{approvalPolling=false}}
  }
  fun deferApprovalReminder(minutes:Int)=run{
-  require(minutes in 1..60){"Ընտրեք 1-ից 60 րոպե"};val target=approvalReminder?:return@run
+  val target=approvalReminder?:return@run;deferApproval(target,minutes)
+ }
+ fun deferCurrentApproval(minutes:Int)=run{
+  val current=order?:return@run;check(clientCanReviewApproval(user,current)){"Միայն հաճախորդը կարող է հաստատել փոփոխությունները"}
+  val target=JSONObject().put("id",current.text("id")).put("revision",current.optInt("revision")).put("proposalId",current.getJSONObject("approval").text("id"))
+  deferApproval(target,minutes)
+ }
+ private suspend fun deferApproval(target:JSONObject,minutes:Int){
+  require(minutes in 1..60){"Ընտրեք 1-ից 60 րոպե"}
   val body=JSONObject().put("orderId",target.text("id")).put("revision",target.optInt("revision")).put("proposalId",target.text("proposalId")).put("minutes",minutes)
   val key=target.text("proposalId");val fingerprint=body.toString();val prior=approvalDefers[key]
   check(prior==null||prior.first==fingerprint){"Նախորդ պատասխանի արդյունքը դեռ անհայտ է։ Թարմացրեք պատվերը։"}
   val request=prior?.second?:UUID.randomUUID().toString();approvalDefers[key]=fingerprint to request;body.put("requestId",request)
   try{val result=call("orders/approval-defer",body);approvalDefers.remove(key);updateReceiptOrder(result);dismissApprovalReminder();notice="Ադմինիստրատորը ծանուցված է Ձեր խնդրած ժամանակի մասին։"}
-  catch(error:ApiClient.ApiError){if(error.status in listOf(400,403,409)){approvalDefers.remove(key);if(error.status==409)dismissApprovalReminder()};throw error}
+  catch(error:ApiClient.ApiError){if(error.status in listOf(400,403,404,409)){approvalDefers.remove(key);if(error.status==409)dismissApprovalReminder()};throw error}
  }
  private val approvalRequests=mutableMapOf<String,Pair<String,String>>()
  fun respondToApproval(decision:String,declined:List<String>)=run{
@@ -290,7 +300,7 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
   check(prior==null||prior.first==fingerprint){"Նախորդ պատասխանի արդյունքը դեռ անհայտ է։ Թարմացրեք պատվերը։"}
   val request=prior?.second?:java.util.UUID.randomUUID().toString();approvalRequests[key]=fingerprint to request;base.put("requestId",request)
   try{val result=call("orders/approval",base);approvalRequests.remove(key);updateReceiptOrder(result);approvalReminder=null;notice="Համաձայնության պատասխանը պահպանված է։"}
-  catch(e:ApiClient.ApiError){if(e.status in listOf(400,403,409))approvalRequests.remove(key);throw e}
+  catch(e:ApiClient.ApiError){if(e.status in listOf(400,403,404,409))approvalRequests.remove(key);throw e}
  }
  fun openOrder(id:String)=run{val response=call(if(admin&&user?.permission("orders:read")==true)"admin/orders/detail"else"orders/detail",JSONObject().put("id",id));order=response.optJSONObject("order")?:response;screen="order"}
  private fun updateReceiptOrder(value:JSONObject){

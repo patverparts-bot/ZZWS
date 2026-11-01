@@ -156,7 +156,7 @@ const favOnly = document.getElementById('favOnlyFilter').checked;
 const promoOnly = document.getElementById('promoOnlyFilter').checked;
 const stockOnly = document.getElementById('stockOnlyFilter').checked;
 const wholesaleOnlyEl = document.getElementById('wholesaleOnlyFilter');
-const wholesaleOnly = catalogIsAdmin() && wholesaleOnlyEl && wholesaleOnlyEl.checked;
+const wholesaleOnly = isAdminUser() && window.ZZWS_CATALOG_CONTROLS?.enabled('wholesale')!==false && wholesaleOnlyEl && wholesaleOnlyEl.checked;
 
 document.getElementById('clearSearchBtn').classList.toggle('hidden', searchQuery.length === 0);
 
@@ -168,8 +168,7 @@ filteredProducts = allProducts.filter(p => {
   const matchPromo = !promoOnly || (window.ZZWS_STOREFRONT?.isPromo(p) ?? (p.isWholesalePromo || p.kpIsPromo));
   const matchStock = !stockOnly || p.stockAvailable === true || (p.stockAvailable == null && (String(p.stockStatus||'').trim()==='Առկա է'||catalogIsAdmin()&&p.targetWarehousesStock>=3));
   
-  // Условие для Ադմինիստրատորа: проверяет наличие хотя бы одной из оптовых цен (KP price или WS price)
-  const matchWholesale = !wholesaleOnly || p.hasWholesale;
+  const matchWholesale = !wholesaleOnly || Number.isFinite(p.wholesale) && p.wholesale > 0 || Number.isFinite(p.kpPrice) && p.kpPrice > 0;
 
   return matchBrand && matchCategory && matchSearch && matchFav && matchPromo && matchStock && matchWholesale && (window.ZZWS_DEALER?.matches(p) ?? true) && (window.ZZWS_STOREFRONT?.matches(p) ?? true);
 });
@@ -475,4 +474,5 @@ function getActionControlHtml(articul, cartItem, isMobile = false) {
 <button data-act="qty" data-delta="1" data-art="${a}" aria-label="Ավելացնել քանակը" class="${btnPadding} bg-blue-100 dark:bg-blue-900/60 hover:bg-blue-200 dark:hover:bg-blue-900 text-blue-800 dark:text-blue-200 font-bold active:bg-blue-300">+</button>
 </div>`;
 }
+
 

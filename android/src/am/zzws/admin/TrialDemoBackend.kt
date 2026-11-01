@@ -25,6 +25,7 @@ internal class TrialDemoBackend(private val sample:List<JSONObject>?=null,privat
     orders.add(0,created);JSONObject(created.toString())
    }
    path=="orders"||path.startsWith("orders?before=")->JSONObject().put("orders",JSONArray(orders))
+   path=="orders/receipt-state"->JSONObject().put("statement",RECEIPT_STATEMENT)
    path=="orders/detail"||path=="admin/orders/detail"->JSONObject((orders.firstOrNull{it.text("id")==body?.text("id")}?:throw IllegalArgumentException("Դեմո պատվերը չի գտնվել")).toString())
    path=="logout"||path=="me/mobile/session"->JSONObject()
    else->throw IllegalArgumentException("Այս գործողությունը հասանելի է իրական հաշիվ մուտք գործելուց հետո։")

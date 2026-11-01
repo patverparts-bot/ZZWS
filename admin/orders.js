@@ -66,6 +66,8 @@
   let approvalInfo=el('adminApprovalInfo');if(!approvalInfo){approvalInfo=node('div');approvalInfo.id='adminApprovalInfo';el('selectedOrderMeta').after(approvalInfo);}approvalInfo.textContent=o.approval?.state==='approved'&&o.status==='confirmed'?'Հաճախորդը համաձայնեցրել է փոփոխությունները։ Կարելի է ձևակերպել պատվերը։':window.ZZWS_ORDER_APPROVAL?.label(o)||'';
   if(o.approval?.state==='pending'&&o.approval.reviewRequestedMinutes)approvalInfo.append(node('p','Հաճախորդը ժամանակ է խնդրել դիտարկման համար՝ '+o.approval.reviewRequestedMinutes+' րոպե։ Հիշեցնել՝ '+date(o.approval.remindAfter)));
   if(o.approval?.response?.declinedArticuls?.length)approvalInfo.append(node('p','Հաճախորդի մերժած ապրանքները՝ '+o.approval.response.declinedArticuls.join(', ')));
+  window.ZZWS_ORDER_ACTORS?.actor(approvalInfo,o.approval?.response?.actor,'Պատասխանը ուղարկել է՝ ');
+  if(o.approval?.state==='pending')window.ZZWS_ORDER_ACTORS?.actor(approvalInfo,o.approval.deferredBy,'Ժամանակ է խնդրել՝ ');
   if(o.approval?.state==='pending')approvalInfo.append(ZZWS_ORDER_COMPARE.render(o.lines,o.approval.lines));
   ZZWS_ORDER_LAYOUT.delivery(el('selectedOrderDelivery'),o.delivery);
   ZZWS_ADMIN_RECEIPTS.proof(o,el('selectedOrderReceipt'));
@@ -216,4 +218,3 @@
  el('downloadFinalTemplate').onclick=()=>run(()=>download('admin/orders/template','Final-order-template.xlsx'));el('exportServerOrder').onclick=()=>run(()=>download('admin/orders/export','Order-'+selected.number+'.xlsx',{id:selected.id}));
  window.ZZWS_ADMIN_ORDERS={load,start,reset,poll,refreshUnread,setRefreshSeconds,openNotice:id=>open(id),context:()=>selected?{...selected}:null,previewTemplate};
 })();
-
