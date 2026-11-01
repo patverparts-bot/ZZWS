@@ -73,10 +73,11 @@ internal fun catalogSearchVisible(previous:CatalogPosition,current:CatalogPositi
      LocalizedText(p.name,style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.SemiBold,color=Color(0xFF12243C),maxLines=2,overflow=TextOverflow.Ellipsis)
      Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)){
       LocalizedText(p.code,style=MaterialTheme.typography.labelMedium,color=Color(0xFF718096),modifier=Modifier.weight(1f).clickable{val clipboard=context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager;clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Արտիկուլ",p.code))},maxLines=1,overflow=TextOverflow.Ellipsis)
-      LocalizedText(productAvailabilityLabel(p),style=MaterialTheme.typography.labelSmall,color=if(p.available)Color(0xFF087547)else Color(0xFF916000),maxLines=1,overflow=TextOverflow.Ellipsis,modifier=Modifier.widthIn(max=110.dp))
+
      }
     }
    }
+   WarehouseAvailability(p)
    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically){
     Column(Modifier.weight(1f)){LocalizedText("Ձեր գինը",style=MaterialTheme.typography.labelSmall,color=Color(0xFF64748B));OneLineLabel(money(price),18,FontWeight.Bold)}
     if(quantity==0)Button(onClick={onQuantity(1)},enabled=enabled&&price>0,shape=RoundedCornerShape(12.dp),contentPadding=PaddingValues(horizontal=14.dp,vertical=10.dp)){OneLineLabel("Ավելացնել",12)}

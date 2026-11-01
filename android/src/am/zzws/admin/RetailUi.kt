@@ -128,7 +128,7 @@ private fun categoryIcon(category:String):String{val x=category.lowercase();retu
  model.badges(p.code).forEach{LocalizedText(it,fontSize=9.sp,color=BrandBlue)}
  if(p.retail>price&&price>0)Text(money(p.retail),fontSize=10.sp,color=Color(0xFF9DA2A8),textDecoration=TextDecoration.LineThrough)
  Text(money(price),fontWeight=FontWeight.Bold,fontSize=18.sp,color=if(promotion!=null)BrandAccent else ShopInk,maxLines=1)
- LocalizedText(productAvailabilityLabel(p),modifier=Modifier.testTag("retail-stock:"+p.code),fontSize=11.sp,color=if(p.available)Color(0xFF087547)else Color(0xFF916000),maxLines=1,overflow=TextOverflow.Ellipsis)
+ WarehouseAvailability(p,Modifier.testTag("retail-stock:"+p.code))
  Row(Modifier.fillMaxWidth().padding(top=3.dp),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically){
  IconButton(onClick={model.toggleFavorite(p.code)},modifier=Modifier.size(43.dp)){CompositionLocalProvider(LocalContentColor provides if(favorite)BrandAccent else ShopInk){AppIcon(if(favorite)"heart-filled"else"heart")}}
  IconButton(onClick={PartnerLibrary.compare(p.code)},enabled=compare||PartnerLibrary.comparison.size<3,modifier=Modifier.size(43.dp)){CompositionLocalProvider(LocalContentColor provides if(compare)BrandBlue else ShopInk){AppIcon("compare")}}
@@ -155,10 +155,11 @@ private fun categoryIcon(category:String):String{val x=category.lowercase();retu
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable internal fun RetailProductDetails(p:Product,model:UnifiedModel,onDismiss:()->Unit){ModalBottomSheet(onDismissRequest=onDismiss,containerColor=Color.White){Column(Modifier.fillMaxWidth().testTag("retail-product-details:${p.code}").verticalScroll(rememberScrollState()).padding(horizontal=20.dp).padding(bottom=24.dp),verticalArrangement=Arrangement.spacedBy(9.dp)){
  model.promotion(p)?.let{LocalizedText(it.label,fontSize=12.sp,fontWeight=FontWeight.SemiBold,color=BrandAccent)}
- Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){BrandLabel(p.brand,Modifier.weight(1f));IconButton(onClick={model.toggleFavorite(p.code)}){AppIcon(if(p.code in PartnerLibrary.favorites)"heart-filled"else"heart")};IconButton(onClick=onDismiss){AppIcon("close")}}
+ Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){BrandLabel(p.brand,Modifier.weight(1f));IconButton(onClick={model.toggleFavorite(p.code)}){AppIcon(if(p.code in PartnerLibrary.favorites)"heart-filled"else"heart")};IconButton(onClick=onDismiss,modifier=Modifier.testTag("product-details-close")){AppIcon("close")}}
  Box(Modifier.fillMaxWidth().height(232.dp),contentAlignment=Alignment.Center){ProductPhoto(p.code,true,220)}
  LocalizedText(p.name,fontSize=22.sp,fontWeight=FontWeight.Bold,lineHeight=28.sp)
- Row{LocalizedText(p.code,Modifier.weight(1f),fontSize=12.sp,color=ShopMuted);LocalizedText(p.stock,fontSize=12.sp,color=BrandBlue)}
+ LocalizedText(p.code,fontSize=12.sp,color=ShopMuted)
+ WarehouseAvailability(p,Modifier.testTag("details-stock:"+p.code))
  if(p.retail>model.unit(p)&&model.unit(p)>0)Text(money(p.retail),textDecoration=TextDecoration.LineThrough,color=ShopMuted,fontSize=15.sp)
  Text(money(model.unit(p)),fontSize=29.sp,fontWeight=FontWeight.Bold,color=BrandAccent)
  Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)){
@@ -177,7 +178,7 @@ private fun categoryIcon(category:String):String{val x=category.lowercase();retu
  else{Row(horizontalArrangement=Arrangement.spacedBy(10.dp)){products.forEach{p->Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(8.dp)){
  IconButton(onClick={PartnerLibrary.compare(p.code)}){AppIcon("close")};Box(Modifier.fillMaxWidth().height(100.dp),contentAlignment=Alignment.Center){ProductPhoto(p.code,edge=82)}
  LocalizedText(p.name,fontSize=11.sp,maxLines=3,minLines=3,overflow=TextOverflow.Ellipsis);Text(money(model.unit(p)),fontSize=14.sp,color=BrandAccent,fontWeight=FontWeight.Bold)
- BrandLabel(p.brand);LocalizedText(p.category,fontSize=11.sp);LocalizedText(p.stock,fontSize=11.sp,color=BrandBlue)
+ BrandLabel(p.brand);LocalizedText(p.category,fontSize=11.sp);WarehouseAvailability(p,Modifier.testTag("comparison-stock:"+p.code))
  }}}
  HorizontalDivider();LocalizedText("Տեխնիկական բնութագրեր",fontWeight=FontWeight.Bold)
  products.forEach{p->LocalizedText(p.name,fontWeight=FontWeight.SemiBold,fontSize=13.sp);ProductTechnicalDetails(p)}}

@@ -53,6 +53,7 @@
   const compare=button('Համեմատել',()=>ZZWS_DEALER.toggleCompare(p.articul),'sf-button sf-compare');compare.dataset.dealerCompare=p.articul;compare.setAttribute('aria-pressed',String(ZZWS_DEALER.isSelected(p.articul)));compare.setAttribute('aria-label','Համեմատել՝ '+p.name);row.append(buy,compare);root.append(row);return root;
  }
  function navigate(next,clear=true,historyMode='push'){
+  window.ZZWS_DISCLOSURE_MENUS?.close();
   if(!owner)return;const previousRoute=route;route=['home','catalog','promo','new'].includes(next)?next:'home';if(route==='promo'&&controls.promo===false)route='catalog';
   if(clear){resetCatalogFiltersOnOpen();ZZWS_DEALER.clearFilters();}
   else if(previousRoute==='promo'&&route!=='promo')el('promoOnlyFilter').checked=false;

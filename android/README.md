@@ -1,8 +1,9 @@
 # ZZWS — primary Android application
 
-Published baseline 7.1.21 (70121), package `am.zzws.admin`, Android 8+.
-The working 7.1.23 candidate includes the verified installer handoff and direct
-Home/Orders navigation; its publication is separate from the published baseline.
+Published baseline 7.1.23 (70123), package `am.zzws.admin`, Android 8+.
+The working 7.1.24 candidate shows all authorized warehouse counts and includes
+the verified installer handoff and direct Home/Orders navigation; its publication
+is separate from the published baseline.
 The same six bottom actions are visible on every page: Home, Catalogue, Orders,
 Search, Cart and Menu. Filters, comparison, favourites and account/management
 tools are grouped in Menu. Clients open personal order history. Administrators
@@ -10,6 +11,13 @@ with orders:read open native management when mobile administration is enabled,
 or the authenticated web manager directly otherwise. Price-only administrators
 gain no order access. Both hosts recheck the normal session's current rights.
 Their Home actions return to the existing app session without signing out.
+
+Warehouse counts use compact wrapping pills on native home/catalogue/favourites
+cards, product details, comparison and the alternate catalogue. Only the stock
+string already authorized by the server is displayed. An unambiguous numeric
+warehouse-code/count comma list is parsed without rounding, filtering or adding
+warehouses; other availability/status text wraps in full. There is no ellipsis,
+horizontal stock scrolling or lookup of hidden/raw warehouse data.
 This is the canonical
 application as of 1 November 2026. All Android development, builds, tests and
 releases belong here. The separate Partner prototype was retired and deleted on

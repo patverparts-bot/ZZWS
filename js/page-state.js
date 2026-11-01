@@ -31,7 +31,7 @@
    else if(state.overlay==='technical'){if(state.bulletin)await window.ZZWS_BULLETINS?.restore(state.bulletin);await window.ZZWS_PRODUCT_TECHNICAL?.restore(state.technical);}
    if(state.dealerPanel)await window.ZZWS_DEALER?.restoreView?.(state.dealerPanel);
    window.ZZWS_STOREFRONT?.restoreView?.(state.storefront);await window.ZZWS_USER_GUIDE?.restoreView?.(state.guide);window.ZZWS_ASSISTANT?.restoreView?.(state.assistant);await window.ZZWS_CONTEXT_HELP?.restoreView?.(state.contextHelp);
-   await window.ZZWS_VIEW_STATE?.restore(state.ui);if(ticket!==epoch)return;window.scrollTo({top:Math.max(0,Math.min(1000000,Number(state.scrollY)||0)),behavior:'instant'});
+   await window.ZZWS_VIEW_STATE?.restore(state.ui);if(ticket!==epoch)return;const point={x:0,y:Math.max(0,Math.min(1000000,Number(state.scrollY)||0))};if(window.ZZWS_DISCLOSURE_MENUS?.restorePosition)window.ZZWS_DISCLOSURE_MENUS.restorePosition(point);else window.scrollTo({top:point.y,behavior:'instant'});
   }}finally{if(ticket===epoch){restoring=false;ready=true;save();}}
  }
  function stop(){++epoch;clearTimeout(timer);if(owner)history.replaceState(history.state,'','#home');owner=null;pending=null;ready=false;restoring=false;try{sessionStorage.removeItem(key);}catch{}}
