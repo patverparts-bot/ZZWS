@@ -1,5 +1,37 @@
 # ZZWS file layout
 
+## Customer archive and access closure
+
+The owner can choose Close access and move to archive from a main customer card.
+An explicit reason (3–1000 characters) and the current administrator password are
+required. The archive records the reason, Yerevan date/time and administrator name;
+search matches customer, code, reason or administrator, with 50 entries per page.
+Only owners can view it or restore a customer. Deleted customers remain separate.
+
+The SQL transaction saves each team member's prior access state, disables the whole
+team, revokes sessions/invitations and retains all existing prices, carts, delivery
+variants, orders and report author snapshots. Working client lists and assisted-order
+selection exclude archived accounts. A database guard prevents stale cards/imports
+from editing or enabling archived accounts. Password reset/invitation endpoints also
+reject them before changing Auth credentials. Customer codes remain reserved.
+
+Restore requires the current administrator password and a matching card revision.
+It returns the customer to working lists and restores only the access settings from
+before archiving. Already disabled managers/employees stay disabled. Old sessions
+and invitations never revive; unused invitations must be issued again. Audit records
+retain the original reason and administrator after restoration/repeated archiving.
+All archive metadata is part of existing encrypted application snapshots; it is never
+exposed in a client's personal profile.
+
+Migration: `supabase/migrations/20261101061259_client_archive.sql`.
+UI: `admin/client-archive.js`, with the existing critical confirmation dialog.
+API: GET/POST `admin/users/archive`, POST `admin/users/restore`.
+Validation covers permissions, reason/password validation, whole-team closure,
+preserved history/delivery, prior-disabled access restoration, stale requests,
+revoked invitations, search escaping and pagination. Browser coverage includes both
+languages/guides, cancellation, password errors, search, persistence, restoration
+and mobile layout. Real Auth is exercised only on temporary staging accounts.
+
 ## Customer deletion with password confirmation
 
 The owner opens the main customer card and chooses Delete customer. A red critical
