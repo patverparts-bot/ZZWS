@@ -6,7 +6,8 @@ The existing Viber approval reminder has a Choose date and time control. The own
 or order manager selects a future Yerevan (UTC+4) date/time and can optionally defer
 the customer's approval popup until the same moment. Unchecked leaves the customer's
 existing deadline unchanged. The administrator's deadline is personal; other staff
-keep their own reminders. The existing five-minute shortcut remains available.
+keep their own reminders. The existing five-minute shortcut also saves a server-side personal deadline and
+can replace an earlier custom postponement.
 
 Server-side recipient-scoped snoozes persist across page/device reloads. A transaction
 checks the active order manager, pending proposal, defer-request ID and order revision,

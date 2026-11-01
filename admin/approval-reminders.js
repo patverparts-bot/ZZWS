@@ -30,12 +30,16 @@
   const later=button('Հիշեցնել 5 րոպեից',()=>saveLater(o)),orderButton=button('Բացել պատվերը',async()=>{saveLater(o);try{await selectAdminTab('orders');await ZZWS_ADMIN_ORDERS.openNotice(o.id);}catch(e){if(ticket===epoch)alert(ZZWS.message(e));}});
   const custom=node('fieldset'),legend=node('legend','Կամայական հետաձգում'),whenLabel=node('label','Կրկին հիշեցնել՝'),when=node('input'),zone=node('small','Երևանի ժամանակով՝ UTC+4'),clientLabel=node('label'),client=node('input'),hint=node('p','Առանց նշման հաճախորդի հիշեցման ժամկետը չի փոխվի։'),apply=button('Հետաձգել մինչև ընտրված ժամը',async()=>{
    const stamp=Date.parse(when.value+':00+04:00');if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(when.value)||!Number.isFinite(stamp)||stamp<=Date.now()){status.textContent='Ընտրեք ապագա ամսաթիվ և ժամ';return;}
-   const until=new Date(stamp).toISOString(),fingerprint=until+'|'+client.checked;if(!attempt||attempt.fingerprint!==fingerprint)attempt={fingerprint,id:crypto.randomUUID()};
+   await persistUntil(new Date(stamp).toISOString(),client.checked);
+  }),customButton=button('Ընտրել ամսաթիվ և ժամ',()=>{custom.hidden=!custom.hidden;if(!custom.hidden)when.focus();});let busy=false,attempt=null;
+  async function persistUntil(until,includeClient){
+   if(busy)return;const fingerprint=until+'|'+includeClient;if(!attempt||attempt.fingerprint!==fingerprint)attempt={fingerprint,id:crypto.randomUUID()};
    busy=true;for(const b of [later,orderButton,customButton,when,client,apply])b.disabled=true;status.textContent='Հետաձգումը պահպանվում է…';
-   try{await ZZWS.json('admin/orders/approval-reminder/snooze',{method:'POST',body:JSON.stringify({orderId:o.id,revision:o.revision,proposalId:o.proposalId,deferRequestId:o.deferRequestId,until,includeClient:client.checked,requestId:attempt.id})});if(ticket!==epoch||dialog!==box)return;postponed.delete(key(o));try{sessionStorage.setItem('zzws_admin_approval_later_'+identity.id,JSON.stringify([...postponed]));}catch{}close();await refresh();}
+   try{await ZZWS.json('admin/orders/approval-reminder/snooze',{method:'POST',body:JSON.stringify({orderId:o.id,revision:o.revision,proposalId:o.proposalId,deferRequestId:o.deferRequestId,until,includeClient,requestId:attempt.id})});if(ticket!==epoch||dialog!==box)return;postponed.delete(key(o));try{sessionStorage.setItem('zzws_admin_approval_later_'+identity.id,JSON.stringify([...postponed]));}catch{}close();await refresh();}
    catch(e){if(ticket===epoch&&dialog===box){status.textContent=ZZWS.message(e);if([400,403,409].includes(e.status))attempt=null;if(e.status===409)refresh();}}
    finally{busy=false;for(const b of [later,orderButton,customButton,when,client,apply])b.disabled=false;}
-  }),customButton=button('Ընտրել ամսաթիվ և ժամ',()=>{custom.hidden=!custom.hidden;if(!custom.hidden)when.focus();});let busy=false,attempt=null;
+  }
+  later.onclick=()=>persistUntil(new Date(Date.now()+LATER_MS).toISOString(),false);
   custom.id='approvalCustomSnooze';custom.className='approval-custom-snooze';custom.hidden=true;when.type='datetime-local';when.step='60';when.id='approvalSnoozeUntil';when.value=new Date((paused(o)?Date.parse(o.snoozedUntil):Date.now()+3600000)+14400000).toISOString().slice(0,16);whenLabel.htmlFor=when.id;whenLabel.append(when);client.type='checkbox';client.id='approvalSnoozeClient';clientLabel.className='approval-snooze-client';clientLabel.append(client,node('span','Նույն ժամկետով հետաձգել նաև հաճախորդի ծանուցումը'));custom.append(legend,whenLabel,zone,clientLabel,hint,apply);
   actions.append(orderButton,later,customButton);box.append(title,info,content,status,actions,custom);box.oncancel=e=>{e.preventDefault();if(!busy)saveLater(o);};document.body.append(box);box.showModal();later.focus();
   try{
