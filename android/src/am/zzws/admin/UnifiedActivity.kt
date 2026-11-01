@@ -19,6 +19,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.background
@@ -42,18 +43,20 @@ class UnifiedActivity:ComponentActivity(){
  override fun onStart(){super.onStart();readDestination()}
  override fun onResume(){super.onResume();AppLanguage.current.value=L10n.language();VersionReminder.resume(this)}
  override fun onPause(){VersionReminder.pause(this);super.onPause()}
- private fun readDestination(){val kind=intent.getStringExtra("zzws_kind");if(kind in listOf("order.created","order.status","order.changed","order.comment","catalog.prices","catalog.offers","system")){destination=Pair(kind!!,intent.getStringExtra("zzws_order")?:"");intent.removeExtra("zzws_kind");intent.removeExtra("zzws_order")}}
+ override fun onActivityResult(requestCode:Int,resultCode:Int,data:Intent?){super.onActivityResult(requestCode,resultCode,data);UserUpdateInstaller.activityResult(this,requestCode,resultCode)}
+ private fun readDestination(){if(intent.getBooleanExtra("zzws_home",false)){destination=Pair("home","");intent.removeExtra("zzws_home");return};val kind=intent.getStringExtra("zzws_kind");if(kind in listOf("order.created","order.status","order.changed","order.comment","catalog.prices","catalog.offers","system")){destination=Pair(kind!!,intent.getStringExtra("zzws_order")?:"");intent.removeExtra("zzws_kind");intent.removeExtra("zzws_order")}}
 }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable internal fun UnifiedApp(model:UnifiedModel=viewModel()){
  val context=androidx.compose.ui.platform.LocalContext.current
  val language=AppLanguage.current.value
  val activity=context as? UnifiedActivity
+ if(model.restoringSession){SessionRestoringScreen();return}
  val messages=remember{SnackbarHostState()}
  LaunchedEffect(model.user?.text("id")){if(model.user!=null&&activity!=null)VersionReminder.check(activity)}
  LaunchedEffect(model.notice,model.user){if(model.user!=null&&model.notice.isNotBlank()&&model.screen!="catalog")messages.showSnackbar(L10n.t(model.notice),duration=SnackbarDuration.Short)}
  LaunchedEffect(model.user?.text("id"),model.subscriptions?.optBoolean("enabled")){if(model.user!=null&&!model.demo&&model.subscriptions?.optBoolean("enabled")==true)PushHooks.attach(context,AppSession.api)else PushHooks.detach(context,AppSession.api)}
- LaunchedEffect(model.user,model.busy,activity?.destination){if(model.user!=null&&!model.busy){activity?.destination?.let{(kind,id)->activity.destination=null;model.notification(kind,id)}}}
+ LaunchedEffect(model.user,model.busy,activity?.destination){if(model.user!=null&&!model.busy){activity?.destination?.let{(kind,id)->activity.destination=null;if(kind=="home")model.screen="home"else model.notification(kind,id)}}}
  var compareDialog by remember{mutableStateOf(false)}
  LaunchedEffect(model.user?.text("id")){PartnerLibrary.load(model.user?.text("id").orEmpty())}
  LaunchedEffect(Unit){if(BuildConfig.DEBUG&&activity?.intent?.getBooleanExtra("trial_demo",false)==true){while(model.busy)kotlinx.coroutines.delay(50);model.enterDemo()}}
@@ -73,11 +76,10 @@ class UnifiedActivity:ComponentActivity(){
   }
  }
  DisposableEffect(lifecycle){val observer=androidx.lifecycle.LifecycleEventObserver{_,event->if(event==androidx.lifecycle.Lifecycle.Event.ON_RESUME&&model.user!=null)model.resume()};lifecycle.lifecycle.addObserver(observer);onDispose{lifecycle.lifecycle.removeObserver(observer)}}
- BackHandler(model.user!=null&&model.screen!="home"){if(model.screen=="catalog"&&!model.catalogSections&&model.control("category"))model.showDepartments()else model.screen=mainBackDestination(model.screen)}
+ BackHandler(model.user!=null&&model.screen!="home"){if(model.screen=="order"&&model.user?.text("role")=="admin"){model.screen="home";model.openOrders(context)}else if(model.screen=="catalog"&&!model.catalogSections&&model.control("category"))model.showDepartments()else model.screen=mainBackDestination(model.screen)}
  val catalogue=model.user!=null&&usesCatalogChrome(model.screen)
  Scaffold(topBar={if(model.user!=null&&!catalogue)RetailHeader(model)},bottomBar={if(model.user!=null){
-  if(catalogue)CatalogBottomBar(CatalogDockState(searchEnabled=model.control("search"),filtersEnabled=model.user?.text("role")=="admin"&&model.control("wholesale")||listOf("category","brand","stock","promo","sorting").any{model.control(it)},filters=CatalogFilters(model.brands.toSet(),model.categories.toSet(),model.onlyAvailable,model.onlyPromo,model.sort,model.onlyWholesale&&model.user?.text("role")=="admin"&&model.control("wholesale")).activeCount,searchActive=model.query.isNotBlank(),comparisons=PartnerLibrary.comparison.size,cartQuantity=model.cart.values.sum()),onDepartments={model.showDepartments()},onFilters={filters=true},onSearch={catalogSearch=true},onCompare={compareDialog=true},onCart={model.screen="cart"},onMenu={appMenu=true})
-  else RetailNavigation(model)
+  CatalogBottomBar(CatalogDockState(searchEnabled=model.control("search"),ordersEnabled=ordersDestination(model.user)!=OrdersDestination.NONE&&!model.busy,searchActive=catalogSearch,cartQuantity=model.cart.values.sum(),screen=model.screen),onHome={model.screen="home"},onCatalog={model.showDepartments()},onOrders={model.openOrders(context)},onSearch={catalogSearch=true},onCart={model.screen="cart"},onMenu={appMenu=true})
  }},snackbarHost={SnackbarHost(messages)}){padding->Box(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)){
  Column(Modifier.fillMaxSize()){
 
@@ -121,6 +123,7 @@ class UnifiedActivity:ComponentActivity(){
     OrderApprovalPanel(model,o)
     OrderLines(o)
     OrderTotal(o)
+    OrderHistoryPanel(o)
     OutlinedButton(onClick={model.openOrder(o.text("id"))},enabled=!model.busy){LocalizedText("Թարմացնել պատվերը")}
     if(o.text("status")=="new"&&model.user?.text("role")!="admin")LocalizedText("Պատվերը փոխանցված է սերվեր։ Սպասեք պատասխանատուի հաստատմանը։")
     if(o.text("comment").isNotBlank())LocalizedText(o.text("comment"))
@@ -136,16 +139,30 @@ class UnifiedActivity:ComponentActivity(){
   Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal=20.dp),verticalArrangement=Arrangement.spacedBy(8.dp)){
    LocalizedText("ZZWS",style=MaterialTheme.typography.titleLarge)
    LocalizedText(model.user?.text("client").orEmpty(),style=MaterialTheme.typography.bodyMedium)
+   fun closeMenu(action:()->Unit){appMenu=false;action()}
+   LocalizedText("Կատալոգ և գնումներ",style=MaterialTheme.typography.titleMedium)
+   if(ordersDestination(model.user)==OrdersDestination.PERSONAL)TextButton(onClick={closeMenu{model.openOrders(context)}},enabled=!model.busy,modifier=Modifier.fillMaxWidth()){LocalizedText(ordersLabel(model.user))}
+   TextButton(onClick={closeMenu{model.showDepartments()}},modifier=Modifier.fillMaxWidth()){LocalizedText("Բաժիններ")}
+   TextButton(onClick={closeMenu{if(!usesCatalogChrome(model.screen))model.showAllProducts();filters=true}},modifier=Modifier.fillMaxWidth().testTag("menu-filters")){LocalizedText("Զտիչներ")}
+   TextButton(onClick={closeMenu{compareDialog=true}},modifier=Modifier.fillMaxWidth().testTag("menu-compare")){LocalizedText("Համեմատել")}
+   TextButton(onClick={closeMenu{model.screen="favorites"}},modifier=Modifier.fillMaxWidth()){LocalizedText("Ընտրյալներ")}
+   if(canOpenFeature(PartnerFeature.SAVED_CARTS,model.user))TextButton(onClick={closeMenu{model.openFeature(PartnerFeature.SAVED_CARTS,context)}},enabled=!model.busy&&!model.pendingSubmission,modifier=Modifier.fillMaxWidth()){LocalizedText(PartnerFeature.SAVED_CARTS.title)}
+   TextButton(onClick={closeMenu{model.refresh()}},enabled=!model.busy&&canReloadCatalog(model.screen,model.pendingSubmission),modifier=Modifier.fillMaxWidth()){LocalizedText("Թարմացնել կատալոգը")}
+   if(model.user?.text("role")=="admin"&&canOpenFeature(PartnerFeature.ADMIN,model.user)){
+    HorizontalDivider();LocalizedText("Կառավարում",style=MaterialTheme.typography.titleMedium)
+    if(ordersDestination(model.user) in listOf(OrdersDestination.NATIVE,OrdersDestination.WEB))TextButton(onClick={closeMenu{model.openOrders(context)}},enabled=!model.busy,modifier=Modifier.fillMaxWidth().testTag("menu-admin-orders")){LocalizedText(ordersLabel(model.user))}
+    for(feature in listOf(PartnerFeature.CLIENTS,PartnerFeature.PRICES,PartnerFeature.DASHBOARD,PartnerFeature.ADMIN).filter{canOpenFeature(it,model.user)})TextButton(onClick={closeMenu{model.openFeature(feature,context)}},enabled=!model.busy&&!model.pendingSubmission,modifier=Modifier.fillMaxWidth()){LocalizedText(feature.title)}
+    if(canSelectCustomer(model.user))OutlinedButton(onClick={closeMenu{buyerDialog=true}},enabled=!model.busy,modifier=Modifier.fillMaxWidth()){LocalizedText("Ընտրել հաճախորդին")}
+   }
+   HorizontalDivider();LocalizedText("Աշխատանքային գործիքներ",style=MaterialTheme.typography.titleMedium)
+   for(feature in listOf(PartnerFeature.SELLER,PartnerFeature.TECHNICAL,PartnerFeature.ASSISTANT).filter{canOpenFeature(it,model.user)})TextButton(onClick={closeMenu{model.openFeature(feature,context)}},enabled=!model.busy&&!model.pendingSubmission,modifier=Modifier.fillMaxWidth()){LocalizedText(feature.title)}
+   TextButton(onClick={closeMenu{openWebsite(context,false)}},modifier=Modifier.fillMaxWidth()){LocalizedText("Բացել ZZWS կայքը")}
+   HorizontalDivider();LocalizedText("Հաշիվ և կարգավորումներ",style=MaterialTheme.typography.titleMedium)
+   TextButton(onClick={closeMenu{model.screen="profile"}},modifier=Modifier.fillMaxWidth()){LocalizedText("Պրոֆիլ")}
+   if(canOpenFeature(PartnerFeature.TEAM,model.user))TextButton(onClick={closeMenu{model.openFeature(PartnerFeature.TEAM,context)}},enabled=!model.busy&&!model.pendingSubmission,modifier=Modifier.fillMaxWidth()){LocalizedText(PartnerFeature.TEAM.title)}
+   TextButton(onClick={closeMenu{model.notifications()}},enabled=!model.busy,modifier=Modifier.fillMaxWidth()){LocalizedText("Ծանուցումների կարգավորումներ")}
    LanguagePicker()
-   TextButton(onClick={appMenu=false;model.screen="home"},modifier=Modifier.fillMaxWidth()){LocalizedText("Գլխավոր")}
-   TextButton(onClick={appMenu=false;model.screen="profile"},modifier=Modifier.fillMaxWidth()){LocalizedText("Պրոֆիլ")}
-   TextButton(onClick={appMenu=false;model.screen="favorites"},modifier=Modifier.fillMaxWidth()){LocalizedText("Ընտրյալներ")}
-   TextButton(onClick={appMenu=false;model.notifications()},modifier=Modifier.fillMaxWidth()){LocalizedText("Ծանուցումների կարգավորումներ")}
-   TextButton(onClick={appMenu=false;model.refresh()},enabled=!model.busy&&canReloadCatalog(model.screen,model.pendingSubmission),modifier=Modifier.fillMaxWidth()){LocalizedText("Թարմացնել կատալոգը")}
-   if(canSelectCustomer(model.user))OutlinedButton(onClick={appMenu=false;buyerDialog=true},enabled=!model.busy,modifier=Modifier.fillMaxWidth()){LocalizedText("Ընտրել հաճախորդին")}
-   TextButton(onClick={openWebsite(context,false)},modifier=Modifier.fillMaxWidth()){LocalizedText("Բացել ZZWS կայքը")}
-   if(canOpenFeature(PartnerFeature.ADMIN,model.user))Button(onClick={appMenu=false;model.screen="management"},enabled=!model.busy,modifier=Modifier.fillMaxWidth()){LocalizedText("Կառավարում")}
-   TextButton(onClick={appMenu=false;confirmLogout=true},enabled=!model.busy,modifier=Modifier.fillMaxWidth()){LocalizedText("Դուրս գալ")}
+   TextButton(onClick={closeMenu{confirmLogout=true}},enabled=!model.busy,modifier=Modifier.fillMaxWidth()){LocalizedText("Դուրս գալ")}
    Spacer(Modifier.height(16.dp))
   }
  }

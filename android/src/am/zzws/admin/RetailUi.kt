@@ -39,16 +39,11 @@ internal object PartnerLibrary {
   Row{IconButton(onClick={model.refresh()},enabled=!model.busy&&canReloadCatalog(model.screen,model.pendingSubmission)){AppIcon("refresh")};BadgedBox(badge={if(model.demo)Badge(containerColor=BrandBlue){Text("DEMO",fontSize=8.sp)}}){IconButton(onClick={model.notifications()}){AppIcon("notifications")}}}
  }
 }}}
-// NavigationBar owns the bottom/horizontal system insets; its height must remain unconstrained.
-@Composable internal fun RetailNavigation(model:UnifiedModel){Surface(color=Color.White,shadowElevation=8.dp){NavigationBar(containerColor=Color.White,tonalElevation=0.dp,windowInsets=NavigationBarDefaults.windowInsets){
- listOf(Triple("home","home","Գլխավոր"),Triple("catalog","catalog","Կատալոգ"),Triple("favorites","heart","Ընտրյալներ"),Triple("profile","person","Պրոֆիլ"),Triple("cart","cart","Զամբյուղ")).forEach{(key,icon,label)->NavigationBarItem(selected=model.screen==key||(model.screen=="management"&&key=="profile"),onClick={if(key=="catalog")model.showDepartments()else model.screen=key},icon={val count=if(key=="cart")model.cart.values.sum()else if(key=="favorites")PartnerLibrary.favorites.size else 0
- BadgedBox(badge={if(count>0)Badge(containerColor=BrandAccent){Text(if(count>99)"99+"else"$count",fontSize=9.sp)}}){AppIcon(icon)}
- },label={OneLineLabel(label,9)},colors=NavigationBarItemDefaults.colors(selectedIconColor=BrandAccent,selectedTextColor=BrandAccent,unselectedIconColor=Color(0xFF64748B),unselectedTextColor=ShopMuted,indicatorColor=Color(0xFFDBEAFE)))}
-}}}
 @Composable private fun SectionTitle(title:String,action:String="",onAction:()->Unit={}){Row(Modifier.fillMaxWidth().padding(horizontal=16.dp,vertical=12.dp),verticalAlignment=Alignment.CenterVertically){LocalizedText(title,fontSize=21.sp,fontWeight=FontWeight.Bold,modifier=Modifier.weight(1f));if(action.isNotEmpty())TextButton(onClick=onAction){LocalizedText(action,fontSize=11.sp,color=BrandAccent)}}}
 @Composable internal fun RetailHome(model:UnifiedModel,onFilters:()->Unit,onProduct:(Product)->Unit,onCompare:()->Unit,onSearch:()->Unit){
+ val context=androidx.compose.ui.platform.LocalContext.current
  val featured=model.specialOffers.take(6);val hasOffers=featured.isNotEmpty()
- val brands=if(model.control("brand"))model.products.map{it.brand}.filter{it.isNotBlank()}.distinct().take(12)else emptyList();val departments=if(model.control("category"))model.departments.take(8)else emptyList()
+ val brands=if(model.control("brand"))model.products.map{it.brand}.filter{it.isNotBlank()}.distinct().take(12)else emptyList();val departments=if(model.control("category"))majorHomeGroups(model.products)else emptyList()
  LazyColumn(Modifier.fillMaxSize().testTag("retail-home-feed"),contentPadding=PaddingValues(bottom=16.dp)){
  item{CatalogSearchEntry(model,onFilters,onSearch)}
  item{LazyRow(contentPadding=PaddingValues(horizontal=14.dp,vertical=7.dp),horizontalArrangement=Arrangement.spacedBy(14.dp)){items(brands){brand->Column(horizontalAlignment=Alignment.CenterHorizontally,modifier=Modifier.width(69.dp).clickable{model.showBrand(brand)}){
@@ -66,12 +61,12 @@ internal object PartnerLibrary {
  }}}}
  item{Row(Modifier.fillMaxWidth().padding(horizontal=14.dp),horizontalArrangement=Arrangement.spacedBy(9.dp)){
  if(hasOffers)QuickTile("Առաջարկներ","offer",Modifier.weight(1f).testTag("home-offers-shortcut")){model.showPromotions()}
- QuickTile("Պատվերներ","orders",Modifier.weight(1f)){model.history()}
+ if(ordersDestination(model.user)!=OrdersDestination.NONE)QuickTile("Պատվերներ","orders",Modifier.weight(1f).testTag("home-orders-shortcut")){model.openOrders(context)}
  QuickTile("Համեմատել","compare",Modifier.weight(1f),onCompare)}}
  item{SectionTitle("Բաժիններ","Բոլորը"){model.showDepartments()}}
- item{LazyRow(contentPadding=PaddingValues(horizontal=14.dp),horizontalArrangement=Arrangement.spacedBy(10.dp)){items(departments){row->Column(Modifier.width(126.dp).clickable{model.showDepartment(row.department.id)},horizontalAlignment=Alignment.CenterHorizontally){
- Surface(shape=RoundedCornerShape(12.dp),color=Color.White,border=BorderStroke(1.dp,BrandBlue),modifier=Modifier.fillMaxWidth().height(72.dp)){Box(contentAlignment=Alignment.Center){CompositionLocalProvider(LocalContentColor provides BrandBlue){AppIcon(row.department.icon)}}}
- LocalizedText(row.department.title,Modifier.padding(top=7.dp),fontSize=11.sp,maxLines=2,overflow=TextOverflow.Ellipsis);Text("${row.count}",fontSize=10.sp,color=ShopMuted)}}}}
+ items(departments.chunked(3)){group->Row(Modifier.fillMaxWidth().padding(horizontal=14.dp,vertical=5.dp).testTag("home-major-categories"),horizontalArrangement=Arrangement.spacedBy(8.dp)){
+  group.forEach{row->Box(Modifier.weight(1f).testTag("home-category:"+row.category.id)){DepartmentTile(row.category.title,row.count,row.category.icon,enabled=row.count>0){model.showHomeCategory(row.category.id)}}}
+ }}
  if(hasOffers){
  item{Box(Modifier.testTag("home-offers-heading")){SectionTitle("Հատուկ առաջարկներ","Բոլորը"){model.showPromotions()}}}
  items(featured.chunked(2)){pair->Row(Modifier.padding(horizontal=14.dp,vertical=5.dp),horizontalArrangement=Arrangement.spacedBy(10.dp)){pair.forEach{p->Box(Modifier.weight(1f)){RetailProductCard(p,model,onProduct)}};if(pair.size==1)Spacer(Modifier.weight(1f))}}
@@ -83,7 +78,7 @@ private fun categoryIcon(category:String):String{val x=category.lowercase();retu
  val sections=!favorites&&model.catalogSections&&model.control("category")
  val rows=if(favorites)model.products.filter{it.code in PartnerLibrary.favorites}else model.filtered
  val currentDepartment=catalogDepartments.find{it.id==model.department}
- val title=if(favorites)"Ընտրյալներ"else if(sections)"Բաժիններ"else if(model.offerCollection)"Հատուկ առաջարկներ"else currentDepartment?.title?:"Բոլոր ապրանքները"
+ val title=if(favorites)"Ընտրյալներ"else if(sections)"Բաժիններ"else if(model.offerCollection)"Հատուկ առաջարկներ"else majorHomeSelectionTitle(model.categories.toList())?:currentDepartment?.title?:"Բոլոր ապրանքները"
  val grid=rememberLazyGridState()
  LaunchedEffect(model.query,model.department,sections,favorites,model.brands.toList(),model.categories.toList(),model.onlyPromo,model.onlyAvailable,model.onlyWholesale,model.sort,model.offerCollection){grid.scrollToItem(0)}
  LazyVerticalGrid(columns=GridCells.Adaptive(if(sections)148.dp else 158.dp),state=grid,modifier=Modifier.fillMaxSize().testTag("catalog-products-grid"),contentPadding=PaddingValues(start=14.dp,end=14.dp,top=8.dp,bottom=14.dp),horizontalArrangement=Arrangement.spacedBy(10.dp),verticalArrangement=Arrangement.spacedBy(10.dp)){
@@ -113,8 +108,8 @@ private fun categoryIcon(category:String):String{val x=category.lowercase();retu
   }else items(rows,key={"product:"+it.code}){product->RetailProductCard(product,model,onProduct)}
  }
 }
-@Composable private fun DepartmentTile(title:String,count:Int,icon:String,onClick:()->Unit){
- Surface(onClick=onClick,color=Color.White,shape=RoundedCornerShape(14.dp),border=BorderStroke(1.dp,Color(0xFFE2E8F0)),modifier=Modifier.fillMaxWidth()){
+@Composable private fun DepartmentTile(title:String,count:Int,icon:String,enabled:Boolean=true,onClick:()->Unit){
+ Surface(onClick=onClick,enabled=enabled,color=Color.White,shape=RoundedCornerShape(14.dp),border=BorderStroke(1.dp,Color(0xFFE2E8F0)),modifier=Modifier.fillMaxWidth()){
  Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(10.dp)){
  CompositionLocalProvider(LocalContentColor provides BrandBlue){AppIcon(icon)}
  LocalizedText(title,fontSize=14.sp,fontWeight=FontWeight.SemiBold,maxLines=3,minLines=2,overflow=TextOverflow.Ellipsis)
@@ -133,6 +128,7 @@ private fun categoryIcon(category:String):String{val x=category.lowercase();retu
  model.badges(p.code).forEach{LocalizedText(it,fontSize=9.sp,color=BrandBlue)}
  if(p.retail>price&&price>0)Text(money(p.retail),fontSize=10.sp,color=Color(0xFF9DA2A8),textDecoration=TextDecoration.LineThrough)
  Text(money(price),fontWeight=FontWeight.Bold,fontSize=18.sp,color=if(promotion!=null)BrandAccent else ShopInk,maxLines=1)
+ LocalizedText(productAvailabilityLabel(p),modifier=Modifier.testTag("retail-stock:"+p.code),fontSize=11.sp,color=if(p.available)Color(0xFF087547)else Color(0xFF916000),maxLines=1,overflow=TextOverflow.Ellipsis)
  Row(Modifier.fillMaxWidth().padding(top=3.dp),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically){
  IconButton(onClick={model.toggleFavorite(p.code)},modifier=Modifier.size(43.dp)){CompositionLocalProvider(LocalContentColor provides if(favorite)BrandAccent else ShopInk){AppIcon(if(favorite)"heart-filled"else"heart")}}
  IconButton(onClick={PartnerLibrary.compare(p.code)},enabled=compare||PartnerLibrary.comparison.size<3,modifier=Modifier.size(43.dp)){CompositionLocalProvider(LocalContentColor provides if(compare)BrandBlue else ShopInk){AppIcon("compare")}}
@@ -143,7 +139,7 @@ private fun categoryIcon(category:String):String{val x=category.lowercase();retu
  LazyColumn(contentPadding=PaddingValues(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
  item{LocalizedText("Պրոֆիլ",fontSize=27.sp,fontWeight=FontWeight.Bold)}
  item{Surface(color=Color.White,shape=RoundedCornerShape(14.dp)){Row(Modifier.fillMaxWidth().padding(20.dp),verticalAlignment=Alignment.CenterVertically){Box(Modifier.size(56.dp).background(Color(0xFFEFF6FF),CircleShape),contentAlignment=Alignment.Center){CompositionLocalProvider(LocalContentColor provides BrandBlue){AppIcon("person")}};Column(Modifier.weight(1f).padding(start=14.dp)){LocalizedText(model.user?.text("client").orEmpty(),fontSize=18.sp,fontWeight=FontWeight.Bold);Text(model.user?.text("login").orEmpty(),fontSize=12.sp,color=ShopMuted)}}}}
- item{ProfileRow("Իմ պատվերները","orders"){model.history()}}
+ if(ordersDestination(model.user)!=OrdersDestination.NONE)item{ProfileRow(ordersLabel(model.user),"orders"){model.openOrders(context)}}
   if(model.user?.text("clientRole")=="manager")item{ProfileRow("Իմ աշխատակիցները","person"){model.openFeature(PartnerFeature.TEAM,context)}}
  item{ProfileRow("Ընտրյալներ","heart"){model.screen="favorites"}}
  item{ProfileRow("Ծանուցումների կարգավորումներ","notifications"){model.notifications()}}

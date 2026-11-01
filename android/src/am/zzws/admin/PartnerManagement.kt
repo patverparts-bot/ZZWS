@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.sp
  LaunchedEffect(allowed){if(allowed){while(model.busy)kotlinx.coroutines.delay(50);model.loadManagement()}}
  if(!allowed){LaunchedEffect(Unit){model.screen="profile"};return}
  val role=when(model.user?.text("adminScope")){"owner"->"Սեփականատեր";"manager"->"Պատվերների կառավարիչ";"price"->"Գնացուցակի կառավարիչ";else->"Միայն դիտում"}
- fun orders(status:String=""){context.startActivity(Intent(context,MainActivity::class.java).putExtra("zzws_status",status))}
+ fun orders(status:String=""){model.openOrders(context,status)}
  LazyColumn(Modifier.fillMaxSize(),contentPadding=PaddingValues(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
   item{Row(verticalAlignment=Alignment.CenterVertically){IconButton(onClick={model.screen="profile"}){AppIcon("back")};LocalizedText("Կառավարում",fontSize=26.sp,fontWeight=FontWeight.Bold,modifier=Modifier.weight(1f));IconButton(onClick={model.loadManagement()},enabled=!model.busy){AppIcon("refresh")}}}
   item{Surface(shape=RoundedCornerShape(16.dp),color=Color.Transparent){Column(Modifier.fillMaxWidth().background(Brush.horizontalGradient(listOf(BrandBlue,ShopInk))).padding(20.dp),verticalArrangement=Arrangement.spacedBy(8.dp)){
@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.sp
    LocalizedText(model.user?.text("client").orEmpty(),color=Color.White.copy(alpha=.85f),fontSize=13.sp)
    LocalizedText("Ձեր իրավունքներին համապատասխան գործողություններ",color=Color.White.copy(alpha=.85f),fontSize=12.sp)
   }}}
-  if(model.admin&&model.user?.permission("orders:read")==true){
+  if(ordersDestination(model.user) in listOf(OrdersDestination.NATIVE,OrdersDestination.WEB)){
    item{Row(horizontalArrangement=Arrangement.spacedBy(10.dp)){
     listOf("new" to "Նոր պատվերներ","in_progress" to "Ձևակերպված է").forEach{(key,title)->
      Surface(onClick={orders(key)},enabled=!model.busy,shape=RoundedCornerShape(14.dp),color=Color.White,modifier=Modifier.weight(1f)){

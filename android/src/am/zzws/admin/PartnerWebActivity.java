@@ -24,7 +24,7 @@ public class PartnerWebActivity extends ComponentActivity {
  private final java.util.concurrent.ExecutorService io=Executors.newSingleThreadExecutor();
  private WebView web;private TextView status;private ProgressBar progress;private boolean destroyed,ready,leaving,backPending;
  private String token="",downloadUrl="",downloadMime="application/octet-stream",downloadName="ZZWS-export";
- private boolean downloadBusy;private OutputStream activeOutput;
+ private boolean downloadBusy,orderStatusApplied;private OutputStream activeOutput;
  private ValueCallback<Uri[]> chooser;private PartnerFeature feature;
  @Override protected void onResume(){super.onResume();VersionReminder.resume(this);}
  @Override protected void onPause(){VersionReminder.pause(this);super.onPause();}
@@ -36,8 +36,8 @@ public class PartnerWebActivity extends ComponentActivity {
   androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(root,(view,insets)->{androidx.core.graphics.Insets safe=insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars()|androidx.core.view.WindowInsetsCompat.Type.displayCutout());view.setPadding(safe.left,safe.top,safe.right,safe.bottom);return insets;});
   LinearLayout bar=new LinearLayout(this);bar.setPadding(0,0,0,0);bar.setGravity(android.view.Gravity.CENTER_VERTICAL);
   Button back=button("‹",this::navigateBack);back.setContentDescription(L10n.t("Հետ"));
-  TextView title=new TextView(this);title.setText(L10n.t(feature.getTitle()));title.setTextSize(16);title.setTextColor(0xff0f172a);title.setGravity(android.view.Gravity.CENTER_VERTICAL);
-  Button close=button("×",this::returnToParent);close.setContentDescription(L10n.t("Փակել"));bar.addView(back);bar.addView(title,new LinearLayout.LayoutParams(0,-1,1));bar.addView(button("Տպել",this::print));bar.addView(close);root.addView(bar,new LinearLayout.LayoutParams(-1,Math.round(48*getResources().getDisplayMetrics().density)));
+  TextView title=new TextView(this);title.setText(L10n.t(feature.getTitle()));title.setTextSize(16);title.setTextColor(0xff0f172a);title.setGravity(android.view.Gravity.CENTER_VERTICAL);title.setSingleLine(true);title.setEllipsize(android.text.TextUtils.TruncateAt.END);
+  Button close=button("×",this::returnToParent);close.setContentDescription(L10n.t("Փակել"));bar.addView(back);Button home=button("⌂",()->{if(!destroyed&&!leaving){leaving=true;NativeNavigationKt.returnToNativeHome(this);}});home.setContentDescription(L10n.t("Գլխավոր"));bar.addView(home);bar.addView(title,new LinearLayout.LayoutParams(0,-1,1));bar.addView(button("Տպել",this::print));bar.addView(close);root.addView(bar,new LinearLayout.LayoutParams(-1,Math.round(48*getResources().getDisplayMetrics().density)));
   progress=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);root.addView(progress,new LinearLayout.LayoutParams(-1,5));
   status=new TextView(this);status.setPadding(16,8,16,8);status.setText(L10n.t("Տվյալները բեռնվում են…"));root.addView(status);
   web=createWebView();root.addView(web,new LinearLayout.LayoutParams(-1,0,1));setContentView(root);
@@ -46,8 +46,10 @@ public class PartnerWebActivity extends ComponentActivity {
   web.setWebViewClient(new WebViewClient(){
    @Override public WebResourceResponse shouldInterceptRequest(WebView view,WebResourceRequest request){
     // Ship this tool's fix with the APK, independently of the site's publication schedule.
-    if("GET".equals(request.getMethod())&&PartnerPolicyKt.trustedPartnerPage(request.getUrl().toString())&&"/ZZWS/js/dealer-tools.js".equals(request.getUrl().getPath())){
-     try{return new WebResourceResponse("application/javascript","UTF-8",getAssets().open("dealer-tools.js"));}catch(IOException ignored){}
+    String assetPath=request.getUrl().getPath();
+    if("GET".equals(request.getMethod())&&PartnerPolicyKt.trustedPartnerPage(request.getUrl().toString())&&("/ZZWS/js/dealer-tools.js".equals(assetPath)||"/ZZWS/js/bundle-policy.js".equals(assetPath))){
+     String asset=assetPath.substring(assetPath.lastIndexOf('/')+1);
+     try{return new WebResourceResponse("application/javascript","UTF-8",getAssets().open(asset));}catch(IOException ignored){}
     }
     return null;
    }
@@ -63,6 +65,11 @@ public class PartnerWebActivity extends ComponentActivity {
     ready=true;progress.setVisibility(View.GONE);status.setVisibility(View.GONE);
     injectNavigation(view);
     if(Uri.parse(url).getPath().startsWith("/ZZWS/admin/")){applyAdminStyle(view);applyAdminLabels(view);}
+    String requestedStatus=getIntent().getStringExtra("zzws_status");
+    if(feature==PartnerFeature.ORDERS&&!orderStatusApplied&&NativeNavigationKt.validOrderStatus(requestedStatus==null?"":requestedStatus)){
+     orderStatusApplied=true;
+     view.evaluateJavascript("(function(){var n=0;function apply(){var section=document.getElementById('manager'),s=document.getElementById('managerStatusFilter');if(section&&!section.hidden&&s&&typeof s.onchange==='function'){s.value="+JSONObject.quote(requestedStatus)+";s.dispatchEvent(new Event('change',{bubbles:true}));return;}if(n++<40)setTimeout(apply,250);}apply();})()",null);
+    }
     String action="";
     switch(feature){
      case ASSISTANT:action="if(window.ZZWS_ASSISTANT){ZZWS_ASSISTANT.open();return true;}";break;
@@ -141,6 +148,7 @@ public class PartnerWebActivity extends ComponentActivity {
  }
  private void chooseDestination(){downloadBusy=true;try{startActivityForResult(new Intent(Intent.ACTION_CREATE_DOCUMENT).setType(downloadMime).addCategory(Intent.CATEGORY_OPENABLE).putExtra(Intent.EXTRA_TITLE,downloadName),22);}catch(Exception e){downloadBusy=false;status.setText(L10n.t("Չհաջողվեց բացել ֆայլի պահպանումը"));status.setVisibility(View.VISIBLE);}}
  @Override protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);
+  UserUpdateInstaller.activityResult(this,request,result);
   if(destroyed||leaving)return;
   if(request==21&&chooser!=null){Uri[] uris=null;if(result==RESULT_OK&&data!=null){if(data.getClipData()!=null){uris=new Uri[data.getClipData().getItemCount()];for(int i=0;i<uris.length;i++)uris[i]=data.getClipData().getItemAt(i).getUri();}else if(data.getData()!=null)uris=new Uri[]{data.getData()};}chooser.onReceiveValue(uris);chooser=null;}
   if(request==22){if(result==RESULT_OK&&data!=null&&data.getData()!=null)saveBlob(data.getData());else downloadBusy=false;}

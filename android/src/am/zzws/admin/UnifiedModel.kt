@@ -22,7 +22,7 @@ internal data class Product(val data:JSONObject) {
  val stock=data.text("stockStatus");val available=if(data.has("stockAvailable"))data.optBoolean("stockAvailable") else stock.trim()=="Առկա է";val promo=data.optBoolean("isPromo")||data.optBoolean("isWholesalePromo")||data.optBoolean("kpIsPromo")
 }
 
-internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoBackend()):ViewModel() {
+internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoBackend(),private val restoreSavedSession:suspend ()->Boolean={withContext(Dispatchers.IO){AppSession.restore()}}):ViewModel() {
  var user by mutableStateOf(AppSession.user);private set
  var products by mutableStateOf<List<Product>>(emptyList());private set
  var orders by mutableStateOf<List<JSONObject>>(emptyList());private set
@@ -37,6 +37,7 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
  var receiptConfirmation by mutableStateOf<ReceiptConfirmation?>(null);private set
  var successOrder by mutableStateOf<Long?>(null)
  var busy by mutableStateOf(false);private set
+ var restoringSession by mutableStateOf(true);private set
  var challenge by mutableStateOf("");private set
  var screen by mutableStateOf("home")
  var orderSearch by mutableStateOf("");var orderFrom by mutableStateOf("");var orderTo by mutableStateOf("")
@@ -62,6 +63,7 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
  fun showAllProducts(){clearCatalogFilters();department="";catalogSections=false;screen="catalog"}
  fun showDepartment(id:String){showAllProducts();department=id}
  fun showBrand(brand:String){showAllProducts();brands.add(brand)}
+ fun showHomeCategory(id:String){val group=majorHomeGroups(products).find{it.category.id==id}?:return;if(group.categories.isEmpty())return;showAllProducts();categories.addAll(group.categories)}
  fun showPromotions(){showAllProducts();offerCollection=true}
  fun searchCatalog(text:String){if(screen!="catalog"||query.isBlank()&&text.isNotBlank())showAllProducts();query=text;catalogSections=false;screen="catalog"}
  fun applyCatalogFilters(){catalogSections=false;screen="catalog"}
@@ -109,8 +111,8 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
  val categoryOptions get()=categoryChoices(departmentProducts,brands.toSet(),categories.toSet())
  fun unit(p:Product)=if(screen=="cart")quotedProducts[p.code]?.let{nativePrice(it,user?.text("role")=="admin",priceMode,buyer!=null)}?:if(buyer!=null)0.0 else nativePrice(p,user?.text("role")=="admin",priceMode,false) else nativePrice(p,user?.text("role")=="admin",priceMode,buyerView)
  val total get()=selectedLines.entries.sumOf{(code,qty)->products.find{it.code==code}?.let{unit(it)*qty}?:0.0}
- init { if(user==null) restoreSession() else run{completeLogin()} }
- private fun restoreSession()=run{val restored=withContext(Dispatchers.IO){AppSession.restore()};if(restored)completeLogin()}
+ init { if(user==null) restoreSession() else run{try{completeLogin()}finally{restoringSession=false}} }
+ private fun restoreSession()=run{try{val restored=restoreSavedSession();if(restored)completeLogin()}finally{restoringSession=false}}
  private fun run(work:suspend ()->Unit){if(busy)return;busy=true;notice="";errorDialog="";viewModelScope.launch{try{work()}catch(e:Exception){if(e is CancellationException)throw e;if(e is ApiClient.ApiError&&e.status==401){reset();AppSession.clear()};notice=e.message?:"Գործողությունը չի կատարվել";errorDialog=notice}finally{busy=false}}}
  private suspend fun call(path:String,body:JSONObject?=null):JSONObject=withContext(Dispatchers.IO){gate.withLock{if(demo)trialBackend.call(path,body)else AppSession.api.call(if(body==null)"GET" else "POST",path,body)}}
  private fun reset(){++draftEpoch;draftReady=false;draftDirty=false;draftVersion=0;draftConflict=false;draftSync="";deliveryIndex=0;method="Առաքում";approvalRequests.clear();approvalDefers.clear();approvalReminder=null;approvalLastShown=null;approvalPolling=false;catalogVersion="";catalogLoadedAt=0;department="";catalogSections=true;offerCollection=false;publishedOffer=null;demo=false;orderSearch="";orderFrom="";orderTo="";appliedOrderFilter=Triple("","","");cartSelection.clear();checkoutStep=1;checkoutProof="";webHandoff=false;PartnerLibrary.clear();catalogControls=JSONObject();popularity=JSONObject();++cartEpoch;cartDirty=false;cartVersion=0;cartConflict=false;cartSync="";PushHooks.detach(AppContext.value,AppSession.api);NotificationBridge.clear(AppContext.value);user=null;products=emptyList();orders=emptyList();order=null;buyer=null;catalogBuyer=null;quotedProducts=emptyMap();customers=emptyList();cart.clear();brands.clear();categories.clear();query="";onlyAvailable=false;onlyPromo=false;onlyWholesale=false;sort=0;challenge="";screen="home";frozenRequest=null;requestId=null;checkoutReady=false;address="";contact="";date="";comment="";priceMode="WS";subscriptions=null;management=null;successOrder=null;receiptConfirmation=null;errorDialog=""}
@@ -254,7 +256,16 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
   check(result.text("id").matches(Regex("[a-fA-F0-9-]{36}"))&&result.optLong("number")>0){"Սերվերի հաստատումը չի ստացվել։ Ստուգեք պատվերի պատմությունը և կրկնեք նույն ուղարկումը։"}
   SecurePendingOrder.clear(AppContext.value,user!!.text("id"));if(!payload.has("customerId")||buyer!=null)payload.optJSONArray("lines").objects().forEach{line->if(cart[line.text("articul")]==line.optInt("qty"))cart.remove(line.text("articul"))};frozenRequest=null;requestId=null;checkoutReady=false;order=result;screen="order";successOrder=result.optLong("number");notice="Պատվերն ուղարկված է։ №"+result.optLong("number");if(!payload.has("customerId")){cartChanged()}
  }
- fun history()=run{val filters=Triple(orderSearch,orderFrom,orderTo);orders=call(orderHistoryPath(filters.first,filters.second,filters.third)).optJSONArray("orders").objects();appliedOrderFilter=filters;screen="orders"}
+ fun openOrders(context:android.content.Context,status:String=""){
+  if(busy)return
+  when(ordersDestination(user)){
+   OrdersDestination.PERSONAL->history()
+   OrdersDestination.WEB->openFeature(PartnerFeature.ORDERS,context,status)
+   OrdersDestination.NATIVE->{if(demo){notice="Այս գործիքը հասանելի է իրական հաշիվ մուտք գործելուց հետո։";return};orderManagementIntent(context,user,status)?.let{context.startActivity(it)}}
+   OrdersDestination.NONE->Unit
+  }
+ }
+ fun history()=run{check(ordersDestination(user)==OrdersDestination.PERSONAL){"Հասանելիությունն արգելված է"};val filters=Triple(orderSearch,orderFrom,orderTo);orders=call(orderHistoryPath(filters.first,filters.second,filters.third)).optJSONArray("orders").objects();appliedOrderFilter=filters;screen="orders"}
  fun olderOrders()=run{val before=orders.lastOrNull()?.optLong("number")?:return@run;val next=call(orderHistoryPath(appliedOrderFilter.first,appliedOrderFilter.second,appliedOrderFilter.third,before)).optJSONArray("orders").objects();orders=(orders+next).distinctBy{it.text("id")}}
  var approvalReminder by mutableStateOf<JSONObject?>(null);private set
  private var approvalLastShown:Long?=null
@@ -328,13 +339,15 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
   call("me/state",JSONObject().put("section","favorites").put("version",state.optJSONObject("versions")?.optInt("favorites")?:0).put("value",JSONArray(favorites.toList())))
   PartnerLibrary.accept(favorites)
  }
- fun openFeature(feature:PartnerFeature,context:android.content.Context)=run{
+ fun openFeature(feature:PartnerFeature,context:android.content.Context,orderStatus:String="")=run{
   check(!demo){"Այս գործիքը հասանելի է իրական հաշիվ մուտք գործելուց հետո։"}
   check(canOpenFeature(feature,user));check(!pendingSubmission){"Նախ ստուգեք նախորդ ուղարկումը"}
   check(buyer==null&&catalogBuyer==null){"Նախ վերադարձեք ձեր կատալոգին"}
   persistDraft();check(!draftDirty&&!draftConflict){"Նախ պահպանեք կամ բեռնեք պատվերի տվյալները։"};persistCart();check(!cartDirty&&!cartConflict){"Նախ համաժամացրեք ձեր զամբյուղը"}
   webHandoff=true
-  context.startActivity(android.content.Intent(context,PartnerWebActivity::class.java).putExtra("feature",feature.name))
+  val intent=android.content.Intent(context,PartnerWebActivity::class.java).putExtra("feature",feature.name)
+  if(feature==PartnerFeature.ORDERS&&validOrderStatus(orderStatus))intent.putExtra("zzws_status",orderStatus)
+  context.startActivity(intent)
  }
  fun notifications()=run{subscriptions=call("me/mobile/preferences");screen="notifications"}
  fun subscribe(key:String,value:Boolean,context:android.content.Context)=run{

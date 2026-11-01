@@ -21,9 +21,9 @@ final class VersionReminder {
  private static boolean checking;
  private static AlertDialog visible;
  private static final Runnable tick=new Runnable(){public void run(){Activity a=foreground.get();if(a!=null){check(a);main.postDelayed(this,AppUpdatePolicy.CHECK_INTERVAL);}}};
- static void resume(Activity a){foreground=new WeakReference<>(a);UserUpdateDownload.reconcile(a.getApplicationContext());main.removeCallbacks(tick);check(a);main.postDelayed(tick,AppUpdatePolicy.CHECK_INTERVAL);}
- static void pause(Activity a){if(foreground.get()==a){foreground.clear();main.removeCallbacks(tick);if(visible!=null){visible.dismiss();visible=null;}}}
- static void reset(){checkedToken="";lastCheck=-1;if(visible!=null){visible.dismiss();visible=null;}}
+ static void resume(Activity a){foreground=new WeakReference<>(a);UserUpdateInstaller.resume(a);main.removeCallbacks(tick);check(a);main.postDelayed(tick,AppUpdatePolicy.CHECK_INTERVAL);}
+ static void pause(Activity a){UserUpdateInstaller.pause(a);if(foreground.get()==a){foreground.clear();main.removeCallbacks(tick);if(visible!=null){visible.dismiss();visible=null;}}}
+ static void reset(){checkedToken="";lastCheck=-1;UserUpdateInstaller.reset();if(visible!=null){visible.dismiss();visible=null;}}
  private static boolean eligible(Activity a){return EndpointConfiguration.RELEASE&&!BuildConfig.DEBUG&&AppSession.authenticated()&&!AppSession.api.sessionToken().isEmpty()&&foreground.get()==a&&!a.isFinishing()&&!a.isDestroyed();}
  static void check(Activity a){start(a,false);}
  static void manual(Activity a){start(a,true);}
@@ -59,7 +59,7 @@ final class VersionReminder {
   if(visible!=null&&visible.isShowing())return false;
   visible=new AlertDialog.Builder(a)
    .setTitle(L10n.t("Հասանելի է ZZWS-ի նոր տարբերակ՝ ")+release.version)
-   .setMessage(L10n.t("Սեղմեք «Թարմացնել»՝ հավելվածի նոր տարբերակը ներբեռնելու համար։"))
+   .setMessage(L10n.t("Սեղմեք «Թարմացնել»՝ նոր տարբերակը ներբեռնելու և Android-ի տեղադրիչը բացելու համար։"))
    .setPositiveButton(L10n.t("Թարմացնել"),(dialog,which)->confirmed.run())
    .setNegativeButton(L10n.t("Ավելի ուշ"),(dialog,which)->{}).create();
   AlertDialog shown=visible;

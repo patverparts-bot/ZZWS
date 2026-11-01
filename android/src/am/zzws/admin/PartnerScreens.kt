@@ -69,7 +69,7 @@ import java.time.ZoneId
   if(model.pendingSubmission){
    LocalizedText("Նախորդ ուղարկման պատասխանը չի ստացվել։ Կրկնելիս կստուգվի նույն պատվերը՝ առանց կրկնօրինակի։")
    Button(onClick={model.submit()},enabled=!model.busy,modifier=Modifier.fillMaxWidth()){LocalizedText("Կրկնել նույն ուղարկումը")}
-   OutlinedButton(onClick={model.history()},enabled=!model.busy){LocalizedText("Ստուգել պատվերների պատմությունը")}
+   if(ordersDestination(model.user)!=OrdersDestination.NONE)OutlinedButton(onClick={model.openOrders(context)},enabled=!model.busy&&ordersDestination(model.user)!=OrdersDestination.WEB){LocalizedText("Ստուգել պատվերների պատմությունը")}
    return@Column
   }
   if(model.cart.isEmpty()){RetailEmptyCart{model.showDepartments()};return@Column}

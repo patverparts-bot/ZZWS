@@ -6,18 +6,19 @@ import java.net.URI
 
 internal const val PARTNER_SITE="https://patverparts-bot.github.io/ZZWS/"
 internal enum class PartnerFeature(val title:String,val path:String,val permission:String?=null){
- ASSISTANT("ԶիգԶագ օգնական", "?partner=assistant"),
+ ASSISTANT("ԶիգԶագն AI", "?partner=assistant"),
  SAVED_CARTS("Պահպանված զամբյուղներ", "?partner=saved-carts"),
  TEAM("Իմ աշխատակիցները", "?partner=team"),
  SELLER("Վաճառողի գործիքներ", "?partner=seller"),
  TECHNICAL("Տեխնիկական զտիչներ", "?partner=technical"),
  ADMIN("Կառավարման բաժիններ", "admin/", "admin"),
+ ORDERS("Պատվերների կառավարում", "admin/#tab=manager", "orders:read"),
  CLIENTS("Հաճախորդներ", "admin/#tab=users", "users"),
  PRICES("Գնացուցակի կառավարում", "admin/#tab=price", "price:read"),
  DASHBOARD("Աշխատանքային սեղան", "admin/#tab=dashboard", "admin")
 }
 internal fun canOpenFeature(feature:PartnerFeature,user:JSONObject?):Boolean{
- if(user==null||user.optBoolean("needsPasswordSetup")||user.has("active")&&!user.optBoolean("active"))return false
+ if(user==null||user.optBoolean("needsPasswordSetup")||user.optBoolean("needsProfileSetup")||user.has("active")&&!user.optBoolean("active"))return false
  if(feature==PartnerFeature.TEAM)return user.text("role")=="client"&&user.text("clientRole")=="manager"
  if(feature.permission==null)return user.text("role") in listOf("client","admin")
  if(user.text("role")!="admin")return false

@@ -70,7 +70,8 @@ class CatalogChromeRegressionTest {
  @Test fun homeRetainsBrandingBrandsAndOffers(){
   show(catalog=false)
   ui.onNodeWithTag("retail-main-header").assertIsDisplayed()
-  ui.onNodeWithTag("catalog-bottom-bar").assertDoesNotExist()
+  ui.onNodeWithTag("catalog-bottom-bar").assertIsDisplayed()
+  ui.onNodeWithTag("navigation-home").assertIsDisplayed()
   ui.onNodeWithText("APPLE").assertExists()
   ui.onNodeWithTag("retail-home-feed").performScrollToNode(hasText("Հատուկ առաջարկներ"))
   ui.onNodeWithText("Հատուկ առաջարկներ").assertIsDisplayed()

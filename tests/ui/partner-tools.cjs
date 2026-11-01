@@ -47,7 +47,9 @@ const actions=new Map([...native.matchAll(/case ([A-Z_]+):action=("(?:[^"\\]|\\.
   }
   await admin.screenshot({path:path.join(root,'output/partner/admin-7.1.5.png'),fullPage:true});
   const managerSource=fs.readFileSync(path.join(root,appRoot,'src/am/zzws/admin/PartnerManagement.kt'),'utf8');
-  assert.match(managerSource,/orders\(key\)/);assert.match(managerSource,/putExtra\("zzws_status",status\)/);
+  assert.match(managerSource,/orders\(key\)/);assert.match(managerSource,/model\.openOrders\(context,status\)/);
+  const navigationSource=fs.readFileSync(path.join(root,appRoot,'src/am/zzws/admin/NativeNavigation.kt'),'utf8');
+  assert.match(navigationSource,/putExtra\("zzws_status",status\)/);assert.match(navigationSource,/PartnerFeature\.ORDERS\.name/);
   assert.match(native,/applyAdminStyle\(view\)/);
   assert.deepEqual(errors,[]);assert.equal(runtime.reportEmails.length,0);console.log('PASS: '+checks.join('; '));
  }finally{fs.mkdirSync(path.join(root,'output/partner'),{recursive:true});fs.writeFileSync(path.join(root,'output/partner/tools-verification.json'),JSON.stringify({checks,errors,productionMutations:0},null,2));await browser?.close();await runtime.close();}

@@ -1,6 +1,16 @@
 # ZZWS — primary Android application
 
-Version 7.1.20 (70120), package `am.zzws.admin`, Android 8+. This is the canonical
+Published baseline 7.1.21 (70121), package `am.zzws.admin`, Android 8+.
+The working 7.1.23 candidate includes the verified installer handoff and direct
+Home/Orders navigation; its publication is separate from the published baseline.
+The same six bottom actions are visible on every page: Home, Catalogue, Orders,
+Search, Cart and Menu. Filters, comparison, favourites and account/management
+tools are grouped in Menu. Clients open personal order history. Administrators
+with orders:read open native management when mobile administration is enabled,
+or the authenticated web manager directly otherwise. Price-only administrators
+gain no order access. Both hosts recheck the normal session's current rights.
+Their Home actions return to the existing app session without signing out.
+This is the canonical
 application as of 1 November 2026. All Android development, builds, tests and
 releases belong here. The separate Partner prototype was retired and deleted on
 1 November 2026 at the owner's request; do not restore, build or maintain it.
@@ -63,7 +73,8 @@ authorized order and keeps private lock-screen visibility.
 
 ## Direct downloads — 7.1.18
 
-At the owner's request, the foreground reminder now has Update and Later buttons.
+This section records the original 7.1.18 through 7.1.21 download-only behavior.
+At the owner's request, the foreground reminder has Update and Later buttons.
 Update obtains a short-lived signed link for that release and starts Android
 DownloadManager directly. No website, automatic download, recurring job or embedded
 installer is used. Android shows transfer progress; Downloads opens the downloaded
@@ -109,8 +120,8 @@ customer are the first scrolling grid item. They leave the viewport naturally
 when scrolling; no pinned search field, category strip or extra toolbar sits
 above products. Busy state is a thin overlay rather than a reserved content row.
 
-A single 56dp bottom row offers Departments, Filters (including sorting), Search,
-Compare, Cart and Menu. It owns bottom/horizontal safe drawing insets and never
+The historical 7.1.10 56dp bottom row offered Departments, Filters, Search,
+Compare, Cart and Menu. It owned bottom/horizontal safe drawing insets and never
 overlays cards or the phone navigation controls. Menu retains Home, Profile,
 Favourites, notification settings, refresh, language and management. Search opens
 an on-demand bottom sheet with keyboard/IME Search and an explicit submit button.
@@ -251,16 +262,31 @@ offers login help rather than promising a self-service password reset.
 
 ## Updates and release
 
-Current 7.1.18+ releases offer Update and Later in the foreground reminder.
-Only the user's Update action starts DownloadManager with a short-lived signed
-link; there is no automatic download, recurring background job or embedded
-installer. Android shows transfer progress. The Downloads action opens the
-system downloads list, where the user chooses the APK and follows Android's
-installation controls. A failed transfer can be retried with Update.
+The foreground reminder offers Update and Later. Only the user's Update action
+starts DownloadManager with a short-lived signed link; no recurring download
+job or silent installation is introduced. Android shows transfer progress.
+
+In the 7.1.22+ source, that explicit action continues after exact verification:
+the app retains an app-private APK and opens Android's package installer while
+the activity is resumed. The user still confirms installation in Android. The
+content URI comes from a non-exported FileProvider restricted to the verified
+update directory, with temporary read-only access. Background completion retains
+the pending action for a later foreground resume; it never starts an activity
+from the background receiver. The pending action survives process recreation
+and is bound to the requesting personal account.
+
+Android 8+ may first ask the user to permit installations from ZZWS. Returning
+after granting permission resumes this same action. Denial/cancellation keeps
+the checked APK and does not repeatedly reopen Settings or the installer; the
+user can tap Update to retry. A result code by itself is never proof that an APK
+was installed. Older installed 7.1.21 and earlier binaries retain their original
+download-only behavior until this new code is installed once.
 
 Exact length, SHA-256, package, version and installed signing identity are checked
-before acknowledging the download receipt. A failed acknowledgement preserves
-the verified APK. The primary update service supports active clients and the
+before the installer handoff and before acknowledging the download receipt.
+Retained bytes and identity are checked again when the flow resumes; a saved
+`verified` flag alone is not trusted. A failed acknowledgement preserves the
+verified APK. The primary update service supports active clients and the
 existing authorized administrators. Only an owner with a fresh password
 confirmation can publish. No storage policies were broadened.
 
