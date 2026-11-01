@@ -115,13 +115,14 @@ class UnifiedActivity:ComponentActivity(){
    }
    "order"->model.order?.let{o->Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
     LocalizedText("Պատվեր №"+o.optLong("number"),style=MaterialTheme.typography.headlineMedium);LocalizedText(statusLabel(o.text("status")))
+    OrderOriginCard(o)
+    if(o.text("created").isNotBlank())LocalizedText(yerevanTime(o.text("created")),style=MaterialTheme.typography.bodySmall)
     ReceiptPanel(model.user,o,model.busy){model.prepareReceipt(o.text("id"),o.optInt("revision"))}
-    o.optJSONObject("created_by")?.let{LocalizedText("Լրացրել է՝ "+it.text("name"))}
     OrderApprovalPanel(model,o)
     OrderLines(o)
     OrderTotal(o)
     OutlinedButton(onClick={model.openOrder(o.text("id"))},enabled=!model.busy){LocalizedText("Թարմացնել պատվերը")}
-    if(o.text("status")=="new")LocalizedText("Պատվերը փոխանցված է սերվեր։ Սպասեք պատասխանատուի հաստատմանը։")
+    if(o.text("status")=="new"&&model.user?.text("role")!="admin")LocalizedText("Պատվերը փոխանցված է սերվեր։ Սպասեք պատասխանատուի հաստատմանը։")
     if(o.text("comment").isNotBlank())LocalizedText(o.text("comment"))
 
    }}

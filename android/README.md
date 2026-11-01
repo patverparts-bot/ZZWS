@@ -1,6 +1,6 @@
 # ZZWS — primary Android application
 
-Version 7.1.18 (70118), package `am.zzws.admin`, Android 8+. This is the canonical
+Version 7.1.19 (70119), package `am.zzws.admin`, Android 8+. This is the canonical
 application as of 31 October 2026. All Android development, builds, tests and
 releases belong here. The separate Partner prototype was retired and deleted on
 1 November 2026 at the owner's request; do not restore, build or maintain it.
@@ -46,6 +46,20 @@ The banner grows to fit its translated action instead of clipping it at a fixed
 height. Compose regression checks exercise all entry points, exact product details,
 filter clearing, Armenian/Russian at 320dp, and offers appearing/disappearing after
 catalogue refresh. The existing price-context policy checks remain in place.
+
+## Order sender — 7.1.19
+
+Orders opened from push show the saved customer, business code, organization,
+actual submitting person and their phone/email above the products. Assisted
+orders identify the administrator separately from the customer's contact. Older
+orders use their stored login or explicitly state when the author's name was
+not saved. No current-profile lookup or additional data permission is introduced.
+The administrator view uses the same snapshot fields. Customer waiting text is
+not shown to administrators. Direct user-requested APK downloads remain intact.
+New-order pushes show the customer and total from the immutable creation event.
+The new payload is tied to the recipient account; logout, account switches and
+deduplication are checked before display. The notification still opens the same
+authorized order and keeps private lock-screen visibility.
 
 ## Direct downloads — 7.1.18
 

@@ -27,14 +27,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RunWith(RobolectricTestRunner.class) @Config(sdk=28)
 public class UserUpdateDownloadRegressionTest {
  private final String sha=new String(new char[64]).replace('\0','a'),api="https://updates.example.invalid/functions/v1/zzws-api/";
- private AppUpdatePolicy.Release release(){return new AppUpdatePolicy.Release(70119,"7.1.19","",sha,100);}
+ private AppUpdatePolicy.Release release(){return new AppUpdatePolicy.Release(BuildConfig.VERSION_CODE+1L,"7.1.19","",sha,100);}
  private String link(){return "https://updates.example.invalid/storage/v1/object/sign/zzws-android-releases/files/"+sha+".apk?token=test-signed-token";}
  private void idle(Context c)throws Exception{CountDownLatch done=new CountDownLatch(1);UserUpdateDownload.complete(c,-1,done::countDown);assertTrue(done.await(10,TimeUnit.SECONDS));Shadows.shadowOf(android.os.Looper.getMainLooper()).idle();}
  @Test public void updateButtonEnqueuesTheExactApkOnceWithoutOpeningAWebsite()throws Exception{
   JSONObject previous=AppSession.user;String token=AppSession.api.sessionToken();
   try(ActivityController<Activity> controller=Robolectric.buildActivity(Activity.class).setup()){
    Activity a=controller.get();a.getSharedPreferences(UserUpdateDownload.PREFS,0).edit().clear().commit();AppSession.user=new JSONObject().put("id","test-owner");AppSession.api.restoreToken(new String(new char[64]).replace('\0','b'));
-   AtomicInteger requests=new AtomicInteger();UserUpdateDownload.LinkProvider provider=code->{assertEquals(70119,code);requests.incrementAndGet();return new JSONObject().put("url",link()).put("downloadId","00000000-0000-4000-8000-000000000001");};
+   AtomicInteger requests=new AtomicInteger();UserUpdateDownload.LinkProvider provider=code->{assertEquals(BuildConfig.VERSION_CODE+1L,code);requests.incrementAndGet();return new JSONObject().put("url",link()).put("downloadId","00000000-0000-4000-8000-000000000001");};
    VersionReminder.prompt(a,release(),()->UserUpdateDownload.start(a,release(),provider,api));DownloadManager dm=a.getSystemService(DownloadManager.class);
    try(Cursor rows=dm.query(new DownloadManager.Query())){assertEquals(0,rows.getCount());}
    ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).performClick();idle(a);
@@ -62,7 +62,7 @@ public class UserUpdateDownloadRegressionTest {
  }
  private PackageInfo identity(String pkg,int code,String version,String signer){PackageInfo p=new PackageInfo();p.packageName=pkg;p.versionCode=code;p.versionName=version;p.signatures=new Signature[]{new Signature(signer.getBytes(java.nio.charset.StandardCharsets.UTF_8))};return p;}
  @Test public void packageVersionAndSigningCertificateMustMatch(){
-  PackageInfo installed=identity("am.zzws.admin",70118,"7.1.18","release-certificate");assertTrue(UserUpdateDownload.sameIdentity(identity("am.zzws.admin",70119,"7.1.19","release-certificate"),installed,release()));
-  assertFalse(UserUpdateDownload.sameIdentity(identity("am.zzws.partner",70119,"7.1.19","release-certificate"),installed,release()));assertFalse(UserUpdateDownload.sameIdentity(identity("am.zzws.admin",70119,"7.1.19","other-certificate"),installed,release()));assertFalse(UserUpdateDownload.sameIdentity(identity("am.zzws.admin",70118,"7.1.19","release-certificate"),installed,release()));
+  int next=BuildConfig.VERSION_CODE+1;PackageInfo installed=identity("am.zzws.admin",BuildConfig.VERSION_CODE,"7.1.18","release-certificate");assertTrue(UserUpdateDownload.sameIdentity(identity("am.zzws.admin",next,"7.1.19","release-certificate"),installed,release()));
+  assertFalse(UserUpdateDownload.sameIdentity(identity("am.zzws.partner",next,"7.1.19","release-certificate"),installed,release()));assertFalse(UserUpdateDownload.sameIdentity(identity("am.zzws.admin",next,"7.1.19","other-certificate"),installed,release()));assertFalse(UserUpdateDownload.sameIdentity(identity("am.zzws.admin",BuildConfig.VERSION_CODE,"7.1.19","release-certificate"),installed,release()));
  }
 }

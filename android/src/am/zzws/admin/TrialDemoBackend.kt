@@ -3,13 +3,13 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID
 /** Local preview only; never calls the server. */
-internal class TrialDemoBackend(private val sample:List<JSONObject>?=null,private val published:List<String>?=null) {
+internal class TrialDemoBackend(private val sample:List<JSONObject>?=null,private val published:List<String>?=null,initialOrders:List<JSONObject> = emptyList()) {
  val user=JSONObject().put("id","00000000-0000-4000-8000-000000000001").put("login","design-demo").put("client","ZZWS · Դեմո").put("role","client").put("active",true).put("profileRevision",1).put("rowsList",JSONArray().put(JSONObject().put("id","demo-delivery").put("organization","ZZWS Preview").put("address","Երևան · փորձնական հասցե").put("contact","Դեմո օգտատեր")))
  val products:List<JSONObject> by lazy{sample?:AppContext.value.assets.open("trial-products.json").bufferedReader().use{JSONArray(it.readText()).objects()}}
  val offer get()=JSONObject().put("id","demo-offer").put("title","Հատուկ առաջարկներ").put("revision",1).put("articles",JSONArray(published?:products.filter{it.optBoolean("isWholesalePromo")}.map{it.text("articul")}))
  private var memory=JSONObject();private var version=0
  private var preferences=JSONObject().put("enabled",false)
- private val orders=mutableListOf<JSONObject>()
+ private val orders=initialOrders.map{JSONObject(it.toString())}.toMutableList()
  @Synchronized fun call(path:String,body:JSONObject?):JSONObject {
   return when {
    path=="me"->JSONObject(user.toString())
@@ -25,7 +25,7 @@ internal class TrialDemoBackend(private val sample:List<JSONObject>?=null,privat
     orders.add(0,created);JSONObject(created.toString())
    }
    path=="orders"||path.startsWith("orders?before=")->JSONObject().put("orders",JSONArray(orders))
-   path=="orders/detail"->JSONObject((orders.firstOrNull{it.text("id")==body?.text("id")}?:throw IllegalArgumentException("Դեմո պատվերը չի գտնվել")).toString())
+   path=="orders/detail"||path=="admin/orders/detail"->JSONObject((orders.firstOrNull{it.text("id")==body?.text("id")}?:throw IllegalArgumentException("Դեմո պատվերը չի գտնվել")).toString())
    path=="logout"||path=="me/mobile/session"->JSONObject()
    else->throw IllegalArgumentException("Այս գործողությունը հասանելի է իրական հաշիվ մուտք գործելուց հետո։")
   }

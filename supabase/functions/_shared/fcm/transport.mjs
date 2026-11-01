@@ -6,6 +6,11 @@ export function fcmTransport({projectId,accessToken,enabled=false,fetchImpl=glob
   const kinds=['order.created','order.status','order.changed','order.comment','catalog.prices','catalog.offers','system'],kind=job?.kind||'order.changed';
   if(!job||!kinds.includes(kind)||typeof job.token!=='string'||job.token.length<20||job.token.length>4096||/\s/.test(job.token)||!/^[a-f0-9-]{36}$/i.test(job.eventId)||kind.startsWith('order.')&&!/^[a-f0-9-]{36}$/i.test(job.orderId)||!Number.isSafeInteger(job.revision)||job.revision<1)return {state:'dead',code:'invalid_job'};
   const data={eventId:job.eventId,revision:String(job.revision),...(kind.startsWith('order.')?{orderId:job.orderId}:{}),...(job.kind?{kind}:{}),...(/^[a-f0-9-]{36}$/i.test(job.userId||'')?{userId:job.userId}:{})};
+  if(kind==='order.created'&&job.orderSummary!==undefined){
+   const s=job.orderSummary;
+   if(!s||typeof s.customerName!=='string'||!s.customerName.trim()||s.customerName.length>200||/[\u0000-\u001f\u007f]/.test(s.customerName)||!Number.isSafeInteger(s.number)||s.number<1||!Number.isFinite(s.total)||s.total<0||s.total>Number.MAX_SAFE_INTEGER||!data.userId)return {state:'dead',code:'invalid_job'};
+   Object.assign(data,{customerName:s.customerName,orderNumber:String(s.number),orderTotal:String(s.total)});
+  }
   if(job.approvalAction!==undefined){if(!['requested','approved','declined','deferred'].includes(job.approvalAction)||!kind.startsWith('order.'))return {state:'dead',code:'invalid_job'};data.approvalAction=job.approvalAction;if(job.approvalAction==='deferred'){if(!Number.isSafeInteger(job.reviewMinutes)||job.reviewMinutes<1||job.reviewMinutes>60)return {state:'dead',code:'invalid_job'};data.reviewMinutes=String(job.reviewMinutes);}}
   let bearer;try{bearer=await accessToken();if(typeof bearer!=='string'||!bearer||/\s/.test(bearer))throw Error();}catch{return {state:'retry',code:'oauth_unavailable',retrySeconds:60};}
   try{
@@ -19,3 +24,4 @@ export function fcmTransport({projectId,accessToken,enabled=false,fetchImpl=glob
   }catch(error){return ['ENOTFOUND','EAI_AGAIN','ECONNREFUSED','UND_ERR_CONNECT_TIMEOUT'].includes(error?.cause?.code)?{state:'retry',code:'no_connection',retrySeconds:30}:{state:'uncertain',code:'transport_failure'};}
  };
 }
+
