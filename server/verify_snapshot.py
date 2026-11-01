@@ -47,6 +47,11 @@ def verify(snapshot):
         for row in tables.get(name, []):
             if row.get('user_id') and row['user_id'] not in users:
                 raise ValueError('missing_owner')
+    for row in tables.get('approval_reminder_snoozes', []):
+        if row.get('order_id') not in orders:
+            raise ValueError('missing_event_order')
+        if row.get('recipient_id') not in users or row.get('actor') not in users:
+            raise ValueError('missing_owner')
     for row in tables.get('order_events', []):
         if row.get('order_id') not in orders:
             raise ValueError('missing_event_order')

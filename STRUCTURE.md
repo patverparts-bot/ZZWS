@@ -1,5 +1,33 @@
 # ZZWS file layout
 
+## Custom postponement of approval reminders
+
+The existing Viber approval reminder has a Choose date and time control. The owner
+or order manager selects a future Yerevan (UTC+4) date/time and can optionally defer
+the customer's approval popup until the same moment. Unchecked leaves the customer's
+existing deadline unchanged. The administrator's deadline is personal; other staff
+keep their own reminders. The existing five-minute shortcut remains available.
+
+Server-side recipient-scoped snoozes persist across page/device reloads. A transaction
+checks the active order manager, pending proposal, defer-request ID and order revision,
+then saves the personal deadline and optionally the order author's deadline atomically.
+Retries with the same request ID are idempotent. The order, amounts, delivery, approval
+state/revision and notification outboxes do not change, and Viber never sends itself.
+The customer can answer before the deadline; future proposals/new client deferrals
+ignore old snoozes. Expiry makes the existing admin/customer pollers display reminders
+again, subject to existing focus/dialog suppression. Active customer popups close when
+the API reports the postponed reminder as not due.
+
+New table: `zzws_approval_reminder_snoozes`, RLS enabled and service-only. Recipient
+filtering applies to every API read. The table is included in encrypted snapshots and
+restore checks. Migration: `20261101065229_approval_reminder_custom_snooze.sql`.
+POST `admin/orders/approval-reminder/snooze`; admin and client pending-reminder APIs
+return the applicable deadline. Both guides, context help and audit labels explain it.
+Validation includes permissions, arbitrary dates beyond 60 minutes, optional client
+scope, old/stale rounds, order immutability, retries, expiry, backups and browser
+controls/reload, both languages, guides and mobile/desktop layout. No actual Viber
+message or production order is sent or changed during verification.
+
 ## Employee removal by the customer manager
 
 The main customer manager removes their own employee from My employees, through a

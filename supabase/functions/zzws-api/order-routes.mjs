@@ -8,13 +8,16 @@ import {buildOrderContext,calculationRetry} from './order-context.mjs';
 export async function orderRoutes(c){
  const {path,req,user,service,table,query,body,json:rawJson,file,current,project,rowsFromBuffer,draft,fail}=c;
  const json=(data,status)=>rawJson(orderPublic(data),status);
- const rpc=async(name,args)=>{const r=await service.rpc(name,args);if(r.error){if(calculationRetry(r.error))throw Object.assign(Error('Հաշվարկը պետք է թարմացվի'),{code:r.error.code});if(r.error.code==='PT429')fail(409,'Նոր պատվերի համար նախ հաստատեք բոլոր չստացված պատվերների ստացումը');if(r.error.code==='PT403')fail(403,'Հասանելիությունն արգելված է');if(r.error.code==='PT400')fail(400,'Ստուգեք պատվերի և հաշվարկի տվյալները');if(r.error.code==='PT409')fail(409,name==='zzws_submit_order_v3'?'Հաճախորդի տվյալները փոխվել են։ Թարմացրեք էջը և կրկին ընտրեք առաքումը։ Զամբյուղը պահպանված է։':'Պատվերն արդեն փոխվել է կամ նախադիտման ժամկետը լրացել է։ Վերաբացեք պատվերը');if(r.error.code==='PT404')fail(404,'Պատվերը չի գտնվել');console.error('Order operation',r.error.code);fail(500,'Չհաջողվեց պահպանել պատվերը');}return r.data;};
+ const rpc=async(name,args)=>{const r=await service.rpc(name,args);if(r.error){if(calculationRetry(r.error))throw Object.assign(Error('Հաշվարկը պետք է թարմացվի'),{code:r.error.code});if(r.error.code==='PT429')fail(409,'Նոր պատվերի համար նախ հաստատեք բոլոր չստացված պատվերների ստացումը');if(r.error.code==='PT403')fail(403,'Հասանելիությունն արգելված է');if(r.error.code==='PT400')fail(400,name==='zzws_snooze_approval_reminder'?'Ընտրեք ապագա ամսաթիվ և ժամ':'Ստուգեք պատվերի և հաշվարկի տվյալները');if(r.error.code==='PT409')fail(409,name==='zzws_submit_order_v3'?'Հաճախորդի տվյալները փոխվել են։ Թարմացրեք էջը և կրկին ընտրեք առաքումը։ Զամբյուղը պահպանված է։':'Պատվերն արդեն փոխվել է կամ նախադիտման ժամկետը լրացել է։ Վերաբացեք պատվերը');if(r.error.code==='PT404')fail(404,'Պատվերը չի գտնվել');console.error('Order operation',r.error.code);fail(500,'Չհաջողվեց պահպանել պատվերը');}return r.data;};
  const checked=async action=>{for(let attempt=0;attempt<3;attempt++){try{return await action();}catch(e){if(!calculationRetry(e))throw e;if(attempt===2)fail(409,'Գնացուցակը փոխվում է։ Կրկին ստուգեք գները և ուղարկեք պատվերը։ Տվյալները պահպանված են։');}}};
  const order=async(id,admin=false)=>{let q=table('orders').select('*').eq('id',id);if(!admin)q=user.clientRole==='manager'?q.eq('customer_id',user.customerId):q.eq('user_id',user.id);const row=await query(q.maybeSingle());if(!row)fail(404,'Պատվերը չի գտնվել');return row;};
+ const snoozes=async rows=>rows.length?await query(table('approval_reminder_snoozes').select('order_id,proposal_id,defer_request_id,order_revision,snoozed_until').eq('recipient_id',user.id).in('order_id',rows.map(o=>o.id))):[];
+ const snoozedUntil=(o,rows)=>rows.find(s=>s.order_id===o.id&&s.proposal_id===o.approval.id&&s.defer_request_id===o.approval.deferRequestId&&s.order_revision===o.revision)?.snoozed_until||null;
  if(path==='orders/approval-pending'&&req.method==='GET'){
   if(user.role!=='client')fail(403,'Հասանելիությունն արգելված է');
   const rows=await query(table('orders').select('id,number,revision,approval').eq('user_id',user.id).eq('approval->>state','pending').order('updated',{ascending:true}).limit(500));
-  return json({serverTime:new Date().toISOString(),orders:rows.map(o=>({id:o.id,number:o.number,revision:o.revision,proposalId:o.approval.id,remindAfter:o.approval.remindAfter||null,reminderDue:!o.approval.remindAfter||Date.parse(o.approval.remindAfter)<=Date.now()}))});
+  const paused=await snoozes(rows);
+  return json({serverTime:new Date().toISOString(),orders:rows.map(o=>{const until=snoozedUntil(o,paused),after=until&&Date.parse(until)>Date.parse(o.approval.remindAfter||0)?until:o.approval.remindAfter||null;return {id:o.id,number:o.number,revision:o.revision,proposalId:o.approval.id,remindAfter:after,reminderDue:!after||Date.parse(after)<=Date.now()};})});
  }
  if(path==='orders/approval-defer'&&req.method==='POST'){
   const p=await body(req),allowed=['orderId','revision','proposalId','minutes','requestId'];
@@ -69,7 +72,14 @@ export async function orderRoutes(c){
  if(path==='admin/orders/approval-reminders'&&req.method==='GET'){
   if(!user.permissions?.includes('orders:write'))fail(403,'Հասանելիությունն արգելված է');
   const now=new Date(),rows=await query(table('orders').select('id,number,revision,customer,approval').is('received_at',null).in('status',['new','confirmed','in_progress']).eq('approval->>state','pending').gt('approval->>reviewRequestedMinutes','0').lte('approval->>remindAfter',now.toISOString()).order('approval->>remindAfter',{ascending:true}).limit(100));
-  return json({serverTime:now.toISOString(),orders:rows.filter(o=>Date.parse(o.approval.remindAfter)<=now.valueOf()).map(o=>({id:o.id,number:o.number,revision:o.revision,customer:{client:o.customer?.client||'',customerCode:o.customer?.customerCode||''},proposalId:o.approval.id,deferRequestId:o.approval.deferRequestId,minutes:o.approval.reviewRequestedMinutes,remindAfter:o.approval.remindAfter}))});
+  const paused=await snoozes(rows);
+  return json({serverTime:now.toISOString(),orders:rows.filter(o=>Date.parse(o.approval.remindAfter)<=now.valueOf()).map(o=>({id:o.id,number:o.number,revision:o.revision,customer:{client:o.customer?.client||'',customerCode:o.customer?.customerCode||''},proposalId:o.approval.id,deferRequestId:o.approval.deferRequestId,minutes:o.approval.reviewRequestedMinutes,remindAfter:o.approval.remindAfter,snoozedUntil:snoozedUntil(o,paused)}))});
+ }
+ if(path==='admin/orders/approval-reminder/snooze'&&req.method==='POST'){
+  if(!user.permissions?.includes('orders:write'))fail(403,'Հասանելիությունն արգելված է');
+  const p=await body(req),allowed=['orderId','revision','proposalId','deferRequestId','until','includeClient','requestId'];
+  if(Object.keys(p).some(k=>!allowed.includes(k))||!deliveryId(p.orderId)||!deliveryId(p.proposalId)||!deliveryId(p.deferRequestId)||!deliveryId(p.requestId)||!Number.isSafeInteger(p.revision)||typeof p.includeClient!=='boolean'||typeof p.until!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(p.until)||!Number.isFinite(Date.parse(p.until))||new Date(p.until).toISOString()!==p.until)fail(400,'Ընտրեք հիշեցման ճիշտ ամսաթիվը և ժամը');
+  return json(await rpc('zzws_snooze_approval_reminder',{p_actor:user.id,p_order:p.orderId,p_revision:p.revision,p_proposal:p.proposalId,p_defer:p.deferRequestId,p_until:p.until,p_client:p.includeClient,p_request:p.requestId}));
  }
  if(path==='admin/orders/approval-reminder'&&req.method==='POST'){
   if(!user.permissions?.includes('orders:write'))fail(403,'Հասանելիությունն արգելված է');
