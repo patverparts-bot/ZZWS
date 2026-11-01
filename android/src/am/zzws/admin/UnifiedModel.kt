@@ -41,7 +41,7 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
  var challenge by mutableStateOf("");private set
  var screen by mutableStateOf("home")
  var orderSearch by mutableStateOf("");var orderFrom by mutableStateOf("");var orderTo by mutableStateOf("")
- private var appliedOrderFilter=Triple("","","")
+ private var appliedOrderFilter by mutableStateOf(Triple("","",""))
  var demo by mutableStateOf(false);private set
  fun enterDemo(){if(busy)return;reset();AppSession.clear();demo=true;user=trialBackend.user;onlyWholesale=CatalogWholesalePreference.read(AppContext.value,EndpointConfiguration.API,user);products=trialBackend.products.map(::Product);publishedOffer=trialBackend.offer;subscriptions=JSONObject().put("enabled",false);setDelivery(0,false);date=java.time.LocalDate.now(java.time.ZoneId.of("Asia/Yerevan")).toString();draftReady=true;screen="home";cartSync="Դեմո · փոփոխությունները միայն այս սարքում են"}
  var catalogControls by mutableStateOf(JSONObject());private set
@@ -267,6 +267,17 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
  }
  fun history()=run{check(ordersDestination(user)==OrdersDestination.PERSONAL){"Հասանելիությունն արգելված է"};val filters=Triple(orderSearch,orderFrom,orderTo);orders=call(orderHistoryPath(filters.first,filters.second,filters.third)).optJSONArray("orders").objects();appliedOrderFilter=filters;screen="orders"}
  fun olderOrders()=run{val before=orders.lastOrNull()?.optLong("number")?:return@run;val next=call(orderHistoryPath(appliedOrderFilter.first,appliedOrderFilter.second,appliedOrderFilter.third,before)).optJSONArray("orders").objects();orders=(orders+next).distinctBy{it.text("id")}}
+ fun exportOrderFilters()=appliedOrderFilter
+ fun hasOrderExportFilter()=listOf(appliedOrderFilter.first,appliedOrderFilter.second,appliedOrderFilter.third).any{it.isNotBlank()}
+ fun exportOrderData(uri:android.net.Uri,payload:JSONObject,owner:String)=run{
+  check(!demo&&user?.text("role")=="client"&&user?.text("id")==owner){"Հասանելիությունն արգելված է"}
+  notice="Պատրաստվում է Excel ֆայլը…"
+  val token=AppSession.api.sessionToken()
+  val bytes=withContext(Dispatchers.IO){AppSession.api.orderExport(payload)}
+  check(user?.text("id")==owner&&AppSession.api.sessionToken()==token){"Աշխատաշրջանը փոխվել է։ Կրկին փորձեք։"}
+  withContext(Dispatchers.IO){check(AppSession.api.sessionToken()==token){"Աշխատաշրջանը փոխվել է։ Կրկին փորձեք։"};AppContext.value.contentResolver.openOutputStream(uri,"wt")?.use{it.write(bytes)}?:throw java.io.IOException("Չհաջողվեց պահպանել ֆայլը։ Կրկին փորձեք։")}
+  notice="Ֆայլը պահպանված է"
+ }
  var approvalReminder by mutableStateOf<JSONObject?>(null);private set
  private var approvalLastShown:Long?=null
  private var approvalPolling=false

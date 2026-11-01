@@ -102,7 +102,7 @@ class UnifiedActivity:ComponentActivity(){
    "management"->PartnerManagement(model){model.showAllProducts();buyerDialog=true}
    "cart"->PartnerCheckout(model,{buyerDialog=true})
    "orders"->LazyColumn(contentPadding=PaddingValues(16.dp),verticalArrangement=Arrangement.spacedBy(10.dp)){
-    item{LocalizedText("Իմ պատվերները",style=MaterialTheme.typography.headlineSmall);PartnerOrderSearch(model)}
+    item{LocalizedText("Իմ պատվերները",style=MaterialTheme.typography.headlineSmall);OrderDataExportButton(model);LocalizedText("Բոլոր պատվերները՝ բոլոր կարգավիճակներով",style=MaterialTheme.typography.bodySmall);PartnerOrderSearch(model);if(model.hasOrderExportFilter())OrderDataExportButton(model,filtered=true)}
     items(model.orders,key={it.text("id")}){o->
      Card(Modifier.fillMaxWidth().clickable{model.openOrder(o.text("id"))}){
       Column(Modifier.padding(16.dp)){
@@ -119,6 +119,7 @@ class UnifiedActivity:ComponentActivity(){
     LocalizedText("Պատվեր №"+o.optLong("number"),style=MaterialTheme.typography.headlineMedium);LocalizedText(statusLabel(o.text("status")))
     OrderOriginCard(o)
     if(o.text("created").isNotBlank())LocalizedText(yerevanTime(o.text("created")),style=MaterialTheme.typography.bodySmall)
+    OrderDataExportButton(model,o.text("id"),o.optLong("number"))
     ReceiptPanel(model.user,o,model.busy){model.prepareReceipt(o.text("id"),o.optInt("revision"))}
     OrderApprovalPanel(model,o)
     OrderLines(o)

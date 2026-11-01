@@ -30,6 +30,21 @@ final class ApiClient {
   return request("GET",new URL(new URL(base),"../zzws-apk/download-link?versionCode="+versionCode),null,false);
  }
  JSONObject apkDownloadComplete(String downloadId,String sha256,long bytes) throws Exception {return request("POST",new URL(new URL(base),"../zzws-apk/download-complete"),new JSONObject().put("downloadId",downloadId).put("sha256",sha256).put("bytes",bytes),false);}
+ byte[] orderExport(JSONObject body) throws Exception {
+  final String sentToken=token;if(sentToken.isEmpty())throw new ApiError(401,"Մուտք գործեք հաշիվ");
+  HttpURLConnection c=(HttpURLConnection)new URL(base+"orders/export").openConnection();c.setInstanceFollowRedirects(false);c.setRequestMethod("POST");c.setConnectTimeout(10000);c.setReadTimeout(60000);c.setUseCaches(false);c.setRequestProperty("apikey",key);c.setRequestProperty("Authorization","Bearer "+sentToken);c.setRequestProperty("Accept","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");c.setRequestProperty("Content-Type","application/json");c.setRequestProperty("X-ZZWS-Client","android");
+  try{
+   c.setDoOutput(true);try(OutputStream out=c.getOutputStream()){out.write(body.toString().getBytes(StandardCharsets.UTF_8));}
+   int status=c.getResponseCode();
+   if(status!=200){String message="Չհաջողվեց պատրաստել ֆայլը։ Կրկին փորձեք։";InputStream error=c.getErrorStream();if(error!=null)try(InputStream in=error;ByteArrayOutputStream bytes=new ByteArrayOutputStream()){byte[] buffer=new byte[1024];int n;while((n=in.read(buffer))!=-1&&bytes.size()+n<=16000)bytes.write(buffer,0,n);try{message=new JSONObject(bytes.toString("UTF-8")).optString("error",message);}catch(JSONException ignored){}}
+    synchronized(this){if(!token.equals(sentToken))throw new ApiError(409,"Աշխատաշրջանը փոխվել է։ Կրկին փորձեք։");if(status==401)clear();}throw new ApiError(status,message);
+   }
+   if(c.getContentType()==null||!c.getContentType().startsWith("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))throw new IOException("Unexpected file response");
+   byte[] result;try(InputStream in=c.getInputStream();ByteArrayOutputStream out=new ByteArrayOutputStream()){byte[] buffer=new byte[8192];int n;while((n=in.read(buffer))!=-1){if(out.size()+n>24_000_000)throw new IOException("File too large");out.write(buffer,0,n);}result=out.toByteArray();}
+   synchronized(this){if(!token.equals(sentToken))throw new ApiError(409,"Աշխատաշրջանը փոխվել է։ Կրկին փորձեք։");}
+   if(result.length<4||result[0]!='P'||result[1]!='K'||result[2]!=3||result[3]!=4)throw new IOException("Invalid workbook");return result;
+  }catch(SocketTimeoutException e){throw new IOException("Ֆայլի պատրաստումը երկար է տևում։ Ընտրեք ավելի կարճ ժամանակահատված և կրկին փորձեք։");}finally{c.disconnect();}
+ }
  private JSONObject request(String method,URL url,JSONObject body,boolean sessionResponse) throws Exception {
   final String sentToken=token;
   HttpURLConnection c=(HttpURLConnection)url.openConnection();c.setInstanceFollowRedirects(false);c.setRequestMethod(method);c.setConnectTimeout(10000);c.setReadTimeout(15000);c.setUseCaches(false);c.setRequestProperty("apikey",key);c.setRequestProperty("Accept","application/json");c.setRequestProperty("X-ZZWS-Client","android");if(EndpointConfiguration.RELEASE){c.setRequestProperty("X-ZZWS-App-Version",BuildConfig.VERSION_NAME);c.setRequestProperty("X-ZZWS-App-Code",String.valueOf(BuildConfig.VERSION_CODE));}

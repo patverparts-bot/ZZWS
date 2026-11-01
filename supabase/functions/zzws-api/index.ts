@@ -69,7 +69,7 @@ async function uploadRows(req:Request){
   if(!(file instanceof File)||!file.name.toLowerCase().endsWith('.xlsx'))fail(400,'Ընտրեք XLSX ֆայլ');
   return rowsFromBuffer(await file.arrayBuffer());
 }
-const workbook=(rows:any[][],columns:any[]=[])=>{const book=XLSX.utils.book_new();const sheet=XLSX.utils.aoa_to_sheet(rows.map(r=>r.map(v=>typeof v==='string'&&/^[=+@-]/.test(v)?"'"+v:v)));sheet['!cols']=columns.length?columns:workbookColumns(rows);sheet['!merges']=catalogMetadataMerge(rows);XLSX.utils.book_append_sheet(book,sheet,'ZZWS');return XLSX.write(book,{type:'array',bookType:'xlsx'});};
+const workbook=(rows:any[][],columns:any[]=[],sheets:any[]=[])=>{const book=XLSX.utils.book_new();for(const tab of sheets.length?sheets:[{name:'ZZWS',rows,columns}]){const sheet=XLSX.utils.aoa_to_sheet(tab.rows.map((r:any[])=>r.map(v=>typeof v==='string'&&/^[=+@-]/.test(v)?"'"+v:v)));sheet['!cols']=tab.columns?.length?tab.columns:workbookColumns(tab.rows);sheet['!merges']=catalogMetadataMerge(tab.rows);XLSX.utils.book_append_sheet(book,sheet,tab.name);}return XLSX.write(book,{type:'array',bookType:'xlsx'});};
 const cleanUser=accountDTO;
 async function confirmAccountPassword(req:Request,user:any,hash:string,password:unknown,mfaVerified:boolean){
   if(typeof password!=='string'||!password||password.length>256)fail(400,'Մուտքագրեք ձեր ընթացիկ գաղտնաբառը');
@@ -163,7 +163,7 @@ export async function handle(req:Request){
   const headers:any={'Content-Type':'application/json','Cache-Control':'no-store','Vary':'Origin','X-Content-Type-Options':'nosniff'};
   if(allowed.has(origin))Object.assign(headers,{'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Headers':'authorization,apikey,content-type,x-zzws-request','Access-Control-Allow-Methods':'GET,POST,OPTIONS','Access-Control-Expose-Headers':'Content-Disposition'});
   const json=(data:any,status=200)=>new Response(JSON.stringify(data),{status,headers});
-  const file=(rows:any[][],name:string,columns:any[]=[])=>new Response(workbook(rows,columns),{headers:{...headers,'Content-Type':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','Content-Disposition':`attachment; filename="${name}"`}});
+  const file=(rows:any[][],name:string,columns:any[]=[],sheets:any[]=[])=>new Response(workbook(rows,columns,sheets),{headers:{...headers,'Content-Type':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','Content-Disposition':`attachment; filename="${name}"`}});
   try{
     if(origin&&!allowed.has(origin))return json({error:'Հարցման աղբյուրը թույլատրված չէ'},403);
     if(req.method==='OPTIONS')return new Response(null,{status:204,headers});

@@ -1,4 +1,5 @@
 import {orderExportData} from './order-export.mjs';
+import {clientOrderExportRoute} from './client-order-export.mjs';
 import {viberContacts} from './contacts.mjs';
 import {priceVersionLabel} from './workbook-layout.mjs';
 import {orderPublic} from './order-public.mjs';
@@ -11,6 +12,7 @@ import {buildOrderContext,calculationRetry} from './order-context.mjs';
 export const awaitingCustomerApproval=q=>q.eq('approval->>state','pending').is('received_at',null).in('status',['new','confirmed','in_progress']);
 export async function orderRoutes(c){
  const {path,req,user,service,table,query,body,json:rawJson,file,current,project,rowsFromBuffer,draft,fail}=c;
+ const clientExport=await clientOrderExportRoute(c);if(clientExport)return clientExport;
  const json=(data,status)=>rawJson(orderPublic(data),status);
  const rpc=async(name,args)=>{const r=await service.rpc(name,args);if(r.error){if(calculationRetry(r.error))throw Object.assign(Error('Հաշվարկը պետք է թարմացվի'),{code:r.error.code});if(r.error.code==='PT429')fail(409,'Նոր պատվերի համար նախ հաստատեք բոլոր չստացված պատվերների ստացումը');if(r.error.code==='PT403')fail(403,'Հասանելիությունն արգելված է');if(r.error.code==='PT400')fail(400,name==='zzws_snooze_approval_reminder'?'Ընտրեք ապագա ամսաթիվ և ժամ':'Ստուգեք պատվերի և հաշվարկի տվյալները');if(r.error.code==='PT409')fail(409,name==='zzws_submit_order_v3'?'Հաճախորդի տվյալները փոխվել են։ Թարմացրեք էջը և կրկին ընտրեք առաքումը։ Զամբյուղը պահպանված է։':'Պատվերն արդեն փոխվել է կամ նախադիտման ժամկետը լրացել է։ Վերաբացեք պատվերը');if(r.error.code==='PT404')fail(404,'Պատվերը չի գտնվել');console.error('Order operation',r.error.code);fail(500,'Չհաջողվեց պահպանել պատվերը');}return r.data;};
  const checked=async action=>{for(let attempt=0;attempt<3;attempt++){try{return await action();}catch(e){if(!calculationRetry(e))throw e;if(attempt===2)fail(409,'Գնացուցակը փոխվում է։ Կրկին ստուգեք գները և ուղարկեք պատվերը։ Տվյալները պահպանված են։');}}};
