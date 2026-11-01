@@ -1,0 +1,1482 @@
+{
+  "verifiedAt": "2026-11-01T20:08:01.152Z",
+  "catalogueRule": "Only article codes beginning with ASCII digit 0-9; no outlet catalogue source photos",
+  "sources": [
+    {
+      "articul": "0300888",
+      "name": "Sony HT-S60",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/s/c/screenshot_2025-09-30_102655_1.png",
+      "sourcePage": "https://www.zigzag.am/en/sony-ht-s60.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/s/c/screenshot_2025-09-30_102655_1.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 100926,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/s/c/screenshot_2025-09-30_102655_1.png",
+        "checkedAt": "2026-11-01T19:45:51.341Z"
+      }
+    },
+    {
+      "articul": "0523220",
+      "name": "Panasonic Lumix S9 S-R 18-40mm Silver / DC-S9NE-SA",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/d/c/dc-s9ne-sa_2-high_res.jpg",
+      "sourcePage": "https://www.zigzag.am/en/panasonic-lumix-s9-s-r-18-40mm-silver-dc-s9ne-sa.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/d/c/dc-s9ne-sa_2-high_res.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 39098,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/d/c/dc-s9ne-sa_2-high_res.jpg",
+        "checkedAt": "2026-11-01T19:45:52.871Z"
+      }
+    },
+    {
+      "articul": "05232200",
+      "name": "Panasonic Lumix S9 18-40mm Jet Black / DC-S9NE-K",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/d/c/dc-s9ne-k_2-high_res-en_gb.jpg",
+      "sourcePage": "https://www.zigzag.am/en/panasonic-lumix-s9-18-40mm-jet-black-dc-s9ne-k.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/d/c/dc-s9ne-k_2-high_res-en_gb.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 304712,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/d/c/dc-s9ne-k_2-high_res-en_gb.jpg",
+        "checkedAt": "2026-11-01T19:45:53.013Z"
+      }
+    },
+    {
+      "articul": "0523221",
+      "name": "Panasonic Lumix TZ99 Black 4K | 30x Travel Zoom / DC-TZ99E-K",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/d/c/dc-tz99e-k_2-high_res-en_gb.jpg",
+      "sourcePage": "https://www.zigzag.am/en/panasonic-lumix-tz99-black-4k-30x-travel-zoom-dc-tz99e-k.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/d/c/dc-tz99e-k_2-high_res-en_gb.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 146207,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/d/c/dc-tz99e-k_2-high_res-en_gb.jpg",
+        "checkedAt": "2026-11-01T19:45:52.978Z"
+      }
+    },
+    {
+      "articul": "0523222",
+      "name": "Panasonic Lumix FZ82D 4K | 60x Ultrazoom / DC-FZ82DE-K",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/d/o/download_2_.png",
+      "sourcePage": "https://www.zigzag.am/en/panasonic-lumix-fz82d-4k-60x-ultrazoom-dc-fz82de-k.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/d/o/download_2_.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 95485,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/d/o/download_2_.png",
+        "checkedAt": "2026-11-01T19:45:53.120Z"
+      }
+    },
+    {
+      "articul": "0523223",
+      "name": "Panasonic Lumix G97 12-60mm Black 4K | Micro 4/3 / DC-G97ME",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/d/c/dc-g97me_2-high_res-en_gb_1.jpg",
+      "sourcePage": "https://www.zigzag.am/en/panasonic-lumix-g97-12-60mm-black-4k-micro-4-3-dc-g97me.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/d/c/dc-g97me_2-high_res-en_gb_1.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 223660,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/d/c/dc-g97me_2-high_res-en_gb_1.jpg",
+        "checkedAt": "2026-11-01T19:45:53.246Z"
+      }
+    },
+    {
+      "articul": "0540520",
+      "name": "Canon EOS R7 RF-S 18-150 S RUK /5137C040AA",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/0/5/0540520_1_1.png",
+      "sourcePage": "https://www.zigzag.am/en/canon-eos-r7-rf-s-18-150-s-ruk-see.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/0/5/0540520_1_1.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 630209,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/0/5/0540520_1_1.png",
+        "checkedAt": "2026-11-01T19:45:54.376Z"
+      }
+    },
+    {
+      "articul": "171701",
+      "name": "Monitor Audio SB6GW10B",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/1/7/171701_1.jpg",
+      "sourcePage": "https://www.zigzag.am/en/monitor-audio-sb6gw10b.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/1/7/171701_1.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 88818,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/1/7/171701_1.jpg",
+        "checkedAt": "2026-11-01T19:46:03.298Z"
+      }
+    },
+    {
+      "articul": "176073",
+      "name": "Yandex Smart Station Mini 3 Pro /YNDX-00059 Grey",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/r/e/rekrmmyrjwy7vo545zxy2khzpdx6nxwtvzmfih6jlk2dnuvcjtavzkhqvohqhecrgwoeoodjp1vgy-ewtvbmf_b8mu0fqdz_3tztkblkmfayt51potfqhmbixpqya9np8zhffrsa1w7h8mramdxfto8eb5hdo2n01j_hxr8ugppn_tk3lgxi9elvwm7h7mbr.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/yandex-smart-station-mini-3-pro-yndx-00059-grey.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/r/e/rekrmmyrjwy7vo545zxy2khzpdx6nxwtvzmfih6jlk2dnuvcjtavzkhqvohqhecrgwoeoodjp1vgy-ewtvbmf_b8mu0fqdz_3tztkblkmfayt51potfqhmbixpqya9np8zhffrsa1w7h8mramdxfto8eb5hdo2n01j_hxr8ugppn_tk3lgxi9elvwm7h7mbr.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 176190,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/r/e/rekrmmyrjwy7vo545zxy2khzpdx6nxwtvzmfih6jlk2dnuvcjtavzkhqvohqhecrgwoeoodjp1vgy-ewtvbmf_b8mu0fqdz_3tztkblkmfayt51potfqhmbixpqya9np8zhffrsa1w7h8mramdxfto8eb5hdo2n01j_hxr8ugppn_tk3lgxi9elvwm7h7mbr.jpeg",
+        "checkedAt": "2026-11-01T19:46:08.055Z"
+      }
+    },
+    {
+      "articul": "176074",
+      "name": "Yandex Smart Station Mini 3 Pro /YNDX-00059 Black",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/c/o/cohst0wp3delzwnmo4yaqrfpeflhwur9z4bkz7nnhmvgscs5dldbfqau7ljblxctw3onpanikraktae22alzhgkqasjcjmxaieslpkjcb6sisyuddlvl_t8njkwux5onxdf7vq8fcwdg-c932hvh02obmlhff-zd82924en07gs.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/yandex-smart-station-mini-3-pro-yndx-00059-black.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/c/o/cohst0wp3delzwnmo4yaqrfpeflhwur9z4bkz7nnhmvgscs5dldbfqau7ljblxctw3onpanikraktae22alzhgkqasjcjmxaieslpkjcb6sisyuddlvl_t8njkwux5onxdf7vq8fcwdg-c932hvh02obmlhff-zd82924en07gs.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 174632,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/c/o/cohst0wp3delzwnmo4yaqrfpeflhwur9z4bkz7nnhmvgscs5dldbfqau7ljblxctw3onpanikraktae22alzhgkqasjcjmxaieslpkjcb6sisyuddlvl_t8njkwux5onxdf7vq8fcwdg-c932hvh02obmlhff-zd82924en07gs.jpeg",
+        "checkedAt": "2026-11-01T19:46:08.101Z"
+      }
+    },
+    {
+      "articul": "176075",
+      "name": "Yandex Smart Station Mini 3 Pro /YNDX-00059 Blue",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/_/h/_hpnsojd3dsan6nwrap7oap7vq7ndxmdluqdmp07dnwlkvqjpx1svoixesvihuvhyq2sy2qnhf0ghulccsxcnifkerupblsybjfmd9ccdndrghx3alrcen0qt9wyzvmlj07ncjt0kek750ocps6zkc9pj5a54si2gj0bdpytyi7ktekumpvondn345fpwwei.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/yandex-smart-station-mini-3-pro-yndx-00059-blue.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/_/h/_hpnsojd3dsan6nwrap7oap7vq7ndxmdluqdmp07dnwlkvqjpx1svoixesvihuvhyq2sy2qnhf0ghulccsxcnifkerupblsybjfmd9ccdndrghx3alrcen0qt9wyzvmlj07ncjt0kek750ocps6zkc9pj5a54si2gj0bdpytyi7ktekumpvondn345fpwwei.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 169856,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/_/h/_hpnsojd3dsan6nwrap7oap7vq7ndxmdluqdmp07dnwlkvqjpx1svoixesvihuvhyq2sy2qnhf0ghulccsxcnifkerupblsybjfmd9ccdndrghx3alrcen0qt9wyzvmlj07ncjt0kek750ocps6zkc9pj5a54si2gj0bdpytyi7ktekumpvondn345fpwwei.jpeg",
+        "checkedAt": "2026-11-01T19:46:08.168Z"
+      }
+    },
+    {
+      "articul": "176076",
+      "name": "Yandex Smart Station Mini 3 Pro /YNDX-00059 Green",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/g/v/gveuzscwksita1d1-2dwih22tzi8vapvto9b2wtbswmdzuvvegfrr-cgosrd24raxd9zoenfi2jayp9zoyvm4rtsyo6aqqkbeed8o_nr6b5lju8e38enis2v120qekwelvqwzoyzecitdxqzuvs1tsbkbs9-m5mlc0rog6s3sv0.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/yandex-smart-station-mini-3-pro-yndx-00059-green.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/g/v/gveuzscwksita1d1-2dwih22tzi8vapvto9b2wtbswmdzuvvegfrr-cgosrd24raxd9zoenfi2jayp9zoyvm4rtsyo6aqqkbeed8o_nr6b5lju8e38enis2v120qekwelvqwzoyzecitdxqzuvs1tsbkbs9-m5mlc0rog6s3sv0.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 153528,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/g/v/gveuzscwksita1d1-2dwih22tzi8vapvto9b2wtbswmdzuvvegfrr-cgosrd24raxd9zoenfi2jayp9zoyvm4rtsyo6aqqkbeed8o_nr6b5lju8e38enis2v120qekwelvqwzoyzecitdxqzuvs1tsbkbs9-m5mlc0rog6s3sv0.jpeg",
+        "checkedAt": "2026-11-01T19:46:08.178Z"
+      }
+    },
+    {
+      "articul": "176077",
+      "name": "Yandex Smart Station Station 3 /YNDX-00060 Grey",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/i/z/izk3zsbinoqmgrgrq09cnlstzspjedrt2tnthpfytwhtgjj4pz68iyxj1opzo9zvedl4kv-j7xr3kte1bwfgohrgjcxqbwyxt4g91ni_dvvkhja912_s-d0mq0gtkdg0qgiimlffuu6_im7f8g8rbxhkmoq76p2foap5r6wj3lcpxizpjkrvi10jfbba4b8f.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/yandex-smart-station-station-3-yndx-00060-grey.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/i/z/izk3zsbinoqmgrgrq09cnlstzspjedrt2tnthpfytwhtgjj4pz68iyxj1opzo9zvedl4kv-j7xr3kte1bwfgohrgjcxqbwyxt4g91ni_dvvkhja912_s-d0mq0gtkdg0qgiimlffuu6_im7f8g8rbxhkmoq76p2foap5r6wj3lcpxizpjkrvi10jfbba4b8f.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 122518,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/i/z/izk3zsbinoqmgrgrq09cnlstzspjedrt2tnthpfytwhtgjj4pz68iyxj1opzo9zvedl4kv-j7xr3kte1bwfgohrgjcxqbwyxt4g91ni_dvvkhja912_s-d0mq0gtkdg0qgiimlffuu6_im7f8g8rbxhkmoq76p2foap5r6wj3lcpxizpjkrvi10jfbba4b8f.jpeg",
+        "checkedAt": "2026-11-01T19:46:08.215Z"
+      }
+    },
+    {
+      "articul": "176078",
+      "name": "Yandex Smart Station Station 3 /YNDX-00060 Black",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/g/h/ghxngd70i4pkjljrwnze2j4ldaar7wonukib_fsbfs2zyiuz6jrjqy1ixuqqzc4cxtzz4rikvlajao3ogir7ksm2z3a2cler2iyllakbwlfy9geozt3oag-tmlijukfdcb7rhzsp0qgdv57tdyx4qfvyrjys9zol-9txlitngryct3gpidf3hoc9ftp7momx.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/yandex-smart-station-station-3-yndx-00060-black.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/g/h/ghxngd70i4pkjljrwnze2j4ldaar7wonukib_fsbfs2zyiuz6jrjqy1ixuqqzc4cxtzz4rikvlajao3ogir7ksm2z3a2cler2iyllakbwlfy9geozt3oag-tmlijukfdcb7rhzsp0qgdv57tdyx4qfvyrjys9zol-9txlitngryct3gpidf3hoc9ftp7momx.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 156840,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/g/h/ghxngd70i4pkjljrwnze2j4ldaar7wonukib_fsbfs2zyiuz6jrjqy1ixuqqzc4cxtzz4rikvlajao3ogir7ksm2z3a2cler2iyllakbwlfy9geozt3oag-tmlijukfdcb7rhzsp0qgdv57tdyx4qfvyrjys9zol-9txlitngryct3gpidf3hoc9ftp7momx.jpeg",
+        "checkedAt": "2026-11-01T19:46:08.290Z"
+      }
+    },
+    {
+      "articul": "176451",
+      "name": "Sonos Era 100 SL Black (E10SLEU1BLK)",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/a/n/anijuocgwkawlgat0-rzi6ck1rcjp-fkh_svmqg2sg7ynrmlupzdep9mbykzbkuprkm-qvu7kawkln71mny6n5khhiiuudve6ejbvgs_fii2pwxb_jio2ugzcacl-le7xjgsjnzwy7vigyqrtedbtjcopdkrtpculmhrujmc2crrr8-ma8uix1un7-cqm6qk.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/sonos-era-100-sl-black-e10sleu1blk.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/a/n/anijuocgwkawlgat0-rzi6ck1rcjp-fkh_svmqg2sg7ynrmlupzdep9mbykzbkuprkm-qvu7kawkln71mny6n5khhiiuudve6ejbvgs_fii2pwxb_jio2ugzcacl-le7xjgsjnzwy7vigyqrtedbtjcopdkrtpculmhrujmc2crrr8-ma8uix1un7-cqm6qk.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 70594,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/a/n/anijuocgwkawlgat0-rzi6ck1rcjp-fkh_svmqg2sg7ynrmlupzdep9mbykzbkuprkm-qvu7kawkln71mny6n5khhiiuudve6ejbvgs_fii2pwxb_jio2ugzcacl-le7xjgsjnzwy7vigyqrtedbtjcopdkrtpculmhrujmc2crrr8-ma8uix1un7-cqm6qk.jpeg",
+        "checkedAt": "2026-11-01T19:46:08.406Z"
+      }
+    },
+    {
+      "articul": "216050",
+      "name": "Anker Soundcore Rave 3S, Black /A31A3012",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/p/w/pwyweztu2-scit4sce7d1ir3bfjp5bygb2nqzahog03mhgd2c_khpcy9x4pha-9soptp4skh0tmuqxkxv0grzilnd5fgdei8tcbwrjz2mkprvrx6f9cihyepk6ljvcyxgkohjev1jy2nbbaxnmmf9agyzwoj-omuehmwpsmvvtr9xb10d-d2hmhyqg36e8lz.jpg",
+      "sourcePage": "https://www.zigzag.am/en/anker-soundcore-rave-3s-black-a31a3012.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/p/w/pwyweztu2-scit4sce7d1ir3bfjp5bygb2nqzahog03mhgd2c_khpcy9x4pha-9soptp4skh0tmuqxkxv0grzilnd5fgdei8tcbwrjz2mkprvrx6f9cihyepk6ljvcyxgkohjev1jy2nbbaxnmmf9agyzwoj-omuehmwpsmvvtr9xb10d-d2hmhyqg36e8lz.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 130751,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/p/w/pwyweztu2-scit4sce7d1ir3bfjp5bygb2nqzahog03mhgd2c_khpcy9x4pha-9soptp4skh0tmuqxkxv0grzilnd5fgdei8tcbwrjz2mkprvrx6f9cihyepk6ljvcyxgkohjev1jy2nbbaxnmmf9agyzwoj-omuehmwpsmvvtr9xb10d-d2hmhyqg36e8lz.jpg",
+        "checkedAt": "2026-11-01T19:46:10.668Z"
+      }
+    },
+    {
+      "articul": "29110451",
+      "name": "Apple AirPods Max 2 Purple /MHWP4ZE/A",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/7/1/71oymd5_izl._ac_sl1500_.jpg",
+      "sourcePage": "https://www.zigzag.am/en/apple-airpods-max-2-purple-mhwp4ze-a.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/7/1/71oymd5_izl._ac_sl1500_.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 81244,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/7/1/71oymd5_izl._ac_sl1500_.jpg",
+        "checkedAt": "2026-11-01T19:46:13.852Z"
+      }
+    },
+    {
+      "articul": "295159",
+      "name": "Logitech G522 LightSpeed Wireless Gaming Headset, White /L981-001550",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/5/-/5-1_4.jpg",
+      "sourcePage": "https://www.zigzag.am/en/logitech-g522-lightspeed-wireless-gaming-headset-white-l981-001550.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/5/-/5-1_4.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 34212,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/5/-/5-1_4.jpg",
+        "checkedAt": "2026-11-01T19:46:21.546Z"
+      }
+    },
+    {
+      "articul": "299600",
+      "name": "Raskat ANC 1B",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/t/t/ttfsz_mnkjkimglhiru0lazopalc03bajeqjyisq-dwdmalshslx4yqevixy1uv4i1gwx8oriqfx4pmqqp_d4y7czkn5lbf9vi86pwfu7dthwsdyufimbawnnv8n-59f1abxwnpx_w9skpzhyvcokol-fcivj54oodoo7zg48lqkuwxr_pttfqpxvzrtvves.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/raskat-anc-1b.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/t/t/ttfsz_mnkjkimglhiru0lazopalc03bajeqjyisq-dwdmalshslx4yqevixy1uv4i1gwx8oriqfx4pmqqp_d4y7czkn5lbf9vi86pwfu7dthwsdyufimbawnnv8n-59f1abxwnpx_w9skpzhyvcokol-fcivj54oodoo7zg48lqkuwxr_pttfqpxvzrtvves.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 15937,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/t/t/ttfsz_mnkjkimglhiru0lazopalc03bajeqjyisq-dwdmalshslx4yqevixy1uv4i1gwx8oriqfx4pmqqp_d4y7czkn5lbf9vi86pwfu7dthwsdyufimbawnnv8n-59f1abxwnpx_w9skpzhyvcokol-fcivj54oodoo7zg48lqkuwxr_pttfqpxvzrtvves.jpeg",
+        "checkedAt": "2026-11-01T19:46:22.504Z"
+      }
+    },
+    {
+      "articul": "3400332",
+      "name": "Garmin Fenix 9 Pro, 47mm, Orange Silicone Band",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/3400332-_1_.png",
+      "sourcePage": "https://www.zigzag.am/en/garmin-fenix-9-pro-47mm-oranfe-silicone-band.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/3400332-_1_.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 422557,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/3400332-_1_.png",
+        "checkedAt": "2026-11-01T19:46:24.991Z"
+      }
+    },
+    {
+      "articul": "3400333",
+      "name": "Garmin Fenix 9 Pro, 51mm, Graphite",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/3400333-_1_.png",
+      "sourcePage": "https://www.zigzag.am/en/garmin-fenix-9-pro-51mm-graphite.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/3400333-_1_.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 334526,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/3400333-_1_.png",
+        "checkedAt": "2026-11-01T19:46:25.221Z"
+      }
+    },
+    {
+      "articul": "3400334",
+      "name": "Garmin Fenix 9 Pro, 47mm, Graphite",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/3400333-_1__1.png",
+      "sourcePage": "https://www.zigzag.am/en/garmin-fenix-9-pro-47mm-graphite.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/3400333-_1__1.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 334526,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/3400333-_1__1.png",
+        "checkedAt": "2026-11-01T19:46:25.436Z"
+      }
+    },
+    {
+      "articul": "3400335",
+      "name": "Garmin Fenix 9 Pro, 43mm, Cream/French Grey",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/3400335-1_1_.png",
+      "sourcePage": "https://www.zigzag.am/en/garmin-fenix-9-pro-43mm-cream-french-grey.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/3400335-1_1_.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 360168,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/3400335-1_1_.png",
+        "checkedAt": "2026-11-01T19:46:25.611Z"
+      }
+    },
+    {
+      "articul": "3400336",
+      "name": "Garmin Fenix 9 Pro Solar, 51mm, Pebble Grey",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/3400336-_1_.png",
+      "sourcePage": "https://www.zigzag.am/en/garmin-fenix-9-pro-solar-51mm-pebble-grey.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/3400336-_1_.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 357749,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/3400336-_1_.png",
+        "checkedAt": "2026-11-01T19:46:25.828Z"
+      }
+    },
+    {
+      "articul": "3400364",
+      "name": "Garmin CIRQA™ Smart Band French Gray, L-XL",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/3400364-_1_.png",
+      "sourcePage": "https://www.zigzag.am/en/garmin-cirqatm-smart-band-french-gray-l-xl.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/3400364-_1_.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 503185,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/3400364-_1_.png",
+        "checkedAt": "2026-11-01T19:46:26.114Z"
+      }
+    },
+    {
+      "articul": "342300",
+      "name": "Anker Power Bank 20K, 87W, Built-In USB-C Cable, Black /A1383H11",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/342300-3.png",
+      "sourcePage": "https://www.zigzag.am/en/anker-power-bank-20k-87w-built-in-usb-c-cable-black-a1383h11.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/342300-3.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 55831,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/342300-3.png",
+        "checkedAt": "2026-11-01T19:46:29.093Z"
+      }
+    },
+    {
+      "articul": "34638090",
+      "name": "Xiaomi POCO X8 Pro 12GB/512GB Black",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/v/o/voedz-montaznaia-oblast-1_1.png",
+      "sourcePage": "https://www.zigzag.am/en/xiaomi-poco-x8-pro-12gb-512gb-black.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/v/o/voedz-montaznaia-oblast-1_1.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 258445,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/v/o/voedz-montaznaia-oblast-1_1.png",
+        "checkedAt": "2026-11-01T19:46:30.501Z"
+      }
+    },
+    {
+      "articul": "34639377",
+      "name": "Xiaomi POCO F9 Ultra 16GB/512GB Black",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/34639377-1.jpg",
+      "sourcePage": "https://www.zigzag.am/en/xiaomi-poco-f9-ultra-16gb-512gb-black.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/34639377-1.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 1405196,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/34639377-1.jpg",
+        "checkedAt": "2026-11-01T19:46:30.551Z"
+      }
+    },
+    {
+      "articul": "347700650",
+      "name": "Apple iPhone 17 256GB Black /MG6J4",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/i/p/iphone_17_black_pdp_image_position_1__ce-ww.jpg",
+      "sourcePage": "https://www.zigzag.am/en/apple-iphone-17-256gb-black-mg6j4af-a.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/i/p/iphone_17_black_pdp_image_position_1__ce-ww.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 42116,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/i/p/iphone_17_black_pdp_image_position_1__ce-ww.jpg",
+        "checkedAt": "2026-11-01T19:46:35.399Z"
+      }
+    },
+    {
+      "articul": "347700755",
+      "name": "Apple iPhone 18 Pro 512GB Black /MJRU4",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/1/-/1-800x800_1.jpg",
+      "sourcePage": "https://www.zigzag.am/en/apple-iphone-18-pro-512gb-black-mjru4.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/1/-/1-800x800_1.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 34494,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/1/-/1-800x800_1.jpg",
+        "checkedAt": "2026-11-01T19:46:35.513Z"
+      }
+    },
+    {
+      "articul": "347700756",
+      "name": "Apple iPhone 18 Pro 512GB Silver /MJRV4",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/1/6/16-800x800_1.jpg",
+      "sourcePage": "https://www.zigzag.am/en/apple-iphone-18-pro-512gb-silver-mjrv4.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/1/6/16-800x800_1.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 36358,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/1/6/16-800x800_1.jpg",
+        "checkedAt": "2026-11-01T19:46:35.526Z"
+      }
+    },
+    {
+      "articul": "347700767",
+      "name": "Apple iPhone 18 Pro Max 256GB Black /MJXN4",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/a/p/apple_iphone_18_pro_max_black-1.png",
+      "sourcePage": "https://www.zigzag.am/en/apple-iphone-18-pro-max-256gb-black-mjxn4.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/a/p/apple_iphone_18_pro_max_black-1.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 60814,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/a/p/apple_iphone_18_pro_max_black-1.png",
+        "checkedAt": "2026-11-01T19:46:35.645Z"
+      }
+    },
+    {
+      "articul": "347700769",
+      "name": "Apple iPhone 18 Pro Max 256GB Burgundy /MJXQ4",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/347700769-1_4.png",
+      "sourcePage": "https://www.zigzag.am/en/apple-iphone-18-pro-max-256gb-burgundy-mjxq4.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/347700769-1_4.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 252207,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/4/347700769-1_4.png",
+        "checkedAt": "2026-11-01T19:46:35.662Z"
+      }
+    },
+    {
+      "articul": "347700774",
+      "name": "Apple iPhone 18 Pro Max 512GB Glacier /MJXW4",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/a/p/apple_iphone_18_pro_max_glacier_-1_1.png",
+      "sourcePage": "https://www.zigzag.am/en/apple-iphone-18-pro-max-512gb-glacier-mjxw4.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/a/p/apple_iphone_18_pro_max_glacier_-1_1.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 203067,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/a/p/apple_iphone_18_pro_max_glacier_-1_1.png",
+        "checkedAt": "2026-11-01T19:46:35.798Z"
+      }
+    },
+    {
+      "articul": "34788381",
+      "name": "Apple Watch Series 12 46mm Black Aluminium, Black Sport Band - M/L /MJEL4",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/a/p/apple_watch_series_12_46mm_gps_black_aluminum_sport_band_black_pdp_image_position_2__ce-ww.jpg",
+      "sourcePage": "https://www.zigzag.am/en/apple-watch-series-12-46mm-black-aluminium-case-black-sport-band-m-l-mjel4.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/a/p/apple_watch_series_12_46mm_gps_black_aluminum_sport_band_black_pdp_image_position_2__ce-ww.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 154847,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/a/p/apple_watch_series_12_46mm_gps_black_aluminum_sport_band_black_pdp_image_position_2__ce-ww.jpg",
+        "checkedAt": "2026-11-01T19:46:36.096Z"
+      }
+    },
+    {
+      "articul": "38541260",
+      "name": "PS5 WWE 2K25",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/i/m/images.png",
+      "sourcePage": "https://www.zigzag.am/en/ps5-wwe-2k25.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/i/m/images.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 295655,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/i/m/images.png",
+        "checkedAt": "2026-11-01T19:46:41.272Z"
+      }
+    },
+    {
+      "articul": "4210091",
+      "name": "GBM Z BlackWood Ultra 5-245KF 32GB/1TB RTX5060 B860",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/g/b/gbmblackwood_01_1.jpg",
+      "sourcePage": "https://www.zigzag.am/en/gbm-z-blackwood-ultra-5-245kf-32gb-1tb-rtx5060-b860.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/g/b/gbmblackwood_01_1.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 127257,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/g/b/gbmblackwood_01_1.jpg",
+        "checkedAt": "2026-11-01T19:46:42.925Z"
+      }
+    },
+    {
+      "articul": "42602896",
+      "name": "Apple iMac 24 M4 8/8 16/256 Eng KB Blue /Z1E5000SV",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/a/7/a7dvpu4wvh2_5koa-ocrsgi_27bqmypje0iufpa6nicwt4xkd22vxnzmmpcdxp1rrbxyya47q075tjtrigra4opytqathr3m-jw_7cintssdpxg74owzosenu95ifoidu5lcmgino8soioel5syn8nbq0dasnvjp6t4beqffsimdv9mw5gsktgnbxjfrod2m.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/apple-imac-24-m4-8-8-16-256-eng-kb-blue-z1e5000sv.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/a/7/a7dvpu4wvh2_5koa-ocrsgi_27bqmypje0iufpa6nicwt4xkd22vxnzmmpcdxp1rrbxyya47q075tjtrigra4opytqathr3m-jw_7cintssdpxg74owzosenu95ifoidu5lcmgino8soioel5syn8nbq0dasnvjp6t4beqffsimdv9mw5gsktgnbxjfrod2m.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 88752,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/a/7/a7dvpu4wvh2_5koa-ocrsgi_27bqmypje0iufpa6nicwt4xkd22vxnzmmpcdxp1rrbxyya47q075tjtrigra4opytqathr3m-jw_7cintssdpxg74owzosenu95ifoidu5lcmgino8soioel5syn8nbq0dasnvjp6t4beqffsimdv9mw5gsktgnbxjfrod2m.jpeg",
+        "checkedAt": "2026-11-01T19:46:43.410Z"
+      }
+    },
+    {
+      "articul": "4267555030",
+      "name": "Apple MacBook Air 15 M5 10/10 16GB/512GB Eng KB Silver /Z1LQ001J7",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/1/c/1cpetf6zkqcfhfowmvvosx3lqfppcejyuvm1yh62hsvquhsj6uqu63l94vvdxo2glotx7z9ern2kg35rbajqsmor66603brro5oicx1j9dhtbqla6wtnaxqxgwdhlmpl1xgxnrjdj0puh8qobsg5vao7np-k3umtkhqjsyr4iq9ql3wklbnebc5kuz8peyj4.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/apple-macbook-air-15-m5-10-10-16gb-512gb-eng-kb-silver-z1lq001j7.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/1/c/1cpetf6zkqcfhfowmvvosx3lqfppcejyuvm1yh62hsvquhsj6uqu63l94vvdxo2glotx7z9ern2kg35rbajqsmor66603brro5oicx1j9dhtbqla6wtnaxqxgwdhlmpl1xgxnrjdj0puh8qobsg5vao7np-k3umtkhqjsyr4iq9ql3wklbnebc5kuz8peyj4.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 397285,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/1/c/1cpetf6zkqcfhfowmvvosx3lqfppcejyuvm1yh62hsvquhsj6uqu63l94vvdxo2glotx7z9ern2kg35rbajqsmor66603brro5oicx1j9dhtbqla6wtnaxqxgwdhlmpl1xgxnrjdj0puh8qobsg5vao7np-k3umtkhqjsyr4iq9ql3wklbnebc5kuz8peyj4.jpeg",
+        "checkedAt": "2026-11-01T19:46:43.708Z"
+      }
+    },
+    {
+      "articul": "4267572",
+      "name": "Apple MacBook Neo 13 A18 Pro 8GB/256GB Silver /MHFA4",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/2/4267572.png",
+      "sourcePage": "https://www.zigzag.am/en/apple-macbook-neo-13-a18-pro-8gb-256gb-silver-mhfa4.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/2/4267572.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 269057,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/2/4267572.png",
+        "checkedAt": "2026-11-01T19:46:43.849Z"
+      }
+    },
+    {
+      "articul": "4267666550",
+      "name": "Apple MacBook Pro 14 M5 10/10 24/1TB Eng KB Black /Z1KJ001ZM",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/q/n/qnlzirzhq8bzhjgp7x0z2jdjvya3ytqbxbnc0po_too8oogdcpkwybnimqutiufiulpid-qcv973e3q0f6vof12kgfs8m7xxupefb-uwdn-o-anz6fcqoru-ho_3gmasqz_3w1xl5uq7ankwth1gudmpuoe4my_ejwuyjmvb43ihnf1oylgxqi8dcpa8ortr_1.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/apple-macbook-pro-14-m5-10-10-24-1tb-eng-kb-black-z1kj001zm.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/q/n/qnlzirzhq8bzhjgp7x0z2jdjvya3ytqbxbnc0po_too8oogdcpkwybnimqutiufiulpid-qcv973e3q0f6vof12kgfs8m7xxupefb-uwdn-o-anz6fcqoru-ho_3gmasqz_3w1xl5uq7ankwth1gudmpuoe4my_ejwuyjmvb43ihnf1oylgxqi8dcpa8ortr_1.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 80410,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/q/n/qnlzirzhq8bzhjgp7x0z2jdjvya3ytqbxbnc0po_too8oogdcpkwybnimqutiufiulpid-qcv973e3q0f6vof12kgfs8m7xxupefb-uwdn-o-anz6fcqoru-ho_3gmasqz_3w1xl5uq7ankwth1gudmpuoe4my_ejwuyjmvb43ihnf1oylgxqi8dcpa8ortr_1.jpeg",
+        "checkedAt": "2026-11-01T19:46:43.876Z"
+      }
+    },
+    {
+      "articul": "426766662",
+      "name": "Apple MacBook Pro 14 M5 Pro 15/16 24GB/1TB Space Black /MGDR4",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/2/426766667_1.png",
+      "sourcePage": "https://www.zigzag.am/en/apple-macbook-pro-14-m5-pro-15-16-24gb-1tb-space-black-mgdr4.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/2/426766667_1.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 79875,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/2/426766667_1.png",
+        "checkedAt": "2026-11-01T19:46:43.968Z"
+      }
+    },
+    {
+      "articul": "4277071",
+      "name": "Lenovo Yoga Slim 7 R5-7640S 16/512 /83AA000BRK",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/2/4277071.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/lenovo-yoga-slim-7-r5-7640s-16-512-83aa000brk.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/2/4277071.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 51805,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/2/4277071.jpeg",
+        "checkedAt": "2026-11-01T19:46:43.978Z"
+      }
+    },
+    {
+      "articul": "4294033",
+      "name": "Honor MagicBook X16 Ultra 5-125H 16GB/1TB W11H Gray /5301ARGM",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/1/_/1_2_1.png",
+      "sourcePage": "https://www.zigzag.am/en/honor-magicbook-x16-ultra-5-125h-16gb-1tb-w11h-gray-5301argm.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/1/_/1_2_1.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 546899,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/1/_/1_2_1.png",
+        "checkedAt": "2026-11-01T19:46:44.840Z"
+      }
+    },
+    {
+      "articul": "429805861",
+      "name": "Xiaomi Redmi Pad 2 Pro 5G 12.1\" 8GB/256GB Silver",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/2/429805861-1.png",
+      "sourcePage": "https://www.zigzag.am/en/xiaomi-redmi-pad-2-pro-5g-12-1-8gb-256gb-silver.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/2/429805861-1.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 2414336,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/2/429805861-1.png",
+        "checkedAt": "2026-11-01T19:46:45.686Z"
+      }
+    },
+    {
+      "articul": "42980595",
+      "name": "Xiaomi Redmi Pad 2 Pro 12.1\" 8GB/256GB Silver",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/2/42980595-1.png",
+      "sourcePage": "https://www.zigzag.am/en/xiaomi-redmi-pad-2-pro-12-1-8gb-256gb-silver.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/2/42980595-1.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 1839722,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/2/42980595-1.png",
+        "checkedAt": "2026-11-01T19:46:46.200Z"
+      }
+    },
+    {
+      "articul": "4348631",
+      "name": "Xiaomi Smart Camera C100 White /BHR07VOGL",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/3/4348631-1.png",
+      "sourcePage": "https://www.zigzag.am/en/xiaomi-smart-camera-c100-white-bhr07vogl.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/3/4348631-1.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 77982,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/3/4348631-1.png",
+        "checkedAt": "2026-11-01T19:46:58.860Z"
+      }
+    },
+    {
+      "articul": "43872501",
+      "name": "Apple USB-C to 3.5 mm Headphone Jack Adapter /MW2Q3ZM/A",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/m/u/mu7e2_av1.jpg",
+      "sourcePage": "https://www.zigzag.am/en/apple-usb-c-to-3-5-mm-headphone-jack-adapter-mw2q3zm-a.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/m/u/mu7e2_av1.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 14820,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/m/u/mu7e2_av1.jpg",
+        "checkedAt": "2026-11-01T19:47:05.190Z"
+      }
+    },
+    {
+      "articul": "470118",
+      "name": "Cecotec 07180 DrumFit WayHome 1000 Runner Sprint",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/7/470118.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/cecotec-drumfit-wayhome-1000-runner-sprint-07180.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/7/470118.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 22085,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/7/470118.jpeg",
+        "checkedAt": "2026-11-01T19:47:09.261Z"
+      }
+    },
+    {
+      "articul": "470461",
+      "name": "UREVO Foldi Mini 2",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/1/_/1_15.jpg",
+      "sourcePage": "https://www.zigzag.am/en/urevo-foldi-mini-2.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/1/_/1_15.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 83094,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/1/_/1_15.jpg",
+        "checkedAt": "2026-11-01T19:47:09.403Z"
+      }
+    },
+    {
+      "articul": "491307",
+      "name": "Yandex Smart Bulb GU10 /YNDX-00019",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/q/g/qgfl7rdspz1uzwc2f_d0oacp8gszgjtuvi3gbwjrumlxaarhcpanmqzcca326mnumzteftctxkkhczclmkaojfpy5ppshki5_4ycgh6bjfrx97e7mflxs8b8zsbpxhzr6e0gqkaa9m67xeb3qrfniyoptwpyabjz8cr1p8cdv6rumcicorpzkyjlw6ptljg2.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/yandex-smart-bulb-gu10-yndx-00019.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/q/g/qgfl7rdspz1uzwc2f_d0oacp8gszgjtuvi3gbwjrumlxaarhcpanmqzcca326mnumzteftctxkkhczclmkaojfpy5ppshki5_4ycgh6bjfrx97e7mflxs8b8zsbpxhzr6e0gqkaa9m67xeb3qrfniyoptwpyabjz8cr1p8cdv6rumcicorpzkyjlw6ptljg2.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 26706,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/q/g/qgfl7rdspz1uzwc2f_d0oacp8gszgjtuvi3gbwjrumlxaarhcpanmqzcca326mnumzteftctxkkhczclmkaojfpy5ppshki5_4ycgh6bjfrx97e7mflxs8b8zsbpxhzr6e0gqkaa9m67xeb3qrfniyoptwpyabjz8cr1p8cdv6rumcicorpzkyjlw6ptljg2.jpeg",
+        "checkedAt": "2026-11-01T19:47:10.302Z"
+      }
+    },
+    {
+      "articul": "510341",
+      "name": "Panasonic NN-GT34NBZUE",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/1/_/1_26.jpg",
+      "sourcePage": "https://www.zigzag.am/en/panasonic-nn-gt34nbzue.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/1/_/1_26.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 20946,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/1/_/1_26.jpg",
+        "checkedAt": "2026-11-01T19:47:16.309Z"
+      }
+    },
+    {
+      "articul": "510342",
+      "name": "Panasonic NN-ST35MKZUE",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/6/a/6a42255592431-photoroom_1.png",
+      "sourcePage": "https://www.zigzag.am/en/panasonic-nn-st35mkzue.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/6/a/6a42255592431-photoroom_1.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 88648,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/6/a/6a42255592431-photoroom_1.png",
+        "checkedAt": "2026-11-01T19:47:16.399Z"
+      }
+    },
+    {
+      "articul": "5203033",
+      "name": "Bosch PNK6B2P41R",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/p/n/pnk6b2p41r.jpg",
+      "sourcePage": "https://www.zigzag.am/en/bosch-pnk6b2p41r.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/p/n/pnk6b2p41r.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 78850,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/p/n/pnk6b2p41r.jpg",
+        "checkedAt": "2026-11-01T19:47:24.837Z"
+      }
+    },
+    {
+      "articul": "528117",
+      "name": "Haier HHX-G75CWSB",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/5/2/528117-_5_.png",
+      "sourcePage": "https://www.zigzag.am/en/haier-hhx-g75cwsb.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/5/2/528117-_5_.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 210078,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/5/2/528117-_5_.png",
+        "checkedAt": "2026-11-01T19:47:33.781Z"
+      }
+    },
+    {
+      "articul": "528264",
+      "name": "Haier HHY-C64NTVB",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/5/2/528264.png",
+      "sourcePage": "https://www.zigzag.am/en/haier-hhy-c64ntvb.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/5/2/528264.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 204768,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/5/2/528264.png",
+        "checkedAt": "2026-11-01T19:47:34.269Z"
+      }
+    },
+    {
+      "articul": "528279",
+      "name": "Haier HOQ-F4AAN3GB",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/o/h/ohsv9a3kxu0a7v9ff7xp3wgb9y79lpmt.jpg",
+      "sourcePage": "https://www.zigzag.am/en/haier-hoq-f4aan3gb.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/o/h/ohsv9a3kxu0a7v9ff7xp3wgb9y79lpmt.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 24840,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/o/h/ohsv9a3kxu0a7v9ff7xp3wgb9y79lpmt.jpg",
+        "checkedAt": "2026-11-01T19:47:34.290Z"
+      }
+    },
+    {
+      "articul": "528283",
+      "name": "Haier HHQ-G64CAQB",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/f/3/f3c013998089d969d62e9ff49b21ff2da60ddd64c0001fad835a17268e98c82d.png.jpg",
+      "sourcePage": "https://www.zigzag.am/en/haier-hhq-g64caqb.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/f/3/f3c013998089d969d62e9ff49b21ff2da60ddd64c0001fad835a17268e98c82d.png.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 47406,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/f/3/f3c013998089d969d62e9ff49b21ff2da60ddd64c0001fad835a17268e98c82d.png.jpg",
+        "checkedAt": "2026-11-01T19:47:34.414Z"
+      }
+    },
+    {
+      "articul": "528284",
+      "name": "Haier HHQ-C64TTVB",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/f/a/fa8bd903ac93e9cc45302b49c202169895ee240ed3beffc1b5d4d9cb4c674ab4.png.jpg",
+      "sourcePage": "https://www.zigzag.am/en/haier-hhq-c64ttvb.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/f/a/fa8bd903ac93e9cc45302b49c202169895ee240ed3beffc1b5d4d9cb4c674ab4.png.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 80030,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/f/a/fa8bd903ac93e9cc45302b49c202169895ee240ed3beffc1b5d4d9cb4c674ab4.png.jpg",
+        "checkedAt": "2026-11-01T19:47:34.453Z"
+      }
+    },
+    {
+      "articul": "528286",
+      "name": "Haier HHK-Y64TB",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/f/c/fc70529ea2e841f8124fa9852b0d4fc270d70debd07a45433161102085876c71.jpg",
+      "sourcePage": "https://www.zigzag.am/en/haier-hhk-y64tb.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/f/c/fc70529ea2e841f8124fa9852b0d4fc270d70debd07a45433161102085876c71.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 40773,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/f/c/fc70529ea2e841f8124fa9852b0d4fc270d70debd07a45433161102085876c71.jpg",
+        "checkedAt": "2026-11-01T19:47:34.558Z"
+      }
+    },
+    {
+      "articul": "601012",
+      "name": "DeLonghi ECAM330.80.TXB Magnifica Duo Brushed Titanium",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/6/0/601012-1.png",
+      "sourcePage": "https://www.zigzag.am/en/delonghi-ecam330-80-txb-magnifica-duo-brushed-titanium.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/6/0/601012-1.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 174402,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/6/0/601012-1.png",
+        "checkedAt": "2026-11-01T19:48:16.397Z"
+      }
+    },
+    {
+      "articul": "608205",
+      "name": "Jura E8 Piano Black 15745 Automatic coffee machine",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/l/v/lvgj1knjuumenyq6er0iyvfyc_xagnfg0bszqi2iidqbcoju_cw8vsidbqa40lr97kr9fkxyjhio0qcjk14vlzjgceijl5j1p35obllsq7b_0zt6pm3k_vtywezvzrtlmohqwftfintlh6ctkjmcpabwwqlr1u6awzzqmcz-w1gy6ono88_zoo0gfueep24e.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/jura-e8-piano-black-15745-automatic-coffee-machine.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/l/v/lvgj1knjuumenyq6er0iyvfyc_xagnfg0bszqi2iidqbcoju_cw8vsidbqa40lr97kr9fkxyjhio0qcjk14vlzjgceijl5j1p35obllsq7b_0zt6pm3k_vtywezvzrtlmohqwftfintlh6ctkjmcpabwwqlr1u6awzzqmcz-w1gy6ono88_zoo0gfueep24e.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 82929,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/l/v/lvgj1knjuumenyq6er0iyvfyc_xagnfg0bszqi2iidqbcoju_cw8vsidbqa40lr97kr9fkxyjhio0qcjk14vlzjgceijl5j1p35obllsq7b_0zt6pm3k_vtywezvzrtlmohqwftfintlh6ctkjmcpabwwqlr1u6awzzqmcz-w1gy6ono88_zoo0gfueep24e.jpeg",
+        "checkedAt": "2026-11-01T19:48:19.809Z"
+      }
+    },
+    {
+      "articul": "608206",
+      "name": "Jura Ena 4 Full Metropilitan Black 15501 Autmatic coffee machine",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/l/3lk_s3txs_kdxxlehubbynupwzv9g4memaes9wwmoesedv3_n2a6xtnlciitmncunculyypg1mrnzbhb4gzwqmc8avsm3eu-qsbofjw6bzddxbgm376seccp_jasfzmfvgkm7wrfx4aht2fhdwgt6ig06qkv_rxnbmn6yiv9itp08bbmaicusxfnpub289t0.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/jura-ena-4-full-metropilitan-black-15501-autmatic-coffee-machine.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/l/3lk_s3txs_kdxxlehubbynupwzv9g4memaes9wwmoesedv3_n2a6xtnlciitmncunculyypg1mrnzbhb4gzwqmc8avsm3eu-qsbofjw6bzddxbgm376seccp_jasfzmfvgkm7wrfx4aht2fhdwgt6ig06qkv_rxnbmn6yiv9itp08bbmaicusxfnpub289t0.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 35294,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/l/3lk_s3txs_kdxxlehubbynupwzv9g4memaes9wwmoesedv3_n2a6xtnlciitmncunculyypg1mrnzbhb4gzwqmc8avsm3eu-qsbofjw6bzddxbgm376seccp_jasfzmfvgkm7wrfx4aht2fhdwgt6ig06qkv_rxnbmn6yiv9itp08bbmaicusxfnpub289t0.jpeg",
+        "checkedAt": "2026-11-01T19:48:19.751Z"
+      }
+    },
+    {
+      "articul": "632314",
+      "name": "Braun CG7044 MultiGrill 7 Contact grill",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/6/3/632314.png",
+      "sourcePage": "https://www.zigzag.am/en/braun-cg7044-multigrill-7-contact-grill.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/6/3/632314.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 87902,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/6/3/632314.png",
+        "checkedAt": "2026-11-01T19:48:32.663Z"
+      }
+    },
+    {
+      "articul": "68165122",
+      "name": "Berlinger Haus BH2980 Leonardo knife set with bamboo stand 10pcs",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/g/u/gut_dovtqnqxrul-mrqahihs-zmo2dolwkiw7echg6xzrspvvyqfo-w24zhjd7oa8l2skeinbozwcwphgmu3ns0rezysdqdpdumelmblu1xpvh23udbyoixvfyzho9lgm1dyfejsethfotrawjgxl6l1egvchghh3-t3ve7sb2ue0gtmmgxupnbwrhnnp7ib.jpg",
+      "sourcePage": "https://www.zigzag.am/en/berlinger-haus-bh2980-leonardo-knife-set-with-bamboo-stand-10pcs.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/g/u/gut_dovtqnqxrul-mrqahihs-zmo2dolwkiw7echg6xzrspvvyqfo-w24zhjd7oa8l2skeinbozwcwphgmu3ns0rezysdqdpdumelmblu1xpvh23udbyoixvfyzho9lgm1dyfejsethfotrawjgxl6l1egvchghh3-t3ve7sb2ue0gtmmgxupnbwrhnnp7ib.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 64408,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/g/u/gut_dovtqnqxrul-mrqahihs-zmo2dolwkiw7echg6xzrspvvyqfo-w24zhjd7oa8l2skeinbozwcwphgmu3ns0rezysdqdpdumelmblu1xpvh23udbyoixvfyzho9lgm1dyfejsethfotrawjgxl6l1egvchghh3-t3ve7sb2ue0gtmmgxupnbwrhnnp7ib.jpg",
+        "checkedAt": "2026-11-01T19:48:57.398Z"
+      }
+    },
+    {
+      "articul": "68667248",
+      "name": "Brandani 52571 cast iron low casserole red 5l",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/r/e/repap.jpg",
+      "sourcePage": "https://www.zigzag.am/en/brandani-52571-cast-iron-low-casserole-red-5l.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/r/e/repap.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 24131,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/r/e/repap.jpg",
+        "checkedAt": "2026-11-01T19:49:18.201Z"
+      }
+    },
+    {
+      "articul": "689995",
+      "name": "Nespresso Nomad Smokey Blue Travel Mug 540ml",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/1/_/1_8_4.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/nespresso-nomad-smokey-blue-travel-mug-540ml.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/1/_/1_8_4.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 36175,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/1/_/1_8_4.jpeg",
+        "checkedAt": "2026-11-01T19:49:34.212Z"
+      }
+    },
+    {
+      "articul": "704600",
+      "name": "Cecotec 04309 Double sandwich maker 4in1",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/6/1/61aohrxkw8l._ac_sl1000__1_.jpg",
+      "sourcePage": "https://www.zigzag.am/en/cecotec-04309-double-sandwich-maker-4in1.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/6/1/61aohrxkw8l._ac_sl1000__1_.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 82929,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/6/1/61aohrxkw8l._ac_sl1000__1_.jpg",
+        "checkedAt": "2026-11-01T19:49:34.818Z"
+      }
+    },
+    {
+      "articul": "720188",
+      "name": "Bosch WGB2560XME",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/7/2/720188_1.jpg",
+      "sourcePage": "https://www.zigzag.am/en/bosch-wgb2560xme.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/7/2/720188_1.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 56640,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/7/2/720188_1.jpg",
+        "checkedAt": "2026-11-01T19:49:36.036Z"
+      }
+    },
+    {
+      "articul": "724169",
+      "name": "Haier HD100-A2387U1",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/d/4dfab739-8830-4125-8ea1-79d885068c97.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/haier-hd100-a2387u1.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/d/4dfab739-8830-4125-8ea1-79d885068c97.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 63363,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/d/4dfab739-8830-4125-8ea1-79d885068c97.jpeg",
+        "checkedAt": "2026-11-01T19:49:39.465Z"
+      }
+    },
+    {
+      "articul": "730723",
+      "name": "Haier HDWE10-394RU",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/7/3/730723-111_1.png",
+      "sourcePage": "https://www.zigzag.am/en/haier-hdwe10-394ru.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/7/3/730723-111_1.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 131838,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/7/3/730723-111_1.png",
+        "checkedAt": "2026-11-01T19:49:41.664Z"
+      }
+    },
+    {
+      "articul": "730724",
+      "name": "Haier HDWE15-58CS2RU",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/0/2/02f08119bf284126cef275950adedbb824e848237104a1c75450c395b31f920a.png-photoroom.png",
+      "sourcePage": "https://www.zigzag.am/en/haier-hdwe15-58cs2ru.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/0/2/02f08119bf284126cef275950adedbb824e848237104a1c75450c395b31f920a.png-photoroom.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 83352,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/0/2/02f08119bf284126cef275950adedbb824e848237104a1c75450c395b31f920a.png-photoroom.png",
+        "checkedAt": "2026-11-01T19:49:41.894Z"
+      }
+    },
+    {
+      "articul": "757105",
+      "name": "Karcher KWD 1 W V-12/2/18 (BY-) *EU (1.628-401.0)",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/k/m/kmxzjr6eqdezbuiih4pzesur_nkhv4yagiuzuxlf5mlmkk_eftwtx8pplespyhrmuyzm7vf3yqmubiut7jxznopgtkvz7f3fx6fmrxbvxafdl21gs9xwsldlkyhtim2pj3ahkeh278y7vtzcdahbk42c5tst3iaxo7krcetum1x-vrjmmvc7zum_mdenjrrp.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/karcher-kwd-1-w-v-12-2-18-by-eu-1-628-401-0.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/k/m/kmxzjr6eqdezbuiih4pzesur_nkhv4yagiuzuxlf5mlmkk_eftwtx8pplespyhrmuyzm7vf3yqmubiut7jxznopgtkvz7f3fx6fmrxbvxafdl21gs9xwsldlkyhtim2pj3ahkeh278y7vtzcdahbk42c5tst3iaxo7krcetum1x-vrjmmvc7zum_mdenjrrp.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 211648,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/k/m/kmxzjr6eqdezbuiih4pzesur_nkhv4yagiuzuxlf5mlmkk_eftwtx8pplespyhrmuyzm7vf3yqmubiut7jxznopgtkvz7f3fx6fmrxbvxafdl21gs9xwsldlkyhtim2pj3ahkeh278y7vtzcdahbk42c5tst3iaxo7krcetum1x-vrjmmvc7zum_mdenjrrp.jpeg",
+        "checkedAt": "2026-11-01T19:49:51.232Z"
+      }
+    },
+    {
+      "articul": "757132",
+      "name": "Karcher Carpet Cleaner RM 519 (6.295-771.0)",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/i/m/images_23_1.jpg",
+      "sourcePage": "https://www.zigzag.am/en/karcher-carpet-cleaner-rm-519-6-295-771-0.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/i/m/images_23_1.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 5684,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/i/m/images_23_1.jpg",
+        "checkedAt": "2026-11-01T19:49:51.310Z"
+      }
+    },
+    {
+      "articul": "757141",
+      "name": "Karcher Cartridge filter WD/SE (2.863-303.0)",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/d/2/d2313diwmx4yssdbl0_l6ll_0e38gpfvsjpeak8zrdnkdekhimgbbe74of1o1lnjdq1m0dvr_j1hdn4vtuq0daamzjb0jenlvjxs79k_kzi5jzxwvotumew66slzdbpfcgmhfi8lh3ml-faspjbqcars5wgwdda4zd88fceppareo_ah8uneagd74__6iq15.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/karcher-cartridge-filter-wd-se-2-863-303-0.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/d/2/d2313diwmx4yssdbl0_l6ll_0e38gpfvsjpeak8zrdnkdekhimgbbe74of1o1lnjdq1m0dvr_j1hdn4vtuq0daamzjb0jenlvjxs79k_kzi5jzxwvotumew66slzdbpfcgmhfi8lh3ml-faspjbqcars5wgwdda4zd88fceppareo_ah8uneagd74__6iq15.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 339545,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/d/2/d2313diwmx4yssdbl0_l6ll_0e38gpfvsjpeak8zrdnkdekhimgbbe74of1o1lnjdq1m0dvr_j1hdn4vtuq0daamzjb0jenlvjxs79k_kzi5jzxwvotumew66slzdbpfcgmhfi8lh3ml-faspjbqcars5wgwdda4zd88fceppareo_ah8uneagd74__6iq15.jpeg",
+        "checkedAt": "2026-11-01T19:49:51.347Z"
+      }
+    },
+    {
+      "articul": "757142",
+      "name": "Karcher Flat-pleated filter SE (6.414-498.0)",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/8/1/81fdmzjtqcl._ac_sl1500_.jpg",
+      "sourcePage": "https://www.zigzag.am/en/karcher-flat-pleated-filter-se-6-414-498-0.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/8/1/81fdmzjtqcl._ac_sl1500_.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 135041,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/8/1/81fdmzjtqcl._ac_sl1500_.jpg",
+        "checkedAt": "2026-11-01T19:49:51.409Z"
+      }
+    },
+    {
+      "articul": "757143",
+      "name": "Karcher Filter kit WD/SE (6.904-143.0)",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/7/37iithyvb7rarrjy2m6darjlkzrrzywfw0rxiivwqthzjj5dzpaldvwaqtlk9chf10o2ambyhqnuf54dcvrbheg1rjqvfsp7ssnvmz-5o0imsmypy2pjofhvpjiyhldxvhvsqj3ymhrdvafbw2opvwekyquvimvx-l49bfjltxn1wvdn_jrvi4ztvgfyaaza.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/karcher-filter-kit-wd-se-6-904-143-0.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/7/37iithyvb7rarrjy2m6darjlkzrrzywfw0rxiivwqthzjj5dzpaldvwaqtlk9chf10o2ambyhqnuf54dcvrbheg1rjqvfsp7ssnvmz-5o0imsmypy2pjofhvpjiyhldxvhvsqj3ymhrdvafbw2opvwekyquvimvx-l49bfjltxn1wvdn_jrvi4ztvgfyaaza.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 81507,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/3/7/37iithyvb7rarrjy2m6darjlkzrrzywfw0rxiivwqthzjj5dzpaldvwaqtlk9chf10o2ambyhqnuf54dcvrbheg1rjqvfsp7ssnvmz-5o0imsmypy2pjofhvpjiyhldxvhvsqj3ymhrdvafbw2opvwekyquvimvx-l49bfjltxn1wvdn_jrvi4ztvgfyaaza.jpeg",
+        "checkedAt": "2026-11-01T19:49:51.426Z"
+      }
+    },
+    {
+      "articul": "757144",
+      "name": "Karcher SE fleece filter bag KFI 657(SE5,SE6,100) (2.863-371.0)",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/7/r/7rqwptt8pih8e_exsox9_pvzpxkctahzgpuyhkhwas2ssj7vzhpqquuuygzfbvpnroxann5zhyfd3u7tpqa3qzpkpaxvd7pdm9puzi0s-ld81n3nvjc2fyaillwl__0vysc90cozk2jhzu1mbuyet9hcftriwwkfqyunzxwbin9etlcl9zgyutmgicttfp3y.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/karcher-se-fleece-filter-bag-kfi-657-se5-se6-100-2-863-371-0.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/7/r/7rqwptt8pih8e_exsox9_pvzpxkctahzgpuyhkhwas2ssj7vzhpqquuuygzfbvpnroxann5zhyfd3u7tpqa3qzpkpaxvd7pdm9puzi0s-ld81n3nvjc2fyaillwl__0vysc90cozk2jhzu1mbuyet9hcftriwwkfqyunzxwbin9etlcl9zgyutmgicttfp3y.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 81588,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/7/r/7rqwptt8pih8e_exsox9_pvzpxkctahzgpuyhkhwas2ssj7vzhpqquuuygzfbvpnroxann5zhyfd3u7tpqa3qzpkpaxvd7pdm9puzi0s-ld81n3nvjc2fyaillwl__0vysc90cozk2jhzu1mbuyet9hcftriwwkfqyunzxwbin9etlcl9zgyutmgicttfp3y.jpeg",
+        "checkedAt": "2026-11-01T19:49:51.515Z"
+      }
+    },
+    {
+      "articul": "757145",
+      "name": "Karcher Filter set KFL 1, FCV 2, FCV 3 (2.863-382.0)",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/x/_/x_ntfygycbuey2wm6dvh2es1zilv9tjzxlclkjnj9qsp5erxtip2qkverzrb-a4a_a37qqv-drgrvm9w2uijgjmb5rvtcp0vrmqabnxroqdpm70csa2th6ka731vltusszwncgtvkesfsjzq1y2nuczgik0negoyursk9eauyhmqkl3w_4xoga7xsmseig-6.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/karcher-filter-set-kfl-1-fcv-2-fcv-3-2-863-382-0.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/x/_/x_ntfygycbuey2wm6dvh2es1zilv9tjzxlclkjnj9qsp5erxtip2qkverzrb-a4a_a37qqv-drgrvm9w2uijgjmb5rvtcp0vrmqabnxroqdpm70csa2th6ka731vltusszwncgtvkesfsjzq1y2nuczgik0negoyursk9eauyhmqkl3w_4xoga7xsmseig-6.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 184529,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/x/_/x_ntfygycbuey2wm6dvh2es1zilv9tjzxlclkjnj9qsp5erxtip2qkverzrb-a4a_a37qqv-drgrvm9w2uijgjmb5rvtcp0vrmqabnxroqdpm70csa2th6ka731vltusszwncgtvkesfsjzq1y2nuczgik0negoyursk9eauyhmqkl3w_4xoga7xsmseig-6.jpeg",
+        "checkedAt": "2026-11-01T19:49:51.519Z"
+      }
+    },
+    {
+      "articul": "757207",
+      "name": "Karcher SC 2 EasyFix *EU (1.512-600.0)",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/j/q/jqcqmljudpk_bnbza9mpa3u00msslopcx56rlfciu4tc73xppywu1v_ded2d-dn32ep_2lrvkii1cnyupriu4yyvbkez48zat_9mohneyrt2ov2kpewppbmeskibff6uhegvdqiyynldqiqyhscrctppf4ahgge-xxtvtgqv5twp77g70gtc1nrhlzaj-ssz.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/karcher-sc-2-easyfix-eu-1-512-600-0.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/j/q/jqcqmljudpk_bnbza9mpa3u00msslopcx56rlfciu4tc73xppywu1v_ded2d-dn32ep_2lrvkii1cnyupriu4yyvbkez48zat_9mohneyrt2ov2kpewppbmeskibff6uhegvdqiyynldqiqyhscrctppf4ahgge-xxtvtgqv5twp77g70gtc1nrhlzaj-ssz.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 69763,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/j/q/jqcqmljudpk_bnbza9mpa3u00msslopcx56rlfciu4tc73xppywu1v_ded2d-dn32ep_2lrvkii1cnyupriu4yyvbkez48zat_9mohneyrt2ov2kpewppbmeskibff6uhegvdqiyynldqiqyhscrctppf4ahgge-xxtvtgqv5twp77g70gtc1nrhlzaj-ssz.jpeg",
+        "checkedAt": "2026-11-01T19:49:51.841Z"
+      }
+    },
+    {
+      "articul": "757225",
+      "name": "Karcher RCW 2 *EU (1.269-210.0)",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/7/5/757225-1.jpg",
+      "sourcePage": "https://www.zigzag.am/en/karcher-rcw-2-eu-1-269-210-0.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/7/5/757225-1.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 94930,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/7/5/757225-1.jpg",
+        "checkedAt": "2026-11-01T19:49:52.009Z"
+      }
+    },
+    {
+      "articul": "757262",
+      "name": "Karcher SE 2 Spot *EU (1.081-410.0)",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/d/0/d0_2__1_1.jpg",
+      "sourcePage": "https://www.zigzag.am/en/karcher-se-2-spot-eu-1-081-410-0.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/d/0/d0_2__1_1.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 94084,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/d/0/d0_2__1_1.jpg",
+        "checkedAt": "2026-11-01T19:49:52.818Z"
+      }
+    },
+    {
+      "articul": "757264",
+      "name": "Karcher SE 5 EU (1.081-230.0)",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/m/f/mfdwe9pz5iunqmlo8prxtg2ymo5dvcisqgzll0veysptw26h94wj-9epqxhkn6gosr8dn2ombxx-hlz4wrz6gobsqlxjyrzqggylr1igz-ct58eh769rm1p2mogvirumunzmt15_twkj1zwr1fi-vffhe_20oppczue9uth-bojydivvsqkq_hahuv-kp6vu.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/karcher-se-5-eu-1-081-230-0.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/m/f/mfdwe9pz5iunqmlo8prxtg2ymo5dvcisqgzll0veysptw26h94wj-9epqxhkn6gosr8dn2ombxx-hlz4wrz6gobsqlxjyrzqggylr1igz-ct58eh769rm1p2mogvirumunzmt15_twkj1zwr1fi-vffhe_20oppczue9uth-bojydivvsqkq_hahuv-kp6vu.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 168940,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/m/f/mfdwe9pz5iunqmlo8prxtg2ymo5dvcisqgzll0veysptw26h94wj-9epqxhkn6gosr8dn2ombxx-hlz4wrz6gobsqlxjyrzqggylr1igz-ct58eh769rm1p2mogvirumunzmt15_twkj1zwr1fi-vffhe_20oppczue9uth-bojydivvsqkq_hahuv-kp6vu.jpeg",
+        "checkedAt": "2026-11-01T19:49:52.875Z"
+      }
+    },
+    {
+      "articul": "7584102",
+      "name": "Dreame Robot X50 Master Black (RLX86 CE-1) GT",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/7/5/7584102_1.jpg",
+      "sourcePage": "https://www.zigzag.am/en/dreame-robot-x50-master-black-rlx86-ce-1-gt.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/7/5/7584102_1.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 24327,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/7/5/7584102_1.jpg",
+        "checkedAt": "2026-11-01T19:49:53.752Z"
+      }
+    },
+    {
+      "articul": "763218",
+      "name": "LauraStar PLUSBOARD BLACK COVER LIPS (155.0001.898)",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/2/7/273284-414693.jpg",
+      "sourcePage": "https://www.zigzag.am/en/laurastar-plusboard-black-cover-lips-155-0001-898.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/2/7/273284-414693.jpg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 31505,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/2/7/273284-414693.jpg",
+        "checkedAt": "2026-11-01T19:50:00.023Z"
+      }
+    },
+    {
+      "articul": "763219",
+      "name": "LauraStar PRESTIGEBOARD WITH UNIVERSALCO VER GREY (139.0002.898)",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/p/d/pdbnm7hjxfsz966z4fqlrxxovyembjvwvejfglrp49v2cyls5zljzulwxkuenznnapxtilixwkyuengroj7xoqowhdtdjx_pi1zwbwiqoglztxvjvxyeafdi3lqygmirgdyffmtwxtuvlqrelc6bjsodam-rbcqtthjjzthydwcfas2gqw-nzldvme5cikn0.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/laurastar-prestigeboard-with-universalco-ver-grey-139-0002-898.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/p/d/pdbnm7hjxfsz966z4fqlrxxovyembjvwvejfglrp49v2cyls5zljzulwxkuenznnapxtilixwkyuengroj7xoqowhdtdjx_pi1zwbwiqoglztxvjvxyeafdi3lqygmirgdyffmtwxtuvlqrelc6bjsodam-rbcqtthjjzthydwcfas2gqw-nzldvme5cikn0.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 35311,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/p/d/pdbnm7hjxfsz966z4fqlrxxovyembjvwvejfglrp49v2cyls5zljzulwxkuenznnapxtilixwkyuengroj7xoqowhdtdjx_pi1zwbwiqoglztxvjvxyeafdi3lqygmirgdyffmtwxtuvlqrelc6bjsodam-rbcqtthjjzthydwcfas2gqw-nzldvme5cikn0.jpeg",
+        "checkedAt": "2026-11-01T19:50:00.113Z"
+      }
+    },
+    {
+      "articul": "815154",
+      "name": "Cecotec 08275 ReadyWarm 2000 Max Ceramic Rotate",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/r/e/readywarm-2000-max-ceramic-rotate_lf606v_3.png",
+      "sourcePage": "https://www.zigzag.am/en/cecotec-08275-readywarm-2000-max-ceramic-rotate.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/r/e/readywarm-2000-max-ceramic-rotate_lf606v_3.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 40093,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/r/e/readywarm-2000-max-ceramic-rotate_lf606v_3.png",
+        "checkedAt": "2026-11-01T19:50:27.444Z"
+      }
+    },
+    {
+      "articul": "8401305",
+      "name": "Bosch DLN77AC50",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/8/4/8401305.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/bosch-dln77ac50.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/8/4/8401305.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 9131,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/8/4/8401305.jpeg",
+        "checkedAt": "2026-11-01T19:50:33.681Z"
+      }
+    },
+    {
+      "articul": "841550",
+      "name": "Haier HAX-22 filter",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/8/4/841550.png",
+      "sourcePage": "https://www.zigzag.am/en/haier-hax-22-filter.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/8/4/841550.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 106594,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/8/4/841550.png",
+        "checkedAt": "2026-11-01T19:50:35.923Z"
+      }
+    },
+    {
+      "articul": "870627",
+      "name": "Panasonic EW-DJ66-W321",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/a/s/ast-2420499.png.pub.thumb.644.644-photoroom.png",
+      "sourcePage": "https://www.zigzag.am/en/panasonic-ew-dj66-w321.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/a/s/ast-2420499.png.pub.thumb.644.644-photoroom.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 26088,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/a/s/ast-2420499.png.pub.thumb.644.644-photoroom.png",
+        "checkedAt": "2026-11-01T19:50:37.909Z"
+      }
+    },
+    {
+      "articul": "890050",
+      "name": "Panasonic ES-WM31-P321 LadyShave",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/0/1/01a07c24-ec41-7d26-a8bb-f4d82c8b9760_sea.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/panasonic-es-wm31-p321-ladyshave.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/0/1/01a07c24-ec41-7d26-a8bb-f4d82c8b9760_sea.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 35399,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/0/1/01a07c24-ec41-7d26-a8bb-f4d82c8b9760_sea.jpeg",
+        "checkedAt": "2026-11-01T19:50:43.943Z"
+      }
+    },
+    {
+      "articul": "890084",
+      "name": "Panasonic ES-EY30-V520",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/8/9/890084-6.png",
+      "sourcePage": "https://www.zigzag.am/en/panasonic-es-ey30-v520.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/8/9/890084-6.png",
+        "status": 200,
+        "type": "image/png",
+        "length": 114711,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/8/9/890084-6.png",
+        "checkedAt": "2026-11-01T19:50:44.049Z"
+      }
+    },
+    {
+      "articul": "9012185",
+      "name": "Aquaphor CITY COOL dark blue 0.6l",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/n/4nbp5p1lx3_8se_mcg5k6wvaxxanjr8v0wrfg_idpku9nvnnoywtd86gnpym-ycfdpo88dqi8ty5w2i0v0o40oylellmg915ila5n4msnbpeiwgp2xnoln06cdwljxz7welk--a2ntkrocu_ehokbavdz6ob744zq6qbkiw9u7pnedspav7g0sxoa447ywmc.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/aquaphor-city-cool-dark-blue-0-6l.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/n/4nbp5p1lx3_8se_mcg5k6wvaxxanjr8v0wrfg_idpku9nvnnoywtd86gnpym-ycfdpo88dqi8ty5w2i0v0o40oylellmg915ila5n4msnbpeiwgp2xnoln06cdwljxz7welk--a2ntkrocu_ehokbavdz6ob744zq6qbkiw9u7pnedspav7g0sxoa447ywmc.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 118055,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/4/n/4nbp5p1lx3_8se_mcg5k6wvaxxanjr8v0wrfg_idpku9nvnnoywtd86gnpym-ycfdpo88dqi8ty5w2i0v0o40oylellmg915ila5n4msnbpeiwgp2xnoln06cdwljxz7welk--a2ntkrocu_ehokbavdz6ob744zq6qbkiw9u7pnedspav7g0sxoa447ywmc.jpeg",
+        "checkedAt": "2026-11-01T19:50:45.177Z"
+      }
+    },
+    {
+      "articul": "970373",
+      "name": "Nespresso Yuzu Vanilla Over Ice/49g",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/o/d/odn0vh31onfwsucytoeepcq-csin-5vhgqupojalfmwpkdgczaa34klx0suj0inwcab4liyynh13bzzejscloid-9sc7p5h23aeuovgiodomeorkqpvqdy7l1wlgtypoulzrabarh056rjs5f6fp3oyd60oj7z_aecf3xoeoiqjj06q_d2epsymt67wtnylh.jpeg",
+      "sourcePage": "https://www.zigzag.am/en/nespresso-yuzu-vanilla-over-ice-49g.html",
+      "reason": "Exact SKU/model gallery; previous guessed URL returned a placeholder",
+      "check": {
+        "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/o/d/odn0vh31onfwsucytoeepcq-csin-5vhgqupojalfmwpkdgczaa34klx0suj0inwcab4liyynh13bzzejscloid-9sc7p5h23aeuovgiodomeorkqpvqdy7l1wlgtypoulzrabarh056rjs5f6fp3oyd60oj7z_aecf3xoeoiqjj06q_d2epsymt67wtnylh.jpeg",
+        "status": 200,
+        "type": "image/jpeg",
+        "length": 98374,
+        "finalUrl": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/o/d/odn0vh31onfwsucytoeepcq-csin-5vhgqupojalfmwpkdgczaa34klx0suj0inwcab4liyynh13bzzejscloid-9sc7p5h23aeuovgiodomeorkqpvqdy7l1wlgtypoulzrabarh056rjs5f6fp3oyd60oj7z_aecf3xoeoiqjj06q_d2epsymt67wtnylh.jpeg",
+        "checkedAt": "2026-11-01T19:50:47.944Z"
+      }
+    },
+    {
+      "articul": "01472108",
+      "name": "Samsung QE65QN90FAUXRU",
+      "url": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/0/1/01472108-7.png",
+      "sourcePage": "https://www.zigzag.am/en/samsung-qe65qn90fauxru.html",
+      "file": "js/product-images/01472108.png",
+      "width": 494,
+      "height": 466,
+      "sha256": "185983ca06df5c11e1761dc1944ab732fb65b2bc104d6482c36fe5de7fddb665",
+      "reason": "Exact model confirmed on the normal retail/manufacturer page; original artwork bundled locally"
+    },
+    {
+      "articul": "0190806",
+      "name": "ViewSonic Projector LX720 Laser 4K HDR 4800lm /LX720-4KRGB",
+      "url": "https://www.viewsonic.com/vsAssetFile/global/img/slides/0projector/LX720-4K_RGB/GPG-25-PRJ-LX720-4K%20RGB-Product%20Photo_F01_pc.jpg",
+      "sourcePage": "https://www.viewsonic.com/global/products/projectors/LX720-4K%20RGB",
+      "file": "js/product-images/0190806.jpg",
+      "width": 960,
+      "height": 455,
+      "sha256": "3ab7679e2a0c13a0e24d0a8099c5ade9da23a02f16e13fbd5fcddc11e40d8232",
+      "reason": "Exact model confirmed on the normal retail/manufacturer page; original artwork bundled locally"
+    },
+    {
+      "articul": "019507",
+      "name": "Epson EB-L530U PowerLite 5200lm Laser Projector /V11HA27040",
+      "url": "https://i8.amplience.net/i/epsonemear/l730u_w_std_03_png?fmt=png&w=800",
+      "sourcePage": "https://www.epson.eu/en_EU/products/projector/professional/eb-l530u-projector/p/31709",
+      "file": "js/product-images/019507.png",
+      "width": 800,
+      "height": 450,
+      "sha256": "abf8c9390c8619b2917c8b8b0f33e7971c79dcb27c267fb1d89c9cd2877f9efe",
+      "reason": "Exact model confirmed on the normal retail/manufacturer page; original artwork bundled locally"
+    },
+    {
+      "articul": "0147115",
+      "name": "Samsung QE77S95FAUXRU",
+      "url": "https://images.samsung.com/is/image/samsung/p6pim/ru/qe77s95fauxru/gallery/ru-oled-s95f-qe77s95fauxru-546263125?$624_468_PNG$",
+      "sourcePage": "https://www.samsung.com/ru/tvs/oled-tv/s95f-77-inch-oled-4k-smart-tv-qe77s95fauxru/",
+      "file": "js/product-images/0147115.png",
+      "width": 624,
+      "height": 468,
+      "sha256": "f8ca983bea28ca01de2cef733d5751f5b3673fb8bc009af9e595d7688beb9af8",
+      "reason": "Exact model confirmed on the normal retail/manufacturer page; original artwork bundled locally"
+    },
+    {
+      "articul": "443871",
+      "name": "HP Smart Tank 580 AIO /1F3Y2A",
+      "url": "https://www.hp.com/in-en/shop/media/catalog/product/l/e/lebi_wl_580_lightbasalt_catalog_visid_graybg_front_m1796961.png?store=in-en&image-type=image&format=jpg&width=960&fit=bounds",
+      "sourcePage": "https://www.hp.com/in-en/shop/products/printers/hp-smart-tank-580-all-in-one-printer-1f3y2a-acj",
+      "file": "js/product-images/443871.jpg",
+      "width": 960,
+      "height": 816,
+      "sha256": "9a894ecdf947954779e44e245534aba2243493825b24fc30c8519aa0ee847478",
+      "reason": "Exact model confirmed on the normal retail/manufacturer page; original artwork bundled locally"
+    },
+    {
+      "articul": "0540828",
+      "name": "Canon Lens RF 45mm f/1.2 STM /7198C005AA",
+      "url": "https://i1.adis.ws/i/canon/7198C005_RF-45mm-F1.2-STM_01?w=940&bg=white&fmt=webp&qlt=80",
+      "sourcePage": "https://www.canon.co.uk/store/canon-rf-45mm-f1-2-stm-lens/7198C005/",
+      "file": "js/product-images/0540828.webp",
+      "width": 940,
+      "height": 940,
+      "sha256": "ea6b4284c2655572673ad9d89b1cb1ecfab17c7063bb41c515440d791ac8d190",
+      "reason": "Exact model confirmed on the normal retail/manufacturer page; original artwork bundled locally"
+    }
+  ]
+}

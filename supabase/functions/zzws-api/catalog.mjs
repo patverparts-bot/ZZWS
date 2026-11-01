@@ -49,6 +49,8 @@ export function project(products,user,storedRules,{forOrder=false,mainWarehouses
   if(!group)throw Error('Հաճախորդի կատեգորիան չի գտնվել');
   const allowed=(user.brands||[]).map(norm);
   for(const p of products){
+    // Outlet, gift and service rows are source-price entries, not catalogue goods.
+    if(!/^[0-9]/.test(String(p.articul??'').trim()))continue;
     const brand=norm(p.brand);
     if(!admin){
       if(user.catalogAccess){if(!permits(p,user.catalogAccess))continue;}

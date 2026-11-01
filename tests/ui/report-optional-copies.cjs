@@ -6,7 +6,7 @@ const {chromium}=require(process.env.ZZWS_PLAYWRIGHT||'C:/Users/levon/.cache/cod
  const api=async(path,token,data)=>{const response=await r.handle(new Request(new URL('functions/v1/zzws-api/'+path,base),{method:data===undefined?'GET':'POST',headers:{...(token?{Authorization:'Bearer '+token}:{}),...(data===undefined?{}:{'Content-Type':'application/json'})},...(data===undefined?{}:{body:JSON.stringify(data)})}));const value=await response.json();assert.equal(response.status,200,path+': '+JSON.stringify(value));return value;};
  try{
   const login=async name=>(await api('login',null,{login:'zzws-test-'+name,password:'24681012'})).sessionToken;
-  const owner=await login('owner'),client=await login('dealer'),admin=await api('me',owner),me=await api('me',client),p=(await api('catalog',client)).products.find(p=>p.articul==='test-002');
+  const owner=await login('owner'),client=await login('dealer'),admin=await api('me',owner),me=await api('me',client),p=(await api('catalog',client)).products.find(p=>p.articul==='900002');
   await api('account/reauth',owner,{password:'24681012'});
   await r.db.query("update zzws_users set profile=profile||'{\"replyToEmail\":\"owner@example.am\"}'::jsonb where id=$1",[admin.id]);await r.db.query('update zzws_users set person=$2 where id=$1',[me.id,JSON.stringify({firstName:'Test',lastName:'Buyer',email:'main@example.am'})]);await r.db.exec("update zzws_receipt_settings set mode='off'");
   browser=await chromium.launch({channel:'msedge',headless:true});const context=await browser.newContext({viewport:{width:1200,height:1000}});context.setDefaultTimeout(10000);await context.addInitScript(token=>{sessionStorage.setItem('zzws_session_v3',token);localStorage.setItem('zzws_language_v1','ru');},owner);

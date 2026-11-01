@@ -8,7 +8,7 @@ const {chromium}=require(process.env.ZZWS_PLAYWRIGHT||'C:/Users/levon/.cache/cod
  const record=name=>{checks.push({name,result:'passed'});console.log('PASS '+name);};
  try{
   const token=(await direct('login',null,{login:'zzws-test-dealer',password:'24681012'})).sessionToken,owner=(await direct('login',null,{login:'zzws-test-owner',password:'24681012'})).sessionToken;
-  const me=await direct('me',token),product=(await direct('catalog',token)).products.find(p=>p.articul==='test-002'),sku=product.articul;
+  const me=await direct('me',token),product=(await direct('catalog',token)).products.find(p=>p.articul==='900002'),sku=product.articul;
   browser=await chromium.launch({channel:'msedge',headless:true});const context=await browser.newContext({viewport:{width:1280,height:900}});context.setDefaultTimeout(15000);
   await context.addInitScript(t=>{sessionStorage.setItem('zzws_session_v3',t);localStorage.setItem('zzws_language_v1','ru');const interval=window.setInterval;window.setInterval=(fn,ms,...args)=>ms===1200?0:interval(fn,ms,...args);},token);
   await context.route('**/js/api-config.js*',route=>route.fulfill({contentType:'application/javascript',body:'window.ZZWS_CONFIG={api:location.origin+"/functions/v1/zzws-api/",publishableKey:"offline-public"};'}));

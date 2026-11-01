@@ -43,3 +43,10 @@ test('vendored SheetJS round trips Unicode XLSX',()=>{
 });
 
 test('legacy KP brand permissions preserve Cyrillic identity without widening visibility',()=>{const raw=parsePrice(rows()).slice(0,1);raw[0].brand='Самсунг';const kp={...user('KP'),brands:['Бош']};assert.equal(project(raw,kp).length,0);kp.brands=['самсунг'];assert.equal(project(raw,kp).length,1);});
+
+test('catalogue eligibility requires a numeric first character for clients, administrators and order lookup',()=>{
+ const sample=parsePrice(rows()).slice(0,1)[0],codes=['00123','0A12','9','O00123','o00123','G00123','X15101','K1T010','ABC'];
+ const raw=codes.map(articul=>({...sample,articul})),copy=JSON.stringify(raw);
+ for(const role of ['client','admin'])for(const forOrder of [false,true])assert.deepEqual(project(raw,user('Dealers',role),undefined,{forOrder}).map(p=>p.articul),['00123','0A12','9']);
+ assert.equal(JSON.stringify(raw),copy,'source-price entries stay intact');
+});

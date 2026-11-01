@@ -453,7 +453,7 @@ function finalizeDataLoad() {
 }
 
 function parseExcelRows(products, isSilent = false) {
-  allProducts = products;
+  allProducts = products.filter(p => /^[0-9]/.test(String(p.articul ?? '').trim()));
   finalizeDataLoad();
   const dealerReady=window.ZZWS_DEALER?.refresh();
   window.ZZWS_STOREFRONT?.refresh();

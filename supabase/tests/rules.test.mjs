@@ -3,14 +3,14 @@ import assert from 'node:assert/strict';
 import { project,validateProfile } from '../functions/zzws-api/catalog.mjs';
 import { defaultRules,validateRules,validateAccess,permits,selectPrice,validPassword,validateContacts } from '../functions/zzws-api/rules.mjs';
 import { parseUsers } from '../functions/zzws-api/catalog.mjs';
-const item=(brand='LG',category='TV',changes={})=>({articul:brand+'-'+category,brand,category,name:'Product',ws:80,kp:70,kpPromo:65,retail:100,base:120,stocks:{'003':4},...changes});
+const item=(brand='LG',category='TV',changes={})=>({articul:'1'+brand+'-'+category,brand,category,name:'Product',ws:80,kp:70,kpPromo:65,retail:100,base:120,stocks:{'003':4},...changes});
 const user=(sheet='Dealers',catalogAccess)=>({role:'client',sheet,client:'Client',allBrands:true,brands:[],...(catalogAccess?{catalogAccess}:{})});
 const access=(include=[],exclude=[],mode='selected')=>({mode,include,exclude});
 const pair=(brand='',category='',categoryMatch='exact')=>({brand,category,categoryMatch});
 test('Dealers include linked brand/category pairs with AND within each pair',()=>{
  const rules=access([pair('LG','TV'),pair('Samsung','Washing')]);
  const data=project([item('LG','TV'),item('LG','Washing'),item('Samsung','TV'),item('Samsung','Washing')],user('Dealers',rules));
- assert.deepEqual(data.map(p=>p.articul),['LG-TV','Samsung-Washing']);
+ assert.deepEqual(data.map(p=>p.articul),['1LG-TV','1Samsung-Washing']);
 });
 test('category-only and brand-only permissions use explicit wildcard',()=>{
  const a=access([pair('','TV'),pair('LG','')]);
@@ -22,14 +22,14 @@ test('exclusion wins over a linked permission',()=>{
 });
 test('brand and category exclusions independently hide matching products',()=>{
  const a=access([],[pair('LG',''),pair('','Washing')],'all');
- assert.deepEqual(project([item('LG','TV'),item('Samsung','Washing'),item('Samsung','TV')],user('Dealers',a)).map(p=>p.articul),['Samsung-TV']);
+ assert.deepEqual(project([item('LG','TV'),item('Samsung','Washing'),item('Samsung','TV')],user('Dealers',a)).map(p=>p.articul),['1Samsung-TV']);
 });
 test('empty selected list denies everything for either group',()=>{
  for(const sheet of ['KP','Dealers'])assert.deepEqual(project([item()],user(sheet,access())),[]);
 });
 test('group and personal restrictions intersect',()=>{
  const g=defaultRules();g.Dealers.access=access([pair('','TV')]);
- assert.deepEqual(project([item('LG','TV'),item('LG','Washing'),item('Samsung','TV')],user('Dealers',access([pair('LG','')])),g).map(p=>p.articul),['LG-TV']);
+ assert.deepEqual(project([item('LG','TV'),item('LG','Washing'),item('Samsung','TV')],user('Dealers',access([pair('LG','')])),g).map(p=>p.articul),['1LG-TV']);
 });
 test('legacy Dealers ignore legacy KP brand list until explicit access rules are saved',()=>{
  assert.equal(project([item()],{...user(),allBrands:false,brands:[]}).length,1);

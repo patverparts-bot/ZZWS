@@ -48,7 +48,7 @@ const root=path.resolve(__dirname,'../..'),out=path.join(root,'output/mobile-win
    await page.locator('#modalBody').evaluate(n=>{n.scrollTop=30;});
    const beforeBulk=await page.evaluate(()=>({top:document.getElementById('modalBody').scrollTop,title:document.getElementById('savedCartTitle').value,step:document.getElementById('orderModal').dataset.checkoutStep,cart:JSON.stringify(cart)}));assert.ok(beforeBulk.top>0);
    await page.locator('#orderModal .checkout-preparation-actions button').nth(1).click();
-   await page.locator('#bulkAddInput').click();await page.locator('#bulkAddInput').fill('test-002\t2');
+   await page.locator('#bulkAddInput').click();await page.locator('#bulkAddInput').fill('900002\t2');
    assert.equal(await page.locator('#orderModal').isVisible(),true,'Checkout stays behind the nested bulk window');
    assert.ok(await page.locator('#bulkAddInput').evaluate(n=>{const r=n.getBoundingClientRect(),hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);return hit===n||n.contains(hit);}), 'Nested bulk input must actually receive the pointer above checkout');
    const bulkScroller=page.locator('#bulkAddModal>div');await bulkScroller.evaluate(n=>{n.scrollTop=n.scrollHeight;});
