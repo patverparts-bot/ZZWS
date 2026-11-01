@@ -3,6 +3,8 @@ $ErrorActionPreference='Stop'
 $photoTask=Split-Path -Parent $PSScriptRoot
 $photoOriginal=$photoTask
 $photoAndroid=Join-Path $photoTask 'android'
+& node (Join-Path $photoTask 'scripts/sync-android-product-photos.cjs')
+if($LASTEXITCODE -ne 0){throw 'Product photo synchronization failed.'}
 $photoFrontend=if($FrontendDirectory){(Resolve-Path -LiteralPath $FrontendDirectory).Path}else{$photoTask}
 if(-not ($photoFrontend.Equals($photoTask,[StringComparison]::OrdinalIgnoreCase) -or $photoFrontend.StartsWith($photoTask+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase))){throw 'Frontend source must stay within the workspace.'}
 foreach($photoAsset in @('dealer-tools.js','bundle-policy.js')){Copy-Item -LiteralPath (Join-Path $photoFrontend ('js/'+$photoAsset)) -Destination (Join-Path $photoAndroid ('assets/'+$photoAsset)) -Force}

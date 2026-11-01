@@ -56,6 +56,8 @@ class AdminCatalogPricePresentationTest {
   return layout
  }
  private fun pair(scope:String,product:Product){
+  ui.onNodeWithTag("admin-retail-$scope:${product.code}:label",useUnmergedTree=true).assertTextEquals(L10n.t("Մանրածախ"))
+  ui.onNodeWithTag("admin-retail-$scope:${product.code}:amount",useUnmergedTree=true).assertTextEquals(money(product.retail))
   val base="admin-price-$scope:${product.code}:"
   for((key,label,amount)in listOf(Triple("ws","Մեծածախ",product.price),Triple("kp","Խոշոր գործընկերոջ գին",product.kp))){
    ui.onNodeWithTag(base+key+":label",useUnmergedTree=true).assertTextEquals(L10n.t(label));ui.onNodeWithTag(base+key+":amount",useUnmergedTree=true).assertTextEquals(money(amount))
@@ -83,7 +85,7 @@ class AdminCatalogPricePresentationTest {
   val model=model();val comparison=mutableStateOf(false);ui.runOnIdle{model.products.forEach{PartnerLibrary.compare(it.code)}}
   ui.setContent{RetailTheme{if(comparison.value)RetailComparison(model,{})else RetailProductDetails(model.products.first(),model,{})}}
   // Administrator pairs open expanded, so both prices are understandable before a scroll.
-  for(key in listOf("ws","kp"))for(field in listOf("label","amount"))ui.onNodeWithTag("admin-price-details:$code:$key:$field",useUnmergedTree=true).assertIsDisplayed()
+  readable("admin-retail-details:$code:amount")
   ui.onNode(vertical).performScrollToNode(hasTestTag("admin-price-details:$code:kp"));pair("details",model.products.first());readable("admin-price-details:$code:kp:label")
   ui.runOnIdle{comparison.value=true};ui.onNode(vertical).performScrollToNode(hasTestTag("admin-price-comparison:$code:kp"))
   for(product in model.products){pair("comparison",product);readable("admin-price-comparison:${product.code}:ws:amount");readable("admin-price-comparison:${product.code}:kp:amount")}

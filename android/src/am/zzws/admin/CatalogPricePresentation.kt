@@ -28,6 +28,12 @@ internal fun adminCatalogPrices(product:Product,role:String?,viewingBuyer:Boolea
  val prices=adminCatalogPrices(product,role,viewingBuyer)
  if(prices.isEmpty())return
  Column(modifier.fillMaxWidth().testTag("admin-price-blocks-$scope:${product.code}"),verticalArrangement=Arrangement.spacedBy(6.dp)){
+  if(product.retail.isFinite()&&product.retail>0){
+   Column(Modifier.fillMaxWidth().testTag("admin-retail-$scope:${product.code}"),verticalArrangement=Arrangement.spacedBy(3.dp)){
+    LocalizedText("Մանրածախ",Modifier.fillMaxWidth().testTag("admin-retail-$scope:${product.code}:label"),fontSize=12.sp,lineHeight=16.sp,color=Color(0xFF626870))
+    Text(money(product.retail),Modifier.fillMaxWidth().testTag("admin-retail-$scope:${product.code}:amount"),fontSize=18.sp,lineHeight=23.sp,fontWeight=FontWeight.SemiBold,color=Color(0xFF1F2937))
+   }
+  }
   prices.forEach{price->
    val foreground=if(price.key=="ws")Color(0xFF075985)else Color(0xFF047857)
    val background=if(price.key=="ws")Color(0xFFF0F9FF)else Color(0xFFECFDF5)

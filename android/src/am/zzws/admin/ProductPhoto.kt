@@ -30,6 +30,7 @@ private object ProductPhotos {
  private val directory get()=File(AppContext.value.cacheDir,"product-photos-v2")
  private fun diskFile(url:String)=File(directory,MessageDigest.getInstance("SHA-256").digest(url.toByteArray(Charsets.UTF_8)).joinToString(""){"%02x".format(it)})
  private fun decode(bytes:ByteArray):Bitmap?{
+  if(isProductPhotoPlaceholder(bytes))return null
   val bounds=BitmapFactory.Options().apply{inJustDecodeBounds=true};BitmapFactory.decodeByteArray(bytes,0,bytes.size,bounds)
   if(bounds.outWidth<=0||bounds.outHeight<=0)return null
   val options=BitmapFactory.Options().apply{inSampleSize=1}
@@ -48,8 +49,12 @@ private object ProductPhotos {
   for(file in files){if(total<=32*1024*1024)break;val size=file.length();if(file.delete())total-=size}
  };Unit}
  suspend fun load(code:String):Bitmap?=withTimeoutOrNull(25000){withContext(Dispatchers.IO){
+  val mapped=paths.optString(code.trim())
+  if(mapped.matches(Regex("product-images/[A-Za-z0-9_-]+\\.(png|jpg|jpeg|webp)"))){
+   runCatching{AppContext.value.assets.open(mapped).use{decode(it.readBytes())}}.getOrNull()?.let{return@withContext it}
+  }
   runCatching{AppContext.value.assets.open("demo-photos/$code.img").use{decode(it.readBytes())}}.getOrNull()?.let{return@withContext it}
-  val urls=productPhotoCandidates(code,paths.optString(code.trim()))
+  val urls=productPhotoCandidates(code,mapped)
   for(url in urls){cache.get(url)?.let{return@withContext it}}
   connections.withPermit{
    for(url in urls){
