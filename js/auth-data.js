@@ -11,6 +11,7 @@ async function secureApi(path, options = {}) {
   catch(e) { if (e.status === 401) lockCatalog(); throw e; }
 }
 function lockCatalog() {
+  window.ZZWS_PAGE_STATE?.stop();
   window.ZZWS_STOREFRONT?.reset();
   window.ZZWS_PRODUCT_TECHNICAL?.reset();
   window.ZZWS_CHECKOUT?.reset();
@@ -44,11 +45,13 @@ async function acceptIdentity(user) {
   window.ZZWS_CATALOG_VIEW?.start(user);
   window.ZZWS_ENTRY?.navigation(user);
   serverIdentity = user;window.ZZWS_HELP_USER=user; authorizedClient = user.client; userSheetType = user.sheet; clientRowsData = user.rowsList;
+  window.ZZWS_PAGE_STATE?.start(user);
   window.ZZWS_STOREFRONT?.start();
   window.ZZWS_BULLETINS?.start(user);
   window.ZZWS_ADMIN_RESOURCES?.start(user);window.ZZWS_TEAM?.start(user);
   configureSortPrices();
   await ZZWS_MEMORY.start(user);
+  window.ZZWS_PAGE_STATE?.restoreFilters();
   ZZWS_ORDERS.start(user);
   document.getElementById('authScreen').classList.add('hidden');
   document.getElementById('passwordInput').value = '';
@@ -442,6 +445,7 @@ function finalizeDataLoad() {
 
   initFilters();
   loadSavedFilters();
+  window.ZZWS_CATALOG_CONTROLS?.enforce();
   resetAndRender();
 
   document.getElementById('skeletonLoader').classList.add('hidden');
@@ -451,8 +455,9 @@ function finalizeDataLoad() {
 function parseExcelRows(products, isSilent = false) {
   allProducts = products;
   finalizeDataLoad();
-  window.ZZWS_DEALER?.refresh();
+  const dealerReady=window.ZZWS_DEALER?.refresh();
   window.ZZWS_STOREFRONT?.refresh();
+  Promise.resolve(dealerReady).then(()=>window.ZZWS_PAGE_STATE?.loaded());
   if (isSilent && !document.getElementById('orderModal').classList.contains('hidden')) renderModalItems();
 }
 

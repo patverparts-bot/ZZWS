@@ -1,9 +1,9 @@
 # ZZWS file layout
 
-## Authenticated storefront — local draft, not published
+## Authenticated storefront
 
 The approved first concept is implemented in `js/storefront.js` and `js/storefront.css`.
-After sign-in the home page shows a rotating product banner, permitted categories,
+After a fresh sign-in the home page shows a rotating product banner, permitted categories,
 up to eight in-stock wholesale promotions/special offers, up to eight new products,
 and available brands. Catalogue cards show retail, the viewer's wholesale price and
 the existing margin/DOMUS ratio. Catalogue opens as cards; the table, technical
@@ -11,12 +11,19 @@ filters, comparison, bundles, saved proposals, showroom, cart and orders remain
 available. Retail-only promotions never qualify for the red ribbon/collection.
 Both red and green ribbons appear on a product that meets both conditions.
 
+`js/page-state.js` keeps navigation in this browser tab across reloads, scoped to
+the authenticated account. It restores the current collection, search, filters,
+sorting, cards/table view, comparison selection and scroll position after fresh
+catalogue data and verified technical facts have loaded. Orders/cart can reopen;
+logout clears this tab state. Prices, stock and permissions are never cached here
+and the state is not synchronized across devices or applied to customer preview.
+
 Migration `20261101092608_storefront_product_arrivals.sql` records `introducedAt`
 inside versioned products during reviewed publication, under the existing draft and
 state locks. Existing SKUs retain their original arrival date; baseline imports
 and price/name changes never create arrivals. Reappearance after absence does.
 Rollback snapshots retain their dates. The default newness window is seven elapsed
-days and is configurable from 1 to 365. No production migration has been applied.
+days and is configurable from 1 to 365. The migration was applied on 2026-11-01.
 
 The owner's Filters and purchase marks section includes home-page settings:
 newness duration, carousel interval, ordered pinned SKUs, excluded SKUs, and the
