@@ -1,11 +1,14 @@
 (() => {
  const node=(tag,text)=>{const e=document.createElement(tag);if(text!=null)e.textContent=text;return e;},money=n=>Number(n).toLocaleString((window.ZZWS_I18N?.language==='ru'?'ru-RU':'hy-AM'))+' ֏';
- let user=null,generation=0,timer=null,started=0,items=[],dialog=null,shown=new Set(),cursor='',polling=false,selection=null,dialogStamp='',inflight=null;
+ let user=null,generation=0,timer=null,items=[],dialog=null,shown=new Set(),cursor='',polling=false,selection=null,dialogStamp='',inflight=null;
  const key=item=>item.id+':'+(item.revision||1),stamp=list=>JSON.stringify(list.map(i=>[key(i),i.title,i.products]));
- const button=node('button','Ծանուցումներ · գներ և առաջարկներ');button.type='button';button.id='catalogBulletinsButton';button.hidden=true;button.className='catalog-bulletins-button';document.querySelector('.catalog-header')?.append(button);
- function reset(){user=null;++generation;clearInterval(timer);timer=null;items=[];cursor='';polling=false;inflight=null;shown.clear();dialog?.close();dialog?.remove();dialog=null;button.hidden=true;}
- async function mark(item){shown.add(key(item));item.seen=true;await ZZWS.json('me/bulletins/read',{method:'POST',body:JSON.stringify({id:item.id})}).catch(()=>{});}
- function open(selected=null){if(!user)return;selection=selected?.id||null;dialog?.remove();dialog=node('dialog');dialog.className='catalog-bulletins-dialog';const head=node('div');head.className='bulletin-dialog-heading';head.append(node('h2',selected?.title||'Գներ և հատուկ առաջարկներ'));const close=node('button','Փակել');close.type='button';close.onclick=()=>dialog.close();head.append(close);dialog.append(head);
+ const button=node('button');button.type='button';button.id='catalogBulletinsButton';button.hidden=true;button.className='catalog-bulletins-button';button.setAttribute('aria-haspopup','dialog');button.setAttribute('aria-controls','catalogBulletinsDialog');document.querySelector('.catalog-header')?.append(button);
+ const icon=node('span','%'),copy=node('span'),heading=node('span'),title=node('strong'),description=node('span'),badge=node('span'),action=node('span'),arrow=node('span','→');icon.className='sf-offers-icon';icon.setAttribute('aria-hidden','true');copy.className='sf-offers-copy';heading.className='sf-offers-title';description.className='sf-offers-description';badge.className='sf-offers-badge';action.className='sf-offers-action';arrow.className='sf-offers-arrow';arrow.setAttribute('aria-hidden','true');heading.append(title,badge);copy.append(heading,description);button.append(icon,copy,action,arrow);
+ function renderEntry(){const ru=window.ZZWS_I18N?.language==='ru',count=items.filter(i=>!i.seen&&!shown.has(key(i))).length;title.textContent=ru?'Цены и специальные предложения':'Գներ և հատուկ առաջարկներ';description.textContent=ru?'Новые цены и предложения в одном месте':'Նոր գներն ու առաջարկները՝ մեկ տեղում';action.textContent=ru?'Смотреть предложения':'Տեսնել առաջարկները';badge.textContent=(ru?'Новых: ':'Նոր՝ ')+count;badge.hidden=count===0;button.dataset.unread=String(count>0);button.setAttribute('aria-label',title.textContent+(count?' · '+badge.textContent:''));}
+ window.addEventListener('zzws:languagechange',renderEntry);renderEntry();
+ function reset(){user=null;++generation;clearInterval(timer);timer=null;items=[];cursor='';polling=false;inflight=null;shown.clear();dialog?.close();dialog?.remove();dialog=null;button.hidden=true;renderEntry();}
+ async function mark(item){shown.add(key(item));item.seen=true;renderEntry();await ZZWS.json('me/bulletins/read',{method:'POST',body:JSON.stringify({id:item.id})}).catch(()=>{});}
+ function open(selected=null){if(!user)return;selection=selected?.id||null;dialog?.remove();dialog=node('dialog');dialog.id='catalogBulletinsDialog';dialog.className='catalog-bulletins-dialog';const head=node('div');head.className='bulletin-dialog-heading';head.append(node('h2',selected?.title||'Գներ և հատուկ առաջարկներ'));const close=node('button','Փակել');close.type='button';close.onclick=()=>dialog.close();head.append(close);dialog.append(head);
   const copyStatus=node('p');copyStatus.className='bulletin-copy-status';copyStatus.setAttribute('role','status');
   const list=selected?[selected]:items;if(!list.length)dialog.append(node('p','Այս պահին նոր գների փոփոխություններ կամ հատուկ առաջարկներ չկան։'));
   for(const item of list){const section=node('section');section.append(node('h3',item.title),node('p',new Date(item.created).toLocaleString((window.ZZWS_I18N?.language==='ru'?'ru-RU':'hy-AM'),{timeZone:'Asia/Yerevan'})));const table=node('table'),tr=table.createTHead().insertRow();for(const h of ['Արտիկուլ / ապրանք','Գին',''])tr.append(node('th',h));
@@ -13,8 +16,8 @@
   }
   dialog.append(copyStatus);dialogStamp=stamp(list);document.body.append(dialog);dialog.showModal();
  }
- async function load(){if(!user||document.hidden||polling)return;const who=user.id,ticket=generation;polling=true;try{const r=await ZZWS.json('me/bulletins'+(cursor?'?cursor='+encodeURIComponent(cursor):''));if(user?.id!==who||generation!==ticket)return;if(!r.unchanged)items=r.bulletins;cursor=r.cursor||'';button.hidden=false;button.textContent='Ծանուցումներ · '+items.filter(i=>!i.seen&&!shown.has(key(i))).length;
-   if(dialog?.open){const selected=selection?items.find(i=>i.id===selection):null;if(selection&&!selected){dialog.close();dialog.remove();dialog=null;}else if(dialogStamp!==stamp(selection?[selected]:items))open(selected);return;}const next=items.find(i=>!i.seen&&!shown.has(key(i))&&(i.kind==='prices'||Date.now()-started>=120000));if(next)open(next);
+ async function load(){if(!user||document.hidden||polling)return;const who=user.id,ticket=generation;polling=true;try{const r=await ZZWS.json('me/bulletins'+(cursor?'?cursor='+encodeURIComponent(cursor):''));if(user?.id!==who||generation!==ticket)return;if(!r.unchanged)items=r.bulletins;cursor=r.cursor||'';button.hidden=false;renderEntry();
+   if(dialog?.open){const selected=selection?items.find(i=>i.id===selection):null;if(selection&&!selected){dialog.close();dialog.remove();dialog=null;}else if(dialogStamp!==stamp(selection?[selected]:items))open(selected);}
   }catch(e){if(e.status===404)button.hidden=true;}finally{if(generation===ticket)polling=false;}
  }
  function refresh(){if(inflight)return inflight;const request=load();inflight=request;request.finally(()=>{if(inflight===request)inflight=null;});return request;}
@@ -24,5 +27,5 @@
   const selected=state.id===null?null:items.find(i=>i.id===state.id);if(state.id!==null&&!selected)return;
   open(selected);dialog.scrollTop=Math.max(0,Math.min(1000000,Number(state.scrollTop)||0));
  }
- button.onclick=()=>open();window.ZZWS_BULLETINS={reset,start(identity){reset();user=identity;started=Date.now();button.hidden=false;refresh();timer=setInterval(refresh,60000);},refresh,open,restore,state:()=>dialog?.open?{id:selection,scrollTop:dialog.scrollTop}:null};
+ button.onclick=()=>open();window.ZZWS_BULLETINS={reset,start(identity){reset();user=identity;button.hidden=false;refresh();timer=setInterval(refresh,60000);},refresh,open,restore,state:()=>dialog?.open?{id:selection,scrollTop:dialog.scrollTop}:null};
 })();

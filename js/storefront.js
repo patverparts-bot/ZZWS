@@ -15,8 +15,8 @@
  const utilities=node('div',null,'sf-header-tools'),account=node('details',null,'sf-account'),accountSummary=node('summary','Իմ հաշիվը'),accountPanel=node('div',null,'sf-account-panel');account.id='storefrontAccount';accountPanel.append(actions,document.querySelector('.catalog-header-utilities'));account.append(accountSummary,accountPanel);top.append(utilities);utilities.append(account);
  const cart=document.querySelector('#stickySearchActions .header-primary');if(cart)utilities.append(cart);
  const notices=document.querySelector('#stickySearchActions .header-notifications');if(notices)actions.append(notices);
- const bulletins=el('catalogBulletinsButton');if(bulletins)document.querySelector('.catalog-header-meta').append(bulletins);
  const nav=node('nav',null,'sf-nav');nav.id='storefrontNavigation';nav.setAttribute('aria-label','Հիմնական բաժիններ');header.append(nav);
+ const bulletins=el('catalogBulletinsButton');if(bulletins){const offersEntry=node('div',null,'sf-offers-entry');offersEntry.append(bulletins);nav.after(offersEntry);}
  for(const key of ['home','catalog','promo','new']){const a=node('a',labels[key]);a.href='#'+key;a.dataset.sfRoute=key;a.onclick=e=>{e.preventDefault();navigate(key);};nav.append(a);}
  const tools=node('details',null,'sf-tools-menu');tools.id='storefrontTools';tools.append(node('summary','Վաճառողի գործիքներ'));const toolItems=node('div',null,'sf-tools-items');tools.append(toolItems);nav.append(tools);
  const dealerActions=document.querySelector('.dealer-workspace-actions'),advanced=el('dealerAdvancedTools');
