@@ -297,7 +297,6 @@ updateStickyOffsets();
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-hideVersionBadge();
 const invited=window.ZZWS_INVITE_CODE;window.ZZWS_INVITE_CODE='';
 try { if(invited)await secureApi('invitation/open',{method:'POST',body:JSON.stringify({code:invited})});await acceptIdentity(await secureApi('me')); } catch(e) {
   if(invited){finishSessionLoading();document.getElementById('errorMsg').textContent=e.message;document.getElementById('errorMsg').classList.remove('hidden');}

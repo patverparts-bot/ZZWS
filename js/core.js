@@ -1,5 +1,4 @@
 function userStorageId(){return serverIdentity?.id||authorizedClient;}
-console.log("ZZWS Web 6.12 loaded successfully");
 
 let allProducts = [];
 let filteredProducts = [];
@@ -107,18 +106,6 @@ const brandDomains = {
 'hp': 'hp.com', 'dell': 'dell.com', 'huawei': 'huawei.com', 'babyliss': 'babyliss.com',
 'elica': 'elica.com', 'indesit': 'indesit.com'
 };
-
-function hideVersionBadge() {
-  setTimeout(() => {
-    const badge = document.getElementById('version-badge');
-    if (badge) {
-      badge.style.opacity = '0';
-      setTimeout(() => badge.remove(), 500);
-    }
-  }, 3000);
-}
-
-
 
 function loadFavorites() {
   if (!authorizedClient) return;
