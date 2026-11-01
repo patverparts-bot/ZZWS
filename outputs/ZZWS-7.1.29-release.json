@@ -1,0 +1,45 @@
+{
+  "sha256": "027f0951ae88ae7c7ac506bc155b5e80f831a3ffe440ef9fda68507b9bd2517f",
+  "deviceTested": false,
+  "carouselChecks": 4,
+  "version": "7.1.29",
+  "zipValid": true,
+  "releaseUnitTests": {
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1,
+    "tests": 163
+  },
+  "newPermissions": false,
+  "updateChannelPublished": true,
+  "versionCode": 70129,
+  "status": "published and verified through the customer update channel",
+  "size": 13383138,
+  "nativeChecks": {
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1,
+    "tests": 282
+  },
+  "package": "am.zzws.admin",
+  "changes": [
+    "Swipeable and automatic offer-product carousel using the complete current account collection",
+    "Reset slides when the published list changes and restart automatic timing after manual swipes",
+    "Armenian and Russian collection label"
+  ],
+  "file": "ZZWS-7.1.29-production.apk",
+  "signerSha256": "85e2356e5269ac94f016858551b5c06ede293c31b649b8e1acedc05a407a0115",
+  "signatureValid": true,
+  "systemVerification": {
+    "verifiedAt": "2026-11-01T22:35:24.140Z",
+    "version": "7.1.29",
+    "versionCode": 70129,
+    "bytes": 13383138,
+    "sha256": "027f0951ae88ae7c7ac506bc155b5e80f831a3ffe440ef9fda68507b9bd2517f",
+    "normalClientCurrent": true,
+    "normalClientDownload": true,
+    "androidSignedLinkVerified": true,
+    "downloadReceiptAccepted": true,
+    "installedOnDevice": false
+  }
+}

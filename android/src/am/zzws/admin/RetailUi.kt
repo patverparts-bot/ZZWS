@@ -53,11 +53,10 @@ internal object PartnerLibrary {
  Box(Modifier.background(Brush.horizontalGradient(listOf(Color(0xFF2563EB),Color(0xFF0F172A))))){
  Box(Modifier.matchParentSize().background(Color.White.copy(alpha=.03f)))
  Row(Modifier.fillMaxWidth().heightIn(min=170.dp).padding(18.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)){Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(8.dp)){
- Text("ZZWS COLLECTION",fontSize=10.sp,letterSpacing=2.sp,color=Color.White.copy(alpha=.85f),fontWeight=FontWeight.SemiBold)
+ LocalizedText("Հատուկ առաջարկներ",modifier=Modifier.testTag("home-collection-label"),fontSize=10.sp,letterSpacing=1.sp,color=Color.White.copy(alpha=.85f),fontWeight=FontWeight.SemiBold)
  LocalizedText(model.publishedOffer?.text("title").orEmpty().ifBlank{"Հատուկ առաջարկներ"},fontSize=22.sp,lineHeight=26.sp,fontWeight=FontWeight.Bold,color=Color.White,maxLines=3)
  Surface(color=Color.White,shape=RoundedCornerShape(6.dp),modifier=Modifier.testTag("home-collection-action")){LocalizedText("Տեսնել առաջարկները  →",Modifier.padding(horizontal=10.dp,vertical=7.dp),fontSize=12.sp,lineHeight=16.sp,fontWeight=FontWeight.Bold,color=Color(0xFF1D4ED8))}}
- val hero=featured.firstOrNull()
- if(hero!=null)Box(Modifier.size(96.dp).background(Color.White,RoundedCornerShape(18.dp)).testTag("home-collection-photo"),contentAlignment=Alignment.Center){ProductPhoto(hero.code,edge=88,interactive=false)}
+ OfferProductCarousel(model.specialOffers)
  }}}}
  item{Row(Modifier.fillMaxWidth().padding(horizontal=14.dp),horizontalArrangement=Arrangement.spacedBy(9.dp)){
  if(hasOffers)QuickTile("Առաջարկներ","offer",Modifier.weight(1f).testTag("home-offers-shortcut")){model.showPromotions()}
