@@ -50,8 +50,9 @@
   const shown=list;el('adminOrderCount').textContent='Ցուցադրված է՝ '+shown.length;
   if(!shown.length){root.append(node('p','Ընտրված պայմաններով պատվերներ չկան։'));return;}
   const table=node('table'),head=table.createTHead().insertRow();for(const h of ['№ / ամսաթիվ','Հաճախորդ','Կարգավիճակ','Գումար',''])head.append(node('th',h));
-  for(const o of shown){const row=table.insertRow();row.insertCell().append(node('strong','№'+o.number),node('small',date(o.created),'admin-order-date'));const customer=row.insertCell();customer.append(node('strong',o.customer.client),node('small',o.customer.customerCode,'admin-order-date'));if(o.customer.author)customer.append(node('small',[o.customer.author.firstName,o.customer.author.lastName].filter(Boolean).join(' '),'admin-order-date'));if(o.created_by)customer.append(node('small','Լրացրել է՝ '+o.created_by.name+' ('+o.created_by.login+')','admin-order-date'));row.insertCell().append(node('span',window.ZZWS_ORDER_APPROVAL?.label(o)||statuses[o.status],'order-status status-'+o.status));row.insertCell().textContent=money(o.total);const actions=row.insertCell();actions.className='order-list-actions';actions.append(btn('Բացել',()=>open(o.id)),btn('Դիտել',()=>viewOrder(o.id)));}root.append(table);controls();
+  for(const o of shown){const row=table.insertRow();row.insertCell().append(node('strong','№'+o.number),node('small',date(o.created),'admin-order-date'));const customer=row.insertCell();customer.append(node('strong',o.customer.client),node('small',o.customer.customerCode,'admin-order-date'));if(o.customer.author)customer.append(node('small',[o.customer.author.firstName,o.customer.author.lastName].filter(Boolean).join(' '),'admin-order-date'));if(o.created_by)customer.append(node('small','Լրացրել է՝ '+o.created_by.name+' ('+o.created_by.login+')','admin-order-date'));row.insertCell().append(node('span',window.ZZWS_ORDER_APPROVAL?.label(o)||statuses[o.status],'order-status status-'+o.status));row.insertCell().textContent=money(o.total);const actions=row.insertCell();actions.className='order-list-actions';actions.append(btn('Բացել',()=>open(o.id)),btn('Դիտել',()=>viewOrder(o.id)));window.ZZWS_ADMIN_ORDER_UNREAD?.apply(row,o,row.cells[0]);}root.append(table);controls();
  }
+ const acknowledgeRead=o=>window.ZZWS_ADMIN_ORDER_UNREAD?window.ZZWS_ADMIN_ORDER_UNREAD.acknowledge(o):request('admin/orders/read',{id:o.id,revision:o.revision});
  async function open(id,internal=false){
   if(busy&&!internal){waitMessage();return;}
   if(dirty&&!internal&&!confirm('Վերաբացե՞լ պատվերը և չեղարկե՞լ չպահպանված ձեռքով փոփոխությունները։'))return;
@@ -72,7 +73,7 @@
   ZZWS_ORDER_LAYOUT.delivery(el('selectedOrderDelivery'),o.delivery);
   ZZWS_ADMIN_RECEIPTS.proof(o,el('selectedOrderReceipt'));
   renderOrderHistory(o.history||o.events||[]);el('editOrderStatus').value=o.status;el('editOrderComment').value=o.approval?.state==='pending'?o.approval.comment:o.comment;renderManual();controls();
-  el('adminOrderStatus').textContent='';el('adminOrderEditor').scrollIntoView({behavior:'smooth',block:'start'});try{await request('admin/orders/read',{id:o.id,revision:o.revision});if(ticket===editorEpoch)await refreshUnread();}catch(e){if(ticket===editorEpoch)el('adminOrderStatus').textContent='Չհաջողվեց թարմացնել դիտված նշումը։ '+ZZWS.message(e);}return o;
+  el('adminOrderStatus').textContent='';el('adminOrderEditor').scrollIntoView({behavior:'smooth',block:'start'});try{await acknowledgeRead(o);if(ticket===editorEpoch)await refreshUnread();}catch(e){if(ticket===editorEpoch)el('adminOrderStatus').textContent='Չհաջողվեց թարմացնել դիտված նշումը։ '+ZZWS.message(e);}return o;
  }
  function renderManual(){const root=el('manualOrderLines');root.replaceChildren();const table=node('table'),head=table.createTHead().insertRow();for(const h of ['Ապրանք','Քանակ','Միավորի գին',''])head.append(node('th',h));
   const body=table.createTBody();for(const row of manualRows){const tr=body.insertRow();tr.insertCell().append(node('strong',row.name),node('small',row.articul,'admin-order-date'));
@@ -178,6 +179,7 @@
   const body=node('div',null,'order-view-body'),table=node('table'),head=table.createTHead().insertRow();for(const title of ['Ապրանք / արտիկուլ','Քանակ','Միավորի գին','Գումար'])head.append(node('th',title));
   const rows=table.createTBody();for(const line of o.lines||[]){const row=rows.insertRow();row.insertCell().append(node('strong',line.name),node('small',line.articul,'admin-order-date'));row.insertCell().textContent=line.qty;row.insertCell().textContent=money(line.unitPrice);row.insertCell().textContent=money(Number(line.qty)*Number(line.unitPrice));}
   body.append(table);const total=node('div',null,'order-view-total');total.append(node('span','Ընդամենը'),node('strong',money(o.total)));dialog.append(header,body,total);dialog.addEventListener('close',()=>dialog.remove(),{once:true});document.body.append(dialog);dialog.showModal();close.focus();
+  try{await acknowledgeRead(o);if(ticket===viewEpoch)await refreshUnread();}catch(e){if(ticket===viewEpoch&&dialog.isConnected){const message=node('p','Չհաջողվեց թարմացնել դիտված նշումը։ '+ZZWS.message(e));message.setAttribute('role','status');body.append(message);}}
  }
  async function viewExport(){
   if(!selected||busy)return;const session=pollSession,id=selected.id,data=await request('admin/orders/export-preview',{id});if(!running||session!==pollSession||selected?.id!==id)return;
@@ -188,7 +190,7 @@
   data.rows.slice(2).forEach(values=>{const row=tbody.insertRow();values.forEach((value,index)=>{row.insertCell().textContent=typeof value==='number'&&(index===4||index===5)?money(value):value;});});body.append(table);dialog.append(heading,body);document.body.append(dialog);dialog.showModal();
  }
  async function download(path,filename,body){const r=await ZZWS.request(path,body?{method:'POST',body:JSON.stringify(body)}:{});if(!r.ok)throw new Error('Չհաջողվեց ներբեռնել ֆայլը');const url=URL.createObjectURL(await ZZWS_I18N_WORKBOOKS.localizeBlob(await r.blob())),a=node('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
- function reset(){activeDialog?.remove();activeDialog=null;document.dispatchEvent(new CustomEvent('zzws:admin-order',{detail:null}));++viewEpoch;document.getElementById('orderViewDialog')?.remove();window.ZZWS_REPORT_EMAIL?.reset();document.getElementById('orderExportPreviewDialog')?.remove();running=false;++pollSession;++summaryEpoch;pollBusy=false;summaryVersion=null;const badge=el('adminUnreadOrderBadge');if(badge){badge.hidden=true;badge.textContent='';}window.ZZWS_ADMIN_RECEIPTS?.reset();++listEpoch;++editorEpoch;++operation;clearTimeout(searchTimer);if(timer)clearInterval(timer);timer=null;list=[];listKey=null;selected=null;manualRows=[];preview=null;dirty=false;busy=false;el('adminOrderList').replaceChildren();el('adminOrderEditor').hidden=true;}
+ function reset(){window.ZZWS_ADMIN_ORDER_UNREAD?.reset();activeDialog?.remove();activeDialog=null;document.dispatchEvent(new CustomEvent('zzws:admin-order',{detail:null}));++viewEpoch;document.getElementById('orderViewDialog')?.remove();window.ZZWS_REPORT_EMAIL?.reset();document.getElementById('orderExportPreviewDialog')?.remove();running=false;++pollSession;++summaryEpoch;pollBusy=false;summaryVersion=null;const badge=el('adminUnreadOrderBadge');if(badge){badge.hidden=true;badge.textContent='';}window.ZZWS_ADMIN_RECEIPTS?.reset();++listEpoch;++editorEpoch;++operation;clearTimeout(searchTimer);if(timer)clearInterval(timer);timer=null;list=[];listKey=null;selected=null;manualRows=[];preview=null;dirty=false;busy=false;el('adminOrderList').replaceChildren();el('adminOrderEditor').hidden=true;}
  async function refreshUnread(){
   if(!running||document.documentElement.dataset.orderRead!=='true')return null;const session=pollSession,ticket=++summaryEpoch;
   const data=await request('admin/orders/summary');if(!running||session!==pollSession||ticket!==summaryEpoch)return null;
@@ -198,10 +200,10 @@
  }
  async function poll(){
   if(!running||pollBusy||document.hidden||document.documentElement.dataset.orderRead!=='true')return;const session=pollSession;pollBusy=true;
-  try{window.ZZWS_ADMIN_RECEIPTS?.poll();const data=await refreshUnread();if(!data||session!==pollSession)return;const changed=summaryVersion!==String(data.version);
+  try{window.ZZWS_ADMIN_RECEIPTS?.poll();const data=await refreshUnread();if(!data||session!==pollSession)return;const nextVersion=String(data.version)+':'+String(Number(data.unreadCount)||0),changed=summaryVersion!==nextVersion;
    if(!el('dashboard').hidden&&changed)await ZZWS_ADMIN_HOME.load();
    if(!el('orders').hidden&&changed){if(busy||el('adminOrderList').getAttribute('aria-busy')==='true')return;await load(false,true);}
-   if(session===pollSession)summaryVersion=String(data.version);
+   if(session===pollSession)summaryVersion=nextVersion;
   }catch(e){if(e.status===401&&running&&session===pollSession&&typeof showLogin==='function')showLogin();}
   finally{if(session===pollSession)pollBusy=false;}
  }

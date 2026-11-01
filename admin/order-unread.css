@@ -1,0 +1,18 @@
+/* Highlight the background, keeping every word and action continuously visible. */
+@keyframes admin-order-unread-pulse{
+ 0%,100%{background-color:#fffbeb;box-shadow:inset 4px 0 0 #f59e0b}
+ 50%{background-color:#fde68a;box-shadow:inset 4px 0 0 #b45309}
+}
+.manager-order.admin-order-unread,#adminOrderList tr.admin-order-unread{color:#0f172a;animation:admin-order-unread-pulse 2s ease-in-out infinite}
+.manager-order.admin-order-unread:focus-visible{outline:3px solid #2563eb;outline-offset:2px}
+.admin-order-unread-label{display:inline-block;width:max-content;max-width:100%;box-sizing:border-box;margin-top:7px;padding:3px 8px;border:1px solid #b45309;border-radius:999px;background:#fef3c7;color:#78350f;font-size:11px;font-weight:750;line-height:1.5;overflow-wrap:anywhere}
+#adminOrderList .admin-order-unread-label{display:block}
+@keyframes admin-order-unread-pulse-dark{
+ 0%,100%{background-color:#292617;box-shadow:inset 4px 0 0 #f59e0b}
+ 50%{background-color:#514016;box-shadow:inset 4px 0 0 #fbbf24}
+}
+.dark .manager-order.admin-order-unread,.dark #adminOrderList tr.admin-order-unread{color:#f8fafc;animation-name:admin-order-unread-pulse-dark}
+@media(prefers-reduced-motion:reduce){
+ .manager-order.admin-order-unread,#adminOrderList tr.admin-order-unread{animation:none;background:#fef3c7;box-shadow:inset 4px 0 0 #d97706}
+ .dark .manager-order.admin-order-unread,.dark #adminOrderList tr.admin-order-unread{background:#514016;box-shadow:inset 4px 0 0 #fbbf24}
+}

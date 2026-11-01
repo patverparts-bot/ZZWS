@@ -153,7 +153,10 @@ export async function orderRoutes(c){
   if(status==='approval_pending')q=awaitingCustomerApproval(q);
   const search=String(params.get('search')||'').replace(/[^\p{L}\p{N} ._-]/gu,'').trim().slice(0,100);if(search){const terms=['customer->>client.ilike.*'+search+'*','customer->>customerCode.ilike.*'+search+'*','delivery->>organization.ilike.*'+search+'*'];if(/^\d+$/.test(search)&&search.length<16)terms.push('number.eq.'+search);q=q.or(terms.join(','));}
   for(const [param,column] of [['from','gte'],['to','lt']]){const date=params.get(param);if(date&&/^\d{4}-\d{2}-\d{2}$/.test(date)){const stamp=new Date(date+'T00:00:00+04:00');if(!Number.isNaN(stamp.valueOf()))q=q[column]('created',new Date(stamp.valueOf()+(param==='to'?86400000:0)).toISOString());}}
-  if(before&&/^\d+$/.test(before))q=q.lt('number',before);return json({orders:await query(q)});
+  if(before&&/^\d+$/.test(before))q=q.lt('number',before);
+  const orders=await query(q),reads=orders.length?await query(table('admin_order_reads').select('order_id,revision').eq('user_id',user.id).in('order_id',orders.map(o=>o.id))):[];
+  const readById=new Map(reads.map(row=>[row.order_id,row.revision]));
+  return json({orders:orders.map(o=>{const adminReadRevision=readById.get(o.id)||0;return {...o,adminReadRevision,unread:adminReadRevision<o.revision};})});
  }
  if(path==='admin/orders/template'&&req.method==='GET')return file([['Արտիկուլ','Քանակ','Գին'],['014676',1,'']],'Final-order-template.xlsx');
  if(path==='admin/orders/detail'&&req.method==='POST'){const p=await body(req),o=await order(p.id,true),events=await query(table('order_events').select('detail,created,revision').eq('order_id',o.id).order('revision',{ascending:false}).limit(101));return json({...o,...await historyFor(o,events),events:events.slice(0,50)});}

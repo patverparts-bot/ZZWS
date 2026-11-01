@@ -28,12 +28,13 @@
   for(const [label,value] of [['Կազմակերպություն',order.delivery?.organization],['Կոնտակտ',order.delivery?.contact],['Հասցե',order.delivery?.address],['Առաքման օր',order.delivery?.date]])if(value)details.append(node('p',label+'՝ '+value));
   root.append(details);
   if(order.user_id){const templates=node('button','Պահպանված զամբյուղներ');templates.type='button';templates.onclick=safe(()=>ZZWS_ADMIN_TEMPLATES.openCustomer(order.user_id));root.append(templates);}
-  if(rows.some(r=>r.id===order.id))rows=rows.map(r=>r.id===order.id?{...r,...order}:r);render();
+  if(rows.some(r=>r.id===order.id))rows=rows.map(r=>r.id===order.id&&Number(order.revision)>=Number(r.revision)?{...r,...order}:r);render();
  }
  function render(){
   const root=el('managerQueue');root.replaceChildren();
   for(const order of rows){const b=node('button',null,'manager-order'+(selected?.id===order.id?' is-selected':''));b.type='button';b.dataset.managerOrder=order.id;
    b.append(node('strong','№'+order.number+' · '+order.customer.client),node('span',window.ZZWS_ORDER_APPROVAL?.label(order)||labels[order.status],'order-status status-'+order.status),node('small',Number(order.total).toLocaleString('hy-AM')+' ֏ · '+new Date(order.created).toLocaleDateString('hy-AM',{timeZone:'Asia/Yerevan'})));
+   window.ZZWS_ADMIN_ORDER_UNREAD?.apply(b,order);
    if(order.approval?.state==='pending'&&order.approval.reviewRequestedMinutes)b.append(node('small','Հաճախորդը ժամանակ է խնդրել դիտարկման համար՝ '+order.approval.reviewRequestedMinutes+' րոպե։'));
    b.onclick=safe(async()=>{const opened=await ZZWS_ADMIN_ORDERS.openNotice(order.id);if(opened){customer(opened);if(matchMedia('(max-width:1100px)').matches){mobileBack.scrollIntoView({block:'start'});mobileBack.focus({preventScroll:true});}}});root.append(b);
   }
