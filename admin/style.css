@@ -173,23 +173,6 @@ html[data-manager-open=true] main{max-width:1600px}.manager-toolbar{display:flex
 @media(prefers-reduced-motion:reduce){.offer-status[data-state=loading]::before{animation:none}}
 @media(max-width:600px){.offer-status{font-size:16px;padding:14px}.offer-history-row{padding:12px}}
 
-/* Notice remains visible throughout the request and after server confirmation. */
-.offer-status{margin:18px 0;padding:18px 20px;border:2px solid #2563eb;border-radius:12px;background:#eff6ff;color:#1e3a8a;font-size:17px;font-weight:650;line-height:1.65;overflow-wrap:anywhere;scroll-margin-block:24px}
-.offer-status[hidden]{display:none}
-.offer-status[data-state=success]{border-color:#15803d;background:#f0fdf4;color:#14532d}
-.offer-status[data-state=error]{border-color:#b91c1c;background:#fef2f2;color:#7f1d1d}
-.offer-status[data-state=loading]::before{content:'';display:inline-block;width:18px;height:18px;margin-inline-end:12px;vertical-align:middle;border:3px solid #bfdbfe;border-top-color:#1d4ed8;border-radius:50%;animation:offer-saving 1s linear infinite}
-.offer-history-row{margin:12px 0;padding:18px;border:1px solid #cbd5e1;border-radius:12px;background:#f8fafc}
-.offer-history-row[data-selected=true]{border:2px solid #2563eb;background:#eff6ff}
-.offer-history-row .offer-state{font-weight:700}
-.offer-history-row .offer-state[data-state=active]{color:#166534}
-.offer-availability{margin-top:12px}.offer-availability>p{font-weight:650}
-.offer-articles{padding:8px 0}.offer-articles summary{cursor:pointer;font-weight:600;overflow-wrap:anywhere}.offer-articles p{padding:10px;background:white;border-radius:6px;white-space:normal;overflow-wrap:anywhere}
-.offer-articles.missing summary{color:#92400e}
-@keyframes offer-saving{to{transform:rotate(360deg)}}
-@media(prefers-reduced-motion:reduce){.offer-status[data-state=loading]::before{animation:none}}
-@media(max-width:600px){.offer-status{font-size:16px;padding:14px}.offer-history-row{padding:12px}}
-
 /* Compact history: one short clickable row, recorded details on demand. */
 .order-history-entry{border:1px solid #cbd5e1;border-radius:9px;margin:8px 0;overflow:hidden}.order-history-entry>summary{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 12px;cursor:pointer;font-weight:600;line-height:1.45}.order-history-entry>summary::before{content:"›";flex:none}.order-history-entry[open]>summary::before{content:"⌄"}.order-history-entry>summary>span{flex:1}.order-history-entry time{font-size:11px;color:#64748b;font-weight:400;white-space:nowrap}.order-history-content{padding:0 12px 10px;font-size:12px;line-height:1.6}.order-history-line{border-top:1px solid #e2e8f0;padding-top:7px;margin-top:7px}.order-history-line small{display:block;color:#64748b}.order-history-content p{margin:5px 0}.dark .order-history-entry{border-color:#475569}@media(max-width:600px){.order-history-entry>summary{flex-wrap:wrap;gap:5px 8px}.order-history-entry time{margin-left:16px}}
 
@@ -201,3 +184,5 @@ html[data-manager-open=true] main{max-width:1600px}.manager-toolbar{display:flex
 
 /* Three primary actions remain one44px row in both HY and RU. */
 .admin-nav-group{margin:0;padding:0;border:0;border-radius:0;box-shadow:none;background:transparent;align-self:start}@media(max-width:650px){.admin-navigation{flex-wrap:nowrap;align-items:stretch;gap:6px;padding:6px 0}.admin-navigation .admin-primary-navigation{flex:1 1 0;min-width:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}.admin-navigation .admin-primary-navigation>button{box-sizing:border-box;min-width:0;width:100%;min-height:44px;height:44px;margin:0;padding:6px 4px;font-size:11px;line-height:1.2;white-space:normal;overflow-wrap:anywhere}.admin-navigation #adminMoreMenu{flex:0 0 56px;margin-left:0}.admin-navigation #adminMoreMenu>summary{box-sizing:border-box;min-width:0;width:56px;height:44px;min-height:44px;padding:6px 4px;font-size:11px;line-height:1.2}}
+
+.receipt-acknowledgement-dialog{box-sizing:border-box;width:420px;max-width:calc(100vw - 24px);max-height:85dvh;overflow:auto;margin:auto;padding:24px;border:1px solid #cbd5e1;border-radius:14px;background:#fff;color:#172033}.receipt-acknowledgement-dialog::backdrop{background:#0f172a80}.receipt-acknowledgement-dialog h2{font-size:20px;margin:0 0 18px}.receipt-acknowledgement-dialog p{margin:10px 0;overflow-wrap:anywhere}.receipt-acknowledgement-dialog button{margin-top:12px;min-height:44px}.receipt-acknowledgement-dialog [role=status]:empty{display:none}
