@@ -1,16 +1,25 @@
 # ZZWS — primary Android application
 
-Version 7.1.12 (70112), package `am.zzws.admin`, Android 8+. This is the canonical
-application as of 31 October 2026. The former Partner interface is now the primary
-ZZWS interface. Future Android changes belong here. `android-partner/` is a
-separately installed prototype/reference and is no longer the primary target.
+Version 7.1.13 (70113), package `am.zzws.admin`, Android 8+. This is the canonical
+application as of 31 October 2026. All Android development, builds, tests and
+releases belong here. The separate Partner prototype was retired and deleted on
+1 November 2026 at the owner's request; do not restore, build or maintain it.
+Its promoted interface and features remain part of this primary application.
 
 The application retains the original package, release certificate, Firebase
 registration, encrypted-session store and primary `zzws-apk` update channel.
-An APK can therefore update the existing original ZZWS installation; the separate
-`am.zzws.partner` installation cannot be updated across package identities.
+An APK can therefore update the existing original ZZWS installation.
 The previous 7.1.3 source is preserved in
 `outputs/ZZWS-7.1.3-source-before-promotion.zip`; its signed APK is retained too.
+
+## Viber reminders — 7.1.13
+
+Embedded administration permits the documented `viber://forward?text=...` share
+action from a direct user gesture on the trusted top-level website. The website
+prepares an Armenian reminder with order number and ZZWS link, offers copying,
+and explains that the administrator chooses the recipient and sends manually.
+No automatic personal-chat recipient or delivery confirmation is claimed.
+Real-device Viber behavior has not been verified.
 
 ## Client accounts — 7.1.11
 

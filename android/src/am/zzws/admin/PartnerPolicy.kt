@@ -28,17 +28,16 @@ internal fun trustedPartnerPage(url:String?):Boolean=try{
  val uri=URI(url?:"")
  uri.scheme=="https"&&uri.host=="patverparts-bot.github.io"&&(uri.port==-1||uri.port==443)&&uri.userInfo==null&&uri.path.startsWith("/ZZWS/")&&!uri.path.contains("..")&&!uri.rawPath.contains('%')
 }catch(_:Exception){false}
-// Only the exact customer-chat link emitted by the authenticated administrator reminder.
-internal fun viberChatLink(url:String):Boolean=try{
+// Only the documented share action; it never selects a personal recipient.
+internal fun viberShareLink(url:String):Boolean=try{
  if(url.length>25000)false else{
   val uri=URI(url)
-  val parts=uri.rawQuery.orEmpty().split('&')
-  val exact=parts.size==2&&Regex("^number=%2[Bb][1-9][0-9]{7,14}$").matches(parts[0])&&parts[1].startsWith("draft=")
-  val encoded=if(exact)parts[1].substring(6)else ""
-  // URI validates percent escapes; scan the bounded message without a recursive regex.
+  val query=uri.rawQuery.orEmpty()
+  val exact=query.startsWith("text=")&&!query.contains('&')
+  val encoded=if(exact)query.substring(5)else ""
   val alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.!~*'()-%"
-  val draft=java.net.URLDecoder.decode(encoded,"UTF-8")
-  uri.scheme=="viber"&&uri.host=="chat"&&uri.userInfo==null&&uri.port==-1&&uri.rawPath.orEmpty().isEmpty()&&uri.rawFragment==null&&exact&&encoded.all{it in alphabet}&&draft.isNotBlank()&&draft.length<=2000&&draft.none{it<' '&&it!='\n'&&it!='\r'&&it!='\t'}
+  val text=java.net.URLDecoder.decode(encoded,"UTF-8")
+  uri.scheme=="viber"&&uri.host=="forward"&&uri.userInfo==null&&uri.port==-1&&uri.rawPath.orEmpty().isEmpty()&&uri.rawFragment==null&&exact&&encoded.all{it in alphabet}&&text.isNotBlank()&&text.length<=2000&&text.none{(it<' '&&it!='\n'&&it!='\r'&&it!='\t')||it=='\u007f'}
  }
 }catch(_:Exception){false}
 internal fun selectedCart(cart:Map<String,Int>,selection:Map<String,Boolean>)=cart.filter{(code,qty)->qty in 1..9999&&selection[code]!=false}

@@ -10,11 +10,11 @@ class PartnerPolicyTest {
   assertFalse(canOpenFeature(PartnerFeature.TEAM,JSONObject().put("role","client").put("clientRole","employee").put("active",true)))
   assertFalse(canOpenFeature(PartnerFeature.TEAM,JSONObject().put("role","admin").put("active",true)))
  }
- @Test fun viberNavigationAllowsOnlyTheCustomerChatNumber(){
-  assertTrue(viberChatLink("viber://chat?number=%2B37491123456&draft=Order%20%2342%0AHello"))
-  assertTrue(viberChatLink("viber://chat?number=%2B37491123456&draft=%D4%B2%D5%A1%D6%80%D6%87"))
-  assertTrue(viberChatLink("viber://chat?number=%2B37491123456&draft="+"a".repeat(2000)))
-  for(url in listOf("viber://chat?number=+37491123456&draft=Hello", "viber://chat?number=%2B12&draft=Hello", "viber://chat?number=%2B37491123456&text=private", "viber://pa?chatURI=other", "intent://chat?number=%2B37491123456&draft=Hello", "https://viber.com/", "viber://chat?number=%2B37491123456&draft=Hello#extra", "viber://chat?number=%2B37491123456&draft=Hello&number=%2B37499123456", "viber://chat?number=%2B37491123456&draft=%ZZ", "viber://chat?number=%2B37491123456&draft=%00", "viber://chat?number=%2B37491123456&draft=", "viber://chat?number=%2B37491123456&draft="+"a".repeat(2001)))assertFalse(url,viberChatLink(url))
+ @Test fun viberNavigationAllowsOnlyManualShare(){
+  assertTrue(viberShareLink("viber://forward?text=Order%20%2342%0AHello"))
+  assertTrue(viberShareLink("viber://forward?text=%D4%B2%D5%A1%D6%80%D6%87"))
+  assertTrue(viberShareLink("viber://forward?text="+"a".repeat(2000)))
+  for(url in listOf("viber://chat?number=%2B37491123456&draft=Hello", "viber://forward?text=Hello&number=%2B37491123456", "viber://pa?chatURI=other", "intent://forward?text=Hello", "https://viber.com/", "viber://forward?text=Hello#extra", "viber://forward?text=Hello&text=Other", "viber://forward?text=%ZZ", "viber://forward?text=%00", "viber://forward?text=%7F", "viber://forward?text=", "viber://forward?text="+"a".repeat(2001), "viber://user@forward?text=Hello", "viber://forward:42?text=Hello", "viber://forward/path?text=Hello"))assertFalse(url,viberShareLink(url))
  }
  @Test fun onlyTheExactWebsiteReceivesTheSession(){
   assertTrue(trustedPartnerPage(PARTNER_SITE))
