@@ -55,11 +55,11 @@ internal fun catalogSearchVisible(previous:CatalogPosition,current:CatalogPositi
    }
   }
   if(rows.isEmpty())item{LocalizedText("Համապատասխան ապրանքներ չկան։ Փոխեք որոնումը կամ զտիչները։",Modifier.padding(24.dp))}
-  items(rows,key={"product:"+it.code}){p->ProductCard(p,model.unit(p),model.cart[p.code]?:0,!model.busy&&!model.pendingSubmission,{model.setQty(p.code,it)},{onProduct(p)})}
+  items(rows,key={"product:"+it.code}){p->ProductCard(p,model.unit(p),model.user?.text("role"),model.buyerView,model.cart[p.code]?:0,!model.busy&&!model.pendingSubmission,{model.setQty(p.code,it)},{onProduct(p)})}
  }
 }
 
-@Composable private fun ProductCard(p:Product,price:Double,quantity:Int,enabled:Boolean,onQuantity:(Int)->Unit,onOpen:()->Unit){
+@Composable private fun ProductCard(p:Product,price:Double,role:String?,viewingBuyer:Boolean,quantity:Int,enabled:Boolean,onQuantity:(Int)->Unit,onOpen:()->Unit){
  val context=LocalContext.current
  ElevatedCard(onClick=onOpen,shape=RoundedCornerShape(14.dp),colors=CardDefaults.elevatedCardColors(containerColor=Color.White),elevation=CardDefaults.elevatedCardElevation(defaultElevation=2.dp),modifier=Modifier.fillMaxWidth()){
   Column(Modifier.padding(10.dp),verticalArrangement=Arrangement.spacedBy(6.dp)){
@@ -78,8 +78,9 @@ internal fun catalogSearchVisible(previous:CatalogPosition,current:CatalogPositi
     }
    }
    WarehouseAvailability(p)
+   if(showAdminCatalogPrices(role,viewingBuyer))AdminCatalogPriceBlocks(p,role,viewingBuyer,"alternate")
    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically){
-    Column(Modifier.weight(1f)){LocalizedText("Ձեր գինը",style=MaterialTheme.typography.labelSmall,color=Color(0xFF64748B));OneLineLabel(money(price),18,FontWeight.Bold)}
+    if(showAdminCatalogPrices(role,viewingBuyer))Spacer(Modifier.weight(1f))else Column(Modifier.weight(1f)){LocalizedText("Ձեր գինը",style=MaterialTheme.typography.labelSmall,color=Color(0xFF64748B));OneLineLabel(money(price),18,FontWeight.Bold)}
     if(quantity==0)Button(onClick={onQuantity(1)},enabled=enabled&&price>0,shape=RoundedCornerShape(12.dp),contentPadding=PaddingValues(horizontal=14.dp,vertical=10.dp)){OneLineLabel("Ավելացնել",12)}
     else QuantityControl(quantity,enabled&&price>0,onQuantity)
    }

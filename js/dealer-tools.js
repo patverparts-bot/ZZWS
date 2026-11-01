@@ -146,7 +146,7 @@
   d.__dealerView={type:'product',articul};
   try{
    const [info]=await fetchDetails([articul]);if(!info||!d.isConnected||!live(userId))return;
-   body.replaceChildren();const top=node('div',null,'dealer-product-hero'),summary=node('div');summary.append(node('p',p.articul+' · '+p.brand,'dealer-muted'),node('strong',price(getProduct(articul))>0?money(price(getProduct(articul))):'Գինը ճշտել մենեջերի հետ','dealer-product-price'));
+   body.replaceChildren();const top=node('div',null,'dealer-product-hero'),summary=node('div');summary.append(node('p',p.articul+' · '+p.brand,'dealer-muted'));const bothPrices=window.ZZWS_ADMIN_PRICES?.pair(getProduct(articul));summary.append(bothPrices||node('strong',price(getProduct(articul))>0?money(price(getProduct(articul))):'Գինը ճշտել մենեջերի հետ','dealer-product-price'));
    top.append(photo(p),summary);body.append(top);
    if(info.highlights.length){body.append(node('h3','Ինչն առանձնացնել գնորդին'),specTable(info.highlights));}
    const sizes=node('section',null,'dealer-size-summary');sizes.append(node('h3','Չափեր'),node('p','Սարք՝ '+(dimensionsLine(info.facts.dimensions)||'չհաստատված')),node('p','Տեղադրման խորշ՝ '+(dimensionsLine(info.facts.niche)||'տվյալներ չկան')));body.append(sizes);
@@ -166,7 +166,7 @@
    const items=await fetchDetails(ids);if(!d.isConnected||!live(userId)||items.length!==ids.length)return;
    body.replaceChildren();const difference=node('input');difference.type='checkbox';difference.id='dealerOnlyDifferences';body.append(field('Միայն տարբերությունները',difference));
    const wrap=node('div',null,'dealer-comparison-scroll'),table=node('table',null,'dealer-spec-table dealer-comparison-table'),head=table.createTHead().insertRow();head.append(node('th','Բնութագիր'));
-   for(const item of items){const cell=node('th'),p=getProduct(item.articul);cell.append(photo(p),node('strong',p.name),node('p',p.articul),node('p',money(price(p))));head.append(cell);}
+   for(const item of items){const cell=node('th'),p=getProduct(item.articul);cell.append(photo(p),node('strong',p.name),node('p',p.articul));cell.append(window.ZZWS_ADMIN_PRICES?.pair(p)||node('p',money(price(p))));head.append(cell);}
    const tbody=table.createTBody(),keys=[...new Set(items.flatMap(i=>i.specifications.map(s=>s.name)))];
    const show=()=>{tbody.replaceChildren();for(const name of keys){const values=items.map(i=>i.specifications.find(s=>s.name===name)?.value??'—');if(difference.checked&&new Set(values).size===1)continue;const tr=tbody.insertRow();tr.append(node('th',specLabel(name)));values.forEach(v=>tr.append(node('td',specValue(v))));}};
    difference.onchange=show;show();wrap.append(table);body.append(wrap,button('Ցույց տալ գնորդին',()=>showroom(ids),'dealer-button dealer-primary'));

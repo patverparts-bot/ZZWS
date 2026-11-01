@@ -1,0 +1,14 @@
+/* Equal hierarchy, explicit labels and separate shapes; colour is secondary. */
+.admin-price-pair,dl.sf-prices.admin-price-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr));gap:8px;align-items:stretch;margin:8px 0;min-width:0;max-width:100%}
+.admin-price-single{margin:0;min-width:130px;max-width:100%}
+.admin-price-block,dl.sf-prices.admin-price-grid>.admin-price-block{box-sizing:border-box;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:5px;min-width:0;max-width:100%;padding:10px;border:1px solid;border-radius:9px;text-align:left}
+.admin-price-block.admin-price-ws{background:#f0f9ff;border-color:#7dd3fc;color:#075985}.admin-price-block.admin-price-kp{background:#ecfdf5;border-color:#6ee7b7;color:#047857}
+.admin-price-block>.admin-price-label{display:block;margin:0;min-height:2.8em;font:700 12px/1.4 Arial,"Segoe UI",sans-serif;white-space:normal;overflow-wrap:anywhere;color:inherit}
+.admin-price-block>.admin-price-value{display:block;margin:0;font:800 18px/1.3 Arial,"Segoe UI",sans-serif;letter-spacing:normal;white-space:normal;overflow-wrap:anywhere;color:inherit;text-align:left}
+.admin-price-block>.admin-price-promo{align-self:flex-start;margin:0;padding:2px 6px;border:1px solid currentColor;border-radius:5px;font:700 10px/1.4 Arial,"Segoe UI",sans-serif;color:inherit;white-space:normal}
+.admin-price-block>.admin-price-margin{margin:0;margin-top:auto;font:400 10px/1.5 Arial,"Segoe UI",sans-serif;color:inherit;white-space:normal;overflow-wrap:anywhere}.admin-price-margin strong{font-weight:700;font-size:inherit;color:inherit}
+dl.sf-prices.admin-price-grid>.sf-price-retail{grid-column:1/-1}.admin-card-price-footer{display:grid!important;grid-template-columns:minmax(0,1fr);gap:10px}.admin-card-price-footer>.js-action{justify-self:stretch}.admin-card-price-footer>.js-action button{width:100%}
+.dark .admin-price-ws{background:#172554;border-color:#3b82f6;color:#dbeafe}.dark .admin-price-kp{background:#064e3b;border-color:#34d399;color:#d1fae5}
+.dealer-product-hero .admin-price-pair{margin-top:12px}.dealer-comparison-table .admin-price-pair{min-width:0;font-weight:400}
+@media(max-width:480px){.admin-price-block>.admin-price-value{font-size:16px}.admin-price-block{padding:9px}.admin-price-pair,dl.sf-prices.admin-price-grid{gap:7px}}
+@media print{body.dealer-showroom-active [data-admin-price-pair],body.dealer-showroom-active [data-admin-price-single],body.dealer-showroom-active [data-admin-price-block]{display:none!important}}

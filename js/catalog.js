@@ -344,7 +344,8 @@ let priceTdsHtml = `<td class="text-center">${marginBadge}</td><td class="text-r
 if (catalogIsAdmin()) {
   const kpFmt = p.kpPrice > 0 ? p.kpPrice.toLocaleString((window.ZZWS_I18N?.language==='ru'?'ru-RU':'hy-AM')) + ' ֏' : '';
   const kpHtml = !kpFmt ? '' : `<span class="text-gray-900 dark:text-white font-semibold whitespace-nowrap">${kpFmt}</span>`;
-  priceTdsHtml = `<td class="text-right">${kpHtml}</td><td class="text-center">${kpMarginBadge}</td><td class="text-right">${wholesaleCellHtml}</td><td class="text-center">${wsMarginBadge}</td>`;
+  const shownKp=window.ZZWS_ADMIN_PRICES?.cell(p,'kp')||kpHtml||'—',shownWs=window.ZZWS_ADMIN_PRICES?.cell(p,'ws')||wholesaleCellHtml;
+  priceTdsHtml = `<td class="text-right">${shownKp}</td><td class="text-center">${kpMarginBadge}</td><td class="text-right">${shownWs}</td><td class="text-center">${wsMarginBadge}</td>`;
 }
 
 const searchUrl = `https://www.zigzag.am/am/catalogsearch/result/?q=${encodeURIComponent(p.articul)}`;
@@ -454,6 +455,7 @@ div.innerHTML = `
   <div class="js-action" data-art="${escapeHtml(p.articul)}">${getActionControlHtml(p.articul, cartItem, true)}</div>
 </div>
 `;
+if(catalogIsAdmin()&&window.ZZWS_ADMIN_PRICES){const footer=div.querySelector('.js-action')?.parentElement,prices=footer?.firstElementChild,retail=prices?.firstElementChild,pair=ZZWS_ADMIN_PRICES.pair(p);if(prices&&retail&&pair){prices.replaceChildren(retail,pair);footer.classList.add('admin-card-price-footer');}}
 window.ZZWS_DEALER?.decorate(div,p);return div;
 }
 

@@ -36,8 +36,9 @@
  const money=value=>value>0?Number(value).toLocaleString(ZZWS_I18N.language==='ru'?'ru-RU':'hy-AM')+' ֏':'—';
  function prices(p){
   const root=node('dl',null,'sf-prices'),domus=/ԴՈՄՈՒՍ|ДОМУՍ|DOMUS/i.test(catalogIdentity()?.client||authorizedClient),margin=p.retail>0&&p.wholesale>0?Number(p.marginVal).toFixed(domus?2:1)+(domus?'':'%'):'—';
-  for(const [key,label,value] of [['retail','Մանրածախ',money(p.retail)],['wholesale','Մեծածախ',money(p.wholesale)],['margin','Եկամտաբերություն',margin]]){const row=node('div',null,'sf-price-'+key);row.append(node('dt',label),node('dd',value));root.append(row);}
-  if(catalogIsAdmin()){const row=node('div');row.append(node('dt','Խոշոր գործընկերոջ գին'),node('dd',money(p.kpPrice)));root.append(row);}
+  const adminPrices=catalogIsAdmin()&&window.ZZWS_ADMIN_PRICES,parts=adminPrices?[['retail','Մանրածախ',money(p.retail)]]:[['retail','Մանրածախ',money(p.retail)],['wholesale','Մեծածախ',money(p.wholesale)],['margin','Եկամտաբերություն',margin]];
+  for(const [key,label,value] of parts){const row=node('div',null,'sf-price-'+key);row.append(node('dt',label),node('dd',value));root.append(row);}
+  if(adminPrices){root.classList.add('admin-price-grid');root.append(...ZZWS_ADMIN_PRICES.rows(p));}else if(catalogIsAdmin()){const row=node('div');row.append(node('dt','Խոշոր գործընկերոջ գին'),node('dd',money(p.kpPrice)));root.append(row);}
   return root;
  }
  function card(p){
