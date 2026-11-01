@@ -57,6 +57,6 @@
  el('managerSearch').oninput=()=>{++epoch;clearTimeout(timer);timer=setTimeout(safe(()=>load()),300);};
  document.addEventListener('zzws:admin-order',e=>customer(e.detail));
  document.addEventListener('zzws:admin-order-closed',()=>customer(null));
- window.ZZWS_ADMIN_WORKBENCH={load,mount,reset,customer,start(){clearInterval(pollTimer);pollTimer=setInterval(()=>window.ZZWS_ADMIN_WORKBENCH.poll(),15000);},poll:()=>{if(!document.hidden&&!el('manager').hidden)return load(false,true);}};
+ window.ZZWS_ADMIN_WORKBENCH={navigationState:()=>({selectedId:selected?.id,count:rows.length}),async restoreView(state){while(rows.length<Math.min(10000,Number(state?.count)||0)&&!el('managerMore').hidden){const n=rows.length;await load(true);if(rows.length<=n)break;}if(state?.selectedId){const order=await ZZWS_ADMIN_ORDERS.openNotice(state.selectedId);if(order)customer(order);}},load,mount,reset,customer,start(){clearInterval(pollTimer);pollTimer=setInterval(()=>window.ZZWS_ADMIN_WORKBENCH.poll(),15000);},poll:()=>{if(!document.hidden&&!el('manager').hidden)return load(false,true);}};
 })();
 

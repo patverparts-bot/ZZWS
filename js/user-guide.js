@@ -9,6 +9,7 @@
   let loading;
   let opener;
 
+  window.ZZWS_USER_GUIDE={viewState:()=>({open:dialog.open,scroll:content.scrollTop,toc:tocDetails.open}),async restoreView(value){if(!value?.open)return;if(!dialog.open)dialog.showModal();document.body.classList.add('zzws-guide-open');await loadGuide();window.ZZWS_I18N?.refresh(content);tocDetails.open=value.toc===true;await new Promise(r=>requestAnimationFrame(r));content.scrollTop=Math.max(0,Number(value.scroll)||0);}};
   async function loadGuide() {
     if (loaded) return;
     if (loading) return loading;
@@ -16,7 +17,7 @@
     content.textContent = 'Ուղեցույցը բեռնվում է…';
     loading = (async () => {
       try {
-        const response = await fetch('help/user-guide.html?v=20261101-storefront-draft');
+        const response = await fetch('help/user-guide.html?v=20261101-full-diagnostics-7122');
         if (!response.ok) throw new Error('Guide unavailable');
         const html = await response.text();
         const parsed=new DOMParser().parseFromString(html,'text/html');const article=parsed.querySelector('.zzws-guide');if(!article)throw Error('Guide unavailable');content.replaceChildren(...[...parsed.querySelectorAll('style')].map(style=>document.importNode(style,true)),document.importNode(article,true));

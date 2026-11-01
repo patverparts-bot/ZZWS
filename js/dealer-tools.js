@@ -28,15 +28,12 @@
  function notice(text){message.textContent=text;}
  function live(id){return serverIdentity?.id===id&&catalogLoaded;}
  function price(p){return p?getItemWholesalePrice({articul:p.articul}):0;}
- // Catalogue categories identify the appliance even when an older server calls its facts "other".
- // No dimensions or compatibility facts are inferred here.
- function bundleType(p,fallback=facts[p?.articul]?.type){
-  const category=String(p?.category||'');
-  if(/պարագա|աքսեսուար|accessor|аксессуар/i.test(category))return 'other';
-  if(/օդաքարշ|օդաքաշ|քարշիչ|cooker hood|kitchen hood|вытяж/i.test(category))return 'hood';
-  if(/ներկառուցվող.*գազօջախ|գազօջախ.*ներկառուցվող|եփման (?:վահանակ|մակերես)|եփող մակերես|\bhobs?\b|cooktop|варочн/i.test(category))return 'hob';
-  return fallback||'other';
+ function bundleFacts(id){return details.get(id)?.facts||facts[id];}
+ function bundleType(p,fallback=bundleFacts(p?.articul)){
+  return window.ZZWS_BUNDLE_POLICY?.type(p,typeof fallback==='object'?fallback:{...bundleFacts(p?.articul),type:fallback})||'other';
  }
+ function bundleSlots(recipe,items){const slots=window.ZZWS_BUNDLE_POLICY?.slots(recipe,items,getProduct,bundleFacts);return slots&&Object.values(slots).every(id=>Number.isFinite(price(getProduct(id)))&&price(getProduct(id))>0)?slots:null;}
+ function savedBundle(offer){const result=window.ZZWS_BUNDLE_POLICY?.offer(offer,getProduct,bundleFacts)||{marked:offer?.bundleSale!=null||String(offer?.id||'').startsWith('bundle:'),valid:false};if(result.marked&&result.valid&&!bundleSlots(result.recipe,offer.items))result.valid=false;return result;}
  function photo(p){const box=node('div',null,'dealer-photo');box.innerHTML=getProductImageHtml(p.articul,p.name);return box;}
  function field(label,control){const l=node('label',null,'dealer-field');l.append(node('span',label),control);return l;}
  function select(options,current=''){const s=node('select');for(const [v,t] of options){const o=node('option',t);o.value=v;s.append(o);}s.value=current;return s;}
@@ -146,6 +143,7 @@
  }
  async function openProduct(articul){
   const p=getProduct(articul);if(!p)return;const userId=serverIdentity.id,{d,body}=dialog(p.name,'dealer-product-drawer');body.append(node('p','Բեռնվում է…'));
+  d.__dealerView={type:'product',articul};
   try{
    const [info]=await fetchDetails([articul]);if(!info||!d.isConnected||!live(userId))return;
    body.replaceChildren();const top=node('div',null,'dealer-product-hero'),summary=node('div');summary.append(node('p',p.articul+' · '+p.brand,'dealer-muted'),node('strong',price(getProduct(articul))>0?money(price(getProduct(articul))):'Գինը ճշտել մենեջերի հետ','dealer-product-price'));
@@ -163,6 +161,7 @@
  async function compare(ids=selected){
   ids=[...new Set(ids)].filter(id=>getProduct(id)).slice(0,4);if(ids.length<2)return;
   const userId=serverIdentity.id,{d,body}=dialog('Ապրանքների համեմատություն','dealer-comparison-dialog');body.append(node('p','Բեռնվում է…'));
+  d.__dealerView={type:'compare',ids:[...ids]};
   try{
    const items=await fetchDetails(ids);if(!d.isConnected||!live(userId)||items.length!==ids.length)return;
    body.replaceChildren();const difference=node('input');difference.type='checkbox';difference.id='dealerOnlyDifferences';body.append(field('Միայն տարբերությունները',difference));
@@ -173,33 +172,39 @@
    difference.onchange=show;show();wrap.append(table);body.append(wrap,button('Ցույց տալ գնորդին',()=>showroom(ids),'dealer-button dealer-primary'));
   }catch(e){if(d.isConnected)body.replaceChildren(node('p',ZZWS.message(e)));}
  }
- function showroom(initial,{bundleSale=null,saved=null}={}){
+ function showroom(initial,{bundleSale=null,saved=null,bundleRecipe=null}={}){
   if(!serverIdentity||!catalogLoaded)return;
   const userId=serverIdentity.id,first=initial||selected.length&&selected||filteredProducts.slice(0,1).map(p=>p.articul);
   const ids=[...new Set(first)].filter(id=>getProduct(id));
   const {d,body}=dialog('ZIGZAG · Առաջարկ գնորդի համար','dealer-showroom');document.body.classList.add('dealer-showroom-active');
+  const marked=saved?savedBundle(saved):bundleRecipe?{marked:true,valid:!!bundleSlots(bundleRecipe,ids),recipe:bundleRecipe}:bundleSale!=null?{marked:true,...window.ZZWS_BUNDLE_POLICY?.infer(ids,getProduct,bundleFacts)}:null;
+  const typedBundle=!!marked?.marked,recipe=marked?.recipe;
+  d.__dealerView={type:'showroom',ids:[...ids],savedId:saved?.id||null,bundleRecipe:typedBundle?recipe:null,bundlePricing:bundleSale!=null};
+  if(typedBundle&&(marked.valid===false||!bundleSlots(recipe,ids))){body.append(node('p','Հավաքածուի ապրանքները փոխվել են։ Կազմեք նոր հավաքածու։','dealer-muted'));return;}
   const quote=new Map(ids.map(id=>[id,{sale:saved?.items.find(i=>i.articul===id)?.sale??Math.max(0,Number(getProduct(id).retail)||0),qty:saved?.items.find(i=>i.articul===id)?.qty??1}]));
   const bar=node('div',null,'dealer-showroom-toolbar'),search=node('input'),results=node('div',null,'dealer-showroom-search-results'),cards=node('div',null,'dealer-showroom-grid'),total=node('strong',null,'dealer-quote-total'),status=node('p',null,'dealer-muted');
   search.type='search';search.placeholder='Գտնել և ավելացնել մոդել կամ արտիկուլ';search.setAttribute('aria-label','Գտնել ապրանք առաջարկի համար');
   const bundlePrice=bundleSale==null?null:numeric(bundleSale,{min:.01});
+  if(typedBundle)search.hidden=true;
+  function validBundle(){if(!typedBundle||bundleSlots(recipe,[...quote.keys()]))return true;status.textContent='Հավաքածուի ապրանքները փոխվել են։ Կազմեք նոր հավաքածու։';return false;}
   bar.append(search,button('Տպել առաջարկը',()=>{
-   if(!live(userId))return;
+   if(!live(userId)||!validBundle())return;
    if(!quote.size||bundlePrice&&(!Number.isFinite(Number(bundlePrice.value))||Number(bundlePrice.value)<=0)||![...quote.values()].every(r=>(bundlePrice||Number.isFinite(r.sale)&&r.sale>0)&&Number.isInteger(r.qty)&&r.qty>0&&r.qty<=MAX_QTY)){status.textContent='Տպելուց առաջ նշեք վաճառքի գներն ու քանակները։';return;}
    window.print();
   },'dealer-button dealer-primary'));
   const saveRow=node('div',null,'dealer-offer-save'),offerTitle=node('input');offerTitle.type='text';offerTitle.maxLength=80;offerTitle.placeholder='Առաջարկի անվանում';offerTitle.setAttribute('aria-label','Առաջարկի անվանում');offerTitle.value=saved?.title||'';
   saveRow.append(offerTitle,button('Պահպանել առաջարկը',()=>{
-   if(!live(userId))return;const title=offerTitle.value.trim();if(!title||!quote.size){status.textContent='Նշեք անվանումը և ավելացրեք ապրանքներ։';return;}
+   if(!live(userId)||!validBundle())return;const title=offerTitle.value.trim();if(!title||!quote.size){status.textContent='Նշեք անվանումը և ավելացրեք ապրանքներ։';return;}
    const items=[...quote].map(([articul,r])=>({articul,qty:r.qty,sale:r.sale}));
    if(items.some(i=>!Number.isFinite(i.sale)||i.sale<0||i.sale>1e9||!Number.isInteger(i.qty)||i.qty<1||i.qty>MAX_QTY)||bundlePrice&&(!Number.isFinite(Number(bundlePrice.value))||Number(bundlePrice.value)<=0||Number(bundlePrice.value)>1e9)){status.textContent='Ստուգեք գներն ու քանակները։';return;}
-   const savedOffers=readOffers(),id=saved?.id||crypto.randomUUID();if(savedOffers.length>=10&&!savedOffers.some(o=>o.id===id)){status.textContent='Արդեն պահպանված է 10 առաջարկ։ Հեռացրեք ավելորդը պահպանվածների ցանկից։';return;}
+   const savedOffers=readOffers(),id=saved?.id||(typedBundle?'bundle:'+recipe+':':'')+crypto.randomUUID();if(savedOffers.length>=10&&!savedOffers.some(o=>o.id===id)){status.textContent='Արդեն պահպանված է 10 առաջարկ։ Հեռացրեք ավելորդը պահպանվածների ցանկից։';return;}
    const offer={id,title,created:new Date().toISOString(),items,bundleSale:bundlePrice?Number(bundlePrice.value):null};
-   try{writeOffers([...savedOffers.filter(o=>o.id!==id),offer]);saved=offer;status.textContent='Առաջարկը պահպանված է։ Սարքերի միջև համաժամացման վիճակը՝ կատալոգի վերևում։';}catch{status.textContent='Պահպանումը չհաջողվեց։ Ստուգեք սարքի ազատ տարածքը։';}
+   try{writeOffers([...savedOffers.filter(o=>o.id!==id),offer]);saved=offer;d.__dealerView.savedId=id;status.textContent='Առաջարկը պահպանված է։ Սարքերի միջև համաժամացման վիճակը՝ կատալոգի վերևում։';}catch{status.textContent='Պահպանումը չհաջողվեց։ Ստուգեք սարքի ազատ տարածքը։';}
   }));
   body.append(bar,results,saveRow);if(bundlePrice){bundlePrice.dataset.bundleSale='true';body.append(field('Հավաքածուի վաճառքի գին (֏)',bundlePrice));bundlePrice.oninput=()=>summary();}body.append(cards,total,status);
   function summary(){total.textContent=(bundlePrice?'Հավաքածուի ընդհանուր գինը՝ ':'Ընդհանուր՝ ')+money(bundlePrice?Number(bundlePrice.value)||0:[...quote.values()].reduce((sum,r)=>sum+(Number(r.sale)||0)*r.qty,0));}
   function render(){
-   if(!live(userId))return;cards.replaceChildren();for(const [id,row] of quote){
+   if(!live(userId))return;cards.replaceChildren();if(!validBundle())return;for(const [id,row] of quote){
     const p=getProduct(id);if(!p){quote.delete(id);continue;}
     const card=node('article',null,'dealer-showroom-card');card.dataset.showroomSku=id;
     card.append(photo(p),node('p',p.brand,'dealer-muted'),node('h3',p.name),node('p','Արտիկուլ՝ '+id,'dealer-muted'));
@@ -207,58 +212,75 @@
     const sale=numeric(row.sale||'',{min:.01}),qty=numeric(row.qty,{min:1,max:MAX_QTY,step:1}),printed=node('p',null,'dealer-print-price');
     sale.dataset.saleSku=id;qty.dataset.saleQty=id;
     const update=()=>{row.sale=Number(sale.value);row.qty=Number(qty.value);printed.textContent=bundlePrice?'Քանակ՝ '+row.qty:money(row.sale)+' × '+row.qty+' = '+money(row.sale*row.qty);summary();};sale.oninput=qty.oninput=update;update();
-    if(!bundlePrice)card.append(field('Վաճառքի գին (֏)',sale));card.append(field('Քանակ',qty),printed,button('Հեռացնել',()=>{quote.delete(id);render();}));cards.append(card);
+    if(!bundlePrice)card.append(field('Վաճառքի գին (֏)',sale));card.append(field('Քանակ',qty),printed);if(!typedBundle)card.append(button('Հեռացնել',()=>{quote.delete(id);render();}));cards.append(card);
    }summary();if(!quote.size)status.textContent='Գտեք և ավելացրեք ապրանքներ առաջարկին։';
   }
-  function find(){results.replaceChildren();const q=search.value.trim().toLowerCase();if(!q)return;for(const p of allProducts.filter(p=>(p.articul+' '+p.name).toLowerCase().includes(q)&&!quote.has(p.articul)).slice(0,12))results.append(button(p.name+' · '+p.articul,()=>{if(quote.size>=20){status.textContent='Առաջարկում թույլատրվում է առավելագույնը 20 ապրանք։';return;}quote.set(p.articul,{sale:Number(p.retail)||0,qty:1});search.value='';find();render();hydrate([p.articul]);}));}
+  function find(){results.replaceChildren();const q=search.value.trim().toLowerCase();if(typedBundle||!q)return;for(const p of allProducts.filter(p=>(p.articul+' '+p.name).toLowerCase().includes(q)&&!quote.has(p.articul)).slice(0,12))results.append(button(p.name+' · '+p.articul,()=>{if(quote.size>=20){status.textContent='Առաջարկում թույլատրվում է առավելագույնը 20 ապրանք։';return;}quote.set(p.articul,{sale:Number(p.retail)||0,qty:1});search.value='';find();render();hydrate([p.articul]);}));}
   async function hydrate(items){for(let i=0;i<items.length;i+=4){try{await fetchDetails(items.slice(i,i+4));if(!d.isConnected||!live(userId))return;}catch{}}if(d.isConnected)render();}
   search.oninput=find;render();hydrate(ids);
  }
- function readOffers(){try{const value=JSON.parse(localStorage.getItem('zigzag_dealer_offers_'+userStorageId())||'[]');return Array.isArray(value)?value:[];}catch{return [];}}
+ function readOffers(){try{const value=JSON.parse(localStorage.getItem('zigzag_dealer_offers_'+userStorageId())||'[]');return Array.isArray(value)?value.filter(o=>o&&typeof o==='object'&&typeof o.id==='string'&&typeof o.title==='string'&&Array.isArray(o.items)&&o.items.every(i=>i&&typeof i.articul==='string')).slice(0,10):[];}catch{return [];}}
  function writeOffers(value){localStorage.setItem('zigzag_dealer_offers_'+userStorageId(),JSON.stringify(value));window.ZZWS_MEMORY?.capture();window.ZZWS_MEMORY?.flush();}
  function offers(){
   if(!serverIdentity||!catalogLoaded)return;const userId=serverIdentity.id,{body,close}=dialog('Պահպանված առաջարկներ','dealer-offers-dialog');
   function render(){body.replaceChildren();const list=readOffers();if(!list.length)body.append(node('p','Պահպանված առաջարկներ դեռ չկան։ Գնորդի ցուցադրման ռեժիմում կազմեք և պահպանեք առաջարկ։'));
-   for(const offer of list){const row=node('section',null,'dealer-saved-offer'),missing=offer.items.filter(i=>!getProduct(i.articul)),tools=node('div',null,'dealer-inline-actions');row.append(node('h3',offer.title),node('p',offer.items.length+' ապրանք · '+new Date(offer.created).toLocaleDateString('hy-AM'),'dealer-muted'));
+   for(const offer of list){const items=Array.isArray(offer.items)?offer.items:[],bundle=savedBundle(offer),row=node('section',null,'dealer-saved-offer'),missing=items.filter(i=>!getProduct(i.articul)),tools=node('div',null,'dealer-inline-actions');row.append(node('h3',offer.title),node('p',items.length+' ապրանք · '+new Date(offer.created).toLocaleDateString('hy-AM'),'dealer-muted'));
     if(missing.length)row.append(node('p','Որոշ ապրանքներ այլևս հասանելի չեն։ Դրանք չեն ցուցադրվի։','dealer-muted'));
-    const show=button('Բացել առաջարկը',()=>{if(!live(userId))return;const ids=offer.items.map(i=>i.articul).filter(id=>getProduct(id));if(!ids.length)return;close();showroom(ids,{bundleSale:offer.bundleSale,saved:offer});});show.disabled=missing.length===offer.items.length||!!offer.bundleSale&&missing.length>0;
-    if(offer.bundleSale&&missing.length)row.append(node('p','Հավաքածուի ապրանքները փոխվել են։ Կազմեք նոր հավաքածու։','dealer-muted'));
+    const show=button('Բացել առաջարկը',()=>{if(!live(userId))return;const current=savedBundle(offer);if(current.marked&&!current.valid)return;const ids=items.map(i=>i.articul).filter(id=>getProduct(id));if(!ids.length)return;close();showroom(ids,{bundleSale:offer.bundleSale,saved:offer,bundleRecipe:current.marked?current.recipe:null});});show.disabled=!items.length||missing.length===items.length||bundle.marked&&(!bundle.valid||missing.length>0);
+    if(bundle.marked&&(!bundle.valid||missing.length))row.append(node('p','Հավաքածուի ապրանքները փոխվել են։ Կազմեք նոր հավաքածու։','dealer-muted'));
     tools.append(show,button('Ջնջել',()=>{if(!live(userId))return;writeOffers(readOffers().filter(o=>o.id!==offer.id));render();}));row.append(tools);body.append(row);
    }
   }render();
  }
  function bundles(recipe='kitchen',seed=null){
-  if(!serverIdentity||!catalogLoaded)return;const userId=serverIdentity.id,{d,body}=dialog('Հավաքածու կազմել','dealer-bundle-dialog');
+  if(!serverIdentity||!catalogLoaded)return;if(!Object.hasOwn(recipes,recipe))recipe='kitchen';const userId=serverIdentity.id,catalogKey=window.ZZWS_CATALOG_VIEW?.key()||'',{d,body}=dialog('Հավաքածու կազմել','dealer-bundle-dialog');
+  d.__dealerView={type:'bundles',recipe,seed:seed&&getProduct(seed)?seed:null};
   const recipeSelect=select(Object.entries(recipes).map(([key,r])=>[key,r.label]),recipe),suggestions=node('div',null,'dealer-bundle-suggestions'),builder=node('div',null,'dealer-bundle-builder'),status=node('p',null,'dealer-muted'),total=node('strong',null,'dealer-product-price'),sale=numeric(null,{min:.01}),chosen=new Map(),shownPrices=new Map();let turn=0,shownMode=adminOrderPriceMode;
   body.append(field('Հավաքածուի տեսակ',recipeSelect),node('p','Առաջարկները հիմնված են բոլոր հաճախորդների նախկին ավարտված գնումների անանուն համակցությունների վրա։ Տեղադրման կամ միացման համատեղելիությունը հաստատված չէ։','dealer-muted'),suggestions,node('h3','Ձեր հավաքածուն'),builder,field('Հավաքածուի վաճառքի գին (֏)',sale),total,status);
   const tools=node('div',null,'dealer-inline-actions');body.append(tools);
-  function currentProducts(){return [...chosen.values()].map(id=>getProduct(id)).filter(Boolean);}
+  function currentProducts(){return [...chosen].flatMap(([type,id])=>{const p=getProduct(id);return p&&bundleType(p)===type?[p]:[];});}
   function sum(){shownPrices.clear();shownMode=adminOrderPriceMode;const products=currentProducts();for(const p of products)shownPrices.set(p.articul,price(p));total.textContent='Ձեր գնման գումարը՝ '+money(products.reduce((n,p)=>n+price(p),0));}
   function build(prefill=[]){
    chosen.clear();builder.replaceChildren();for(const type of recipes[recipeSelect.value].types){
-    const options=allProducts.filter(p=>bundleType(p)===type&&price(p)>0),initial=prefill.find(p=>p.type===type&&options.some(option=>option.articul===p.articul))?.articul||(seed&&options.some(p=>p.articul===seed)?seed:'');
-    const s=select([['','Ընտրեք մոդելը'],...options.map(p=>[p.articul,p.name+' · '+money(price(p))])],initial);s.dataset.bundleType=type;if(initial)chosen.set(type,initial);
-    s.onchange=()=>{if(s.value)chosen.set(type,s.value);else chosen.delete(type);sum();};builder.append(field(labels[type],s));
+    const options=()=>allProducts.filter(p=>bundleType(p)===type&&Number.isFinite(price(p))&&price(p)>0),initial=prefill.find(p=>p.type===type&&options().some(option=>option.articul===p.articul))?.articul||(seed&&options().some(p=>p.articul===seed)?seed:'');
+    const search=node('input'),s=select([]),result=node('p',null,'dealer-muted');search.type='search';search.maxLength=120;search.autocomplete='off';search.dataset.bundleSearch=type;search.setAttribute('aria-label','Որոնել մոդել կամ արտիկուլ՝ '+labels[type]);s.dataset.bundleType=type;s.setAttribute('aria-label',labels[type]);result.setAttribute('role','status');if(initial)chosen.set(type,initial);
+    function choices(value=''){const candidates=window.ZZWS_BUNDLE_POLICY?.search(options(),search.value)||[];s.replaceChildren();for(const [id,text]of [['','Ընտրեք մոդելը'],...candidates.map(p=>[p.articul,p.name+' · '+p.articul+' · '+money(price(p))+' · '+p.stockStatus])]){const o=node('option',text);o.value=id;s.append(o);}s.value=value;result.textContent=candidates.length?'': 'Այս բաժնի համար համապատասխան մոդել չի գտնվել։';}
+    search.oninput=()=>{chosen.delete(type);choices();sum();};
+    s.onchange=()=>{const current=getProduct(s.value);if(current&&bundleType(current)===type&&Number.isFinite(price(current))&&price(current)>0&&options().some(p=>p.articul===current.articul)){chosen.set(type,current.articul);status.textContent='';}else{chosen.delete(type);s.value='';status.textContent='Ընտրեք հասանելի մոդել յուրաքանչյուր բաժնից։';}sum();};
+    const slot=node('section',null,'dealer-bundle-slot');slot.dataset.bundleSlot=type;slot.append(field('Որոնել մոդել կամ արտիկուլ',search),field(labels[type],s),result);builder.append(slot);choices(initial);
    }sum();
   }
-  function validate(){const products=currentProducts();if(!live(userId)||products.length!==recipes[recipeSelect.value].types.length||products.some(p=>price(p)<=0)){status.textContent='Ընտրեք հասանելի մոդել յուրաքանչյուր բաժնից։';return null;}if(shownMode!==adminOrderPriceMode||products.some(p=>shownPrices.get(p.articul)!==price(p))){sum();status.textContent='Գները փոխվել են։ Ստուգեք թարմացված գումարը և կրկնեք գործողությունը։';return null;}return products;}
+  function validate(){const entries=[...chosen].map(([type,articul])=>({type,articul})),slots=bundleSlots(recipeSelect.value,entries);if(!live(userId)||catalogKey!==(window.ZZWS_CATALOG_VIEW?.key()||'')||!slots){status.textContent='Ընտրեք հասանելի մոդել յուրաքանչյուր բաժնից։';return null;}const products=recipes[recipeSelect.value].types.map(type=>getProduct(slots[type]));if(shownMode!==adminOrderPriceMode||products.some(p=>shownPrices.get(p.articul)!==price(p))){sum();status.textContent='Գները փոխվել են։ Ստուգեք թարմացված գումարը և կրկնեք գործողությունը։';return null;}return products;}
   tools.append(button('Ավելացնել հավաքածուն զամբյուղին',()=>{
    const products=validate();if(!products)return;
    if(products.some(p=>(cart[p.articul]?.qty||0)+1>MAX_QTY)){status.textContent='Զամբյուղի քանակի սահմանաչափը գերազանցվում է։';return;}
    for(const p of products)setDirectQty(p.articul,(cart[p.articul]?.qty||0)+1);window.ZZWS_MEMORY?.capture();status.textContent='Հավաքածուն ավելացվեց զամբյուղին։';
   },'dealer-button dealer-primary'),button('Ցույց տալ գնորդին',()=>{
    const products=validate();if(!products)return;const n=Number(sale.value);if(sale.value&&(!Number.isFinite(n)||n<=0)){sale.reportValidity();return;}
-   showroom(products.map(p=>p.articul),{bundleSale:n>0?n:null});
+   showroom(products.map(p=>p.articul),{bundleSale:n>0?n:null,bundleRecipe:recipeSelect.value});
   }));
   async function load(){
    const ticket=++turn;suggestions.replaceChildren(node('p','Համատեղ գնումները վերլուծվում են…'));build();
-   const historySeed=seed&&recipes[recipeSelect.value].types.includes(facts[seed]?.type)?seed:null;
+   const seedType=seed?bundleType(getProduct(seed)):null,historySeed=seed&&recipes[recipeSelect.value].types.includes(seedType)&&bundleFacts(seed)?.type===seedType?seed:null;
    try{const data=await request('dealer/bundles',{recipe:recipeSelect.value,seed:historySeed,priceMode:adminOrderPriceMode});if(!d.isConnected||!live(userId)||ticket!==turn)return;
     suggestions.replaceChildren();if(!data.bundles?.length)suggestions.append(node('p','Բավարար համատեղ գնումներ չկան։ Կարող եք ինքնուրույն կազմել հավաքածուն։'));
-    for(const bundle of data.bundles||[]){const card=node('section',null,'dealer-bundle-option');card.append(node('h3',bundle.items.map(p=>p.name).join(' + ')),node('p','Միասին գնվել են տարբեր հաճախորդների ավարտված պատվերներում։'),node('strong',money(bundle.total)),button('Ընտրել այս հավաքածուն',()=>build(bundle.items)));suggestions.append(card);}
+    const valid=(data.bundles||[]).filter(bundle=>bundleSlots(recipeSelect.value,bundle.items));if(!valid.length&&!suggestions.childNodes.length)suggestions.append(node('p','Բավարար համատեղ գնումներ չկան։ Կարող եք ինքնուրույն կազմել հավաքածուն։'));
+    for(const bundle of valid){const card=node('section',null,'dealer-bundle-option');card.append(node('h3',bundle.items.map(p=>getProduct(p.articul).name).join(' + ')),node('p','Միասին գնվել են տարբեր հաճախորդների ավարտված պատվերներում։'),node('strong',money(bundle.items.reduce((sum,p)=>sum+price(getProduct(p.articul)),0))),button('Ընտրել այս հավաքածուն',()=>{if(bundleSlots(recipeSelect.value,bundle.items))build(bundle.items);else status.textContent='Հավաքածուի ապրանքները փոխվել են։ Կազմեք նոր հավաքածու։';}));suggestions.append(card);}
    }catch(e){if(d.isConnected&&ticket===turn)suggestions.replaceChildren(node('p','Պատմության առաջարկները չբեռնվեցին։ '+ZZWS.message(e)));}
   }
-  recipeSelect.onchange=()=>{seed=null;load();};load();
+  recipeSelect.onchange=()=>{if(!Object.hasOwn(recipes,recipeSelect.value)){status.textContent='Ընտրեք հասանելի մոդել յուրաքանչյուր բաժնից։';return;}seed=null;d.__dealerView={type:'bundles',recipe:recipeSelect.value,seed:null};load();};load();
+ }
+ function viewState(){const d=[...dialogs].filter(d=>d.isConnected&&d.open&&d.__dealerView).at(-1);return d?JSON.parse(JSON.stringify(d.__dealerView)):null;}
+ async function restoreView(state){
+  if(!state||!serverIdentity||!catalogLoaded||typeof state!=='object')return;
+  if(state.type==='product'&&typeof state.articul==='string'&&getProduct(state.articul))return openProduct(state.articul);
+  if(state.type==='compare'&&Array.isArray(state.ids)){const ids=[...new Set(state.ids)].filter(id=>typeof id==='string'&&getProduct(id)).slice(0,4);if(ids.length>=2)return compare(ids);return;}
+  if(state.type==='showroom'){
+   if(typeof state.savedId==='string'){const offer=readOffers().find(o=>o.id===state.savedId);if(!offer)return;const context=savedBundle(offer);if(context.marked&&!context.valid)return;return showroom(offer.items.map(i=>i.articul),{saved:offer,bundleSale:offer.bundleSale,bundleRecipe:context.marked?context.recipe:null});}
+   if(!Array.isArray(state.ids)||state.ids.length>20)return;const ids=state.ids.filter(id=>typeof id==='string'&&getProduct(id));if(!ids.length)return;
+   if(state.bundleRecipe!=null&&!bundleSlots(state.bundleRecipe,ids))return;return showroom(ids,{bundleRecipe:state.bundleRecipe||null,bundleSale:state.bundlePricing===true?0:null});
+  }
+  if(state.type==='bundles'&&Object.hasOwn(recipes,state.recipe))return bundles(state.recipe,typeof state.seed==='string'&&getProduct(state.seed)?state.seed:null);
  }
  function reset(){
   revision++;owner=null;facts={};factNames.clear();details.clear();filters={};selected=[];loading=false;
@@ -272,6 +294,7 @@
   }
   selected=Array.isArray(state.selected)?state.selected.filter(v=>typeof v==='string').slice(0,4):[];
  }
- window.ZZWS_DEALER={get view(){return view;},state:()=>({view,filters:{...filters},selected:[...selected]}),restoreState,setView,toggleCompare,isSelected:articul=>selected.includes(articul),decorate,matches,renderFilters,refresh,reset,openProduct,compare,showroom,bundles,clearFilters(){filters={};renderFilters();},facts:()=>facts};
+ window.ZZWS_DEALER={get view(){return view;},state:()=>({view,filters:{...filters},selected:[...selected]}),viewState,restoreView,restoreState,setView,toggleCompare,isSelected:articul=>selected.includes(articul),decorate,matches,renderFilters,refresh,reset,openProduct,compare,showroom,bundles,clearFilters(){filters={};renderFilters();},facts:()=>facts};
  setView('cards');renderFilters();updateSelection();if(catalogLoaded)refresh();
 })();
+

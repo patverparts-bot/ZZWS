@@ -2,9 +2,9 @@ import {orderExportData} from './order-export.mjs';
 import {viberContacts} from './contacts.mjs';
 import {priceVersionLabel} from './workbook-layout.mjs';
 import {orderPublic} from './order-public.mjs';
+import {projectOrderHistory} from './order-history.mjs';
 import {currentOffer,offerStamp,offerDTO} from './special-offers.mjs';
 import {effectiveControls} from './catalog-controls.mjs';
-import {storefrontSettings,storefrontDTO,storefrontRanking} from './storefront.mjs';
 import {statuses,normalizeLines,totalOf,changesBetween,parseConfirmation,parsePastedConfirmation} from './orders.mjs';
 import {deliveryId,ownedDeliverySnapshot} from './delivery-variants.mjs';
 import {buildOrderContext,calculationRetry} from './order-context.mjs';
@@ -17,6 +17,7 @@ export async function orderRoutes(c){
  const order=async(id,admin=false)=>{let q=table('orders').select('*').eq('id',id);if(!admin)q=user.clientRole==='manager'?q.eq('customer_id',user.customerId):q.eq('user_id',user.id);const row=await query(q.maybeSingle());if(!row)fail(404,'Պատվերը չի գտնվել');return row;};
  const snoozes=async rows=>rows.length?await query(table('approval_reminder_snoozes').select('order_id,proposal_id,defer_request_id,order_revision,snoozed_until').eq('recipient_id',user.id).in('order_id',rows.map(o=>o.id))):[];
  const snoozedUntil=(o,rows)=>rows.find(s=>s.order_id===o.id&&s.proposal_id===o.approval.id&&s.defer_request_id===o.approval.deferRequestId&&s.order_revision===o.revision)?.snoozed_until||null;
+ const historyFor=async(o,events)=>projectOrderHistory(o,await query(table('order_activity').select('id,order_id,order_number,revision,event_type,actor,source,snapshot,changes,occurred_at').eq('order_id',o.id).order('revision',{ascending:false}).limit(101)),events);
  if(path==='orders/approval-pending'&&req.method==='GET'){
   if(user.role!=='client')fail(403,'Հասանելիությունն արգելված է');
   const rows=await query(table('orders').select('id,number,revision,approval').eq('user_id',user.id).eq('approval->>state','pending').order('updated',{ascending:true}).limit(500));
@@ -66,7 +67,7 @@ export async function orderRoutes(c){
   return json({events:events.map(e=>({...e,detail:{...e.detail,changesCount:e.detail.changes?.length||0,changes:(e.detail.changes||[]).slice(0,12)}}))});
  }
  if(path==='orders/detail'&&req.method==='POST'){
-  const p=await body(req),o=await order(p.id);const events=await query(table('order_events').select('id,detail,created,revision').eq('order_id',o.id).eq('user_id',o.user_id).order('revision',{ascending:false}).limit(10));return json({order:o,events});
+  const p=await body(req),o=await order(p.id);const events=await query(table('order_events').select('id,detail,created,revision').eq('order_id',o.id).eq('user_id',o.user_id).order('revision',{ascending:false}).limit(101));return json({order:{...o,...await historyFor(o,events)},events:events.slice(0,10)});
  }
  if(path==='orders/read'&&req.method==='POST'){
   const p=await body(req),o=await order(p.orderId);if(!Number.isSafeInteger(p.revision)||p.revision<1||p.revision>o.revision)fail(400,'Ստուգեք դիտված պատվերի տարբերակը');await query(table('order_events').update({read_at:new Date().toISOString()}).eq('user_id',user.id).eq('order_id',p.orderId).lte('revision',p.revision).is('read_at',null));return json({ok:true});
@@ -114,11 +115,10 @@ export async function orderRoutes(c){
   const hidden=memory?.data?.preferences?.hiddenColumns,hiddenColumns=Array.isArray(hidden)?hidden.filter(key=>['brand','stockStatus','retail','marginVal','resaleWholesale'].includes(key)):[];
   const offer=await currentOffer(table,query),version=v.id+':'+v.rulesRevision+':'+v.warehouseRevision+':'+profile.profileRevision+':'+JSON.stringify(hiddenColumns)+':offer:'+offerStamp(offer),updated=new Date(v.created).toLocaleDateString('en-GB',{timeZone:'Asia/Yerevan'});
   if(path.endsWith('/version'))return json({version,updated});
-  const products=project(v.products,profile,v.rules,{mainWarehouses:v.mainWarehouses,newDays:storefrontSettings(v.catalogControls).newDays});
+  const products=project(v.products,profile,v.rules,{mainWarehouses:v.mainWarehouses});
   if(path.endsWith('/export'))return file([['Ստացող',profile.client,'Տարբերակ',priceVersionLabel(v.created)],['Արտիկուլ','Բրենդ','Կատեգորիա','Անվանում','Մանրածախ','Ձեր գինը','Առկայություն',...(profile.allowResale?['Վերավաճառքի մեծածախ գին']:[])],...products.map(p=>[p.articul,p.brand,p.category,p.name,p.retail,p.wholesale,p.stockStatus,...(profile.allowResale?[p.resaleWholesale]:[])])],'PriceList.xlsx');
   const controls=effectiveControls(v.catalogControls,profile.customerId||profile.id);
-  const banners=await storefrontRanking(service,query,products,v.catalogControls,profile.id,v.catalogControls?.popularityRules?.days||90);
-  return json({customer:customerInfo(profile),hiddenColumns,products,version,updated,controls,storefront:storefrontDTO(products,banners,v.catalogControls),specialOffer:controls.promo?offerDTO(offer,products):null});
+  return json({customer:customerInfo(profile),hiddenColumns,products,version,updated,controls,specialOffer:controls.promo?offerDTO(offer,products):null});
  }
  if(path==='admin/orders/customer-quote'&&req.method==='POST'){
   const p=await body(req),profile=await customerProfile(p.customerId);if(!Array.isArray(p.articuls)||p.articuls.length>500||p.articuls.some(a=>typeof a!=='string'||!a||a.length>100))fail(400,'Ստուգեք արտիկուլները');
@@ -142,9 +142,9 @@ export async function orderRoutes(c){
   const params=new URL(req.url).searchParams,before=params.get('before'),id=params.get('orderId');
   if(before&&(!/^\d{1,19}$/.test(before)||BigInt(before)>9223372036854775807n))fail(400,'Սխալ էջի նույնացուցիչ');
   if(id&&!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(id))fail(400,'Սխալ պատվերի նույնացուցիչ');
-  let q=table('order_activity').select('*').order('sequence',{ascending:false}).limit(100);
+  let q=table('order_activity').select('*').order('sequence',{ascending:false}).limit(101);
   if(before)q=q.lt('sequence',before);if(id)q=q.eq('order_id',id);
-  const events=await query(q);return json({events,next:events.length===100?String(events.at(-1).sequence):null});
+  const rows=await query(q),events=rows.slice(0,100),history=projectOrderHistory(id?{id}:null,rows);return json({events,next:events.length===100?String(events.at(-1).sequence):null,...history});
  }
  if(path==='admin/orders'&&req.method==='GET'){
   const params=new URL(req.url).searchParams,status=params.get('status'),before=params.get('before');let q=table('orders').select('*').order('number',{ascending:false}).limit(100);if(status&&statuses[status])q=q.eq('status',status);
@@ -154,7 +154,7 @@ export async function orderRoutes(c){
   if(before&&/^\d+$/.test(before))q=q.lt('number',before);return json({orders:await query(q)});
  }
  if(path==='admin/orders/template'&&req.method==='GET')return file([['Արտիկուլ','Քանակ','Գին'],['014676',1,'']],'Final-order-template.xlsx');
- if(path==='admin/orders/detail'&&req.method==='POST'){const p=await body(req),o=await order(p.id,true);return json({...o,events:await query(table('order_events').select('detail,created,revision').eq('order_id',o.id).order('revision',{ascending:false}).limit(50))});}
+ if(path==='admin/orders/detail'&&req.method==='POST'){const p=await body(req),o=await order(p.id,true),events=await query(table('order_events').select('detail,created,revision').eq('order_id',o.id).order('revision',{ascending:false}).limit(101));return json({...o,...await historyFor(o,events),events:events.slice(0,50)});}
  if(['admin/orders/export','admin/orders/export-preview'].includes(path)&&req.method==='POST'){
   const p=await body(req),o=await order(p.id,true);if(o.approval?.state==='pending'&&path==='admin/orders/export')fail(409,'Սպասեք հաճախորդի համաձայնությանը');if(p.revision!==undefined&&p.revision!==o.revision)fail(409,'Պատվերը փոխվել է։ Վերաբացեք արտահանվող կազմը');const data=orderExportData(o);
   return path.endsWith('/export-preview')?json(data):file(data.rows,'Order-'+o.number+'.xlsx',data.columns);

@@ -52,5 +52,5 @@
   finally{if(generation===lifecycle){busy=false;for(const field of el('templateEditor').querySelectorAll('input,button'))field.disabled=false;render();}}
  });};
  function reset(){++lifecycle;++epoch;++searchEpoch;customers=[];customer=null;templates=[];busy=false;close();el('templateCustomer').replaceChildren();el('templateList').replaceChildren();el('templateEditLines').replaceChildren();el('templateTitle').value='';el('templateProductSearch').value='';for(const field of el('templateEditor').querySelectorAll('input,button'))field.disabled=false;el('templateStatus').textContent='';}
- window.ZZWS_ADMIN_TEMPLATES={load,openCustomer,reset};
+ window.ZZWS_ADMIN_TEMPLATES={load,openCustomer,reset,navigationState:()=>({customerId:customer?.id,editingId:editing?.id,editorOpen:!el('templateEditor').hidden}),async restoreView(state){if(state?.customerId)await load(state.customerId);if(state?.editorOpen){const saved=templates.find(t=>t.id===state.editingId);if(saved||!state.editingId)edit(saved||null);}}};
 })();

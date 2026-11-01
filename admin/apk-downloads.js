@@ -34,5 +34,5 @@
   finally{if(owner===who&&ticket===serial){busy=false;controls();}}
  }
  form.onsubmit=e=>{e.preventDefault();offset=0;load();};version.onchange=state.onchange=()=>{offset=0;load();};refresh.onclick=()=>load();previous.onclick=()=>{offset=Math.max(0,offset-50);load();};next.onclick=()=>{offset+=50;load();};window.addEventListener('zzws:languagechange',render);
- window.ZZWS_APK_DOWNLOADS=Object.freeze({load,reset});controls();
+ window.ZZWS_APK_DOWNLOADS=Object.freeze({load,reset,navigationState:()=>({offset,version:version.value,search:search.value,status:state.value}),async restoreView(value){offset=Math.max(0,Number(value?.offset)||0);version.value=String(value?.version||'');search.value=String(value?.search||'').slice(0,100);state.value=String(value?.status||'');await load();}});controls();
 })();

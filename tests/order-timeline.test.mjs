@@ -1,0 +1,11 @@
+import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 'node:vm';
+function helper(){const element=tag=>({tag,children:[],dataset:{},textContent:'',append(...children){this.children.push(...children);}}),scope={window:{ZZWS_I18N:{language:'ru'}},document:{createElement:element}};vm.runInNewContext(fs.readFileSync('js/order-timeline.js','utf8'),scope);return scope.window.ZZWS_ORDER_TIMELINE;}
+const text=node=>String(node.textContent||'')+node.children.map(text).join(' ');
+test('history starts with a short collapsed action/time and expands actual actor plus exact before/after',()=>{
+ const entry={id:'entry',at:'2026-11-01T15:29:00Z',action:'approved',actor:{id:'primary',role:'client',clientRole:'manager',firstName:'Primary',lastName:'Person',actingForAuthor:true},status:{before:'new',after:'confirmed'},lines:[{articul:'SKU1',name:'LG product',kind:'changed',before:{qty:2,unitPrice:100},after:{qty:3,unitPrice:120}}]},before=structuredClone(entry),row=helper().render([entry]).children[0];
+ assert.notEqual(row.open,true);assert.equal(row.children[0].tag,'summary');assert.ok(!text(row.children[0]).includes('Primary Person'));assert.ok(text(row.children[1]).includes('Primary Person'));assert.ok(text(row).includes('SKU1'));assert.ok(text(row).includes('2 × 100 ֏ → 3 × 120 ֏'));assert.ok(text(row).includes('աշխատակցի փոխարեն'));assert.deepEqual(entry,before);
+});
+test('proposal deltas remain proposed, legacy unknown actors stay unknown and names are safe text',()=>{
+ const render=helper().render,proposal=render([{id:'p',action:'proposal',at:'2026-11-01T15:29:00Z',proposed:true,actor:{role:'admin',firstName:'<img onerror=alert(1)>'},lines:[{articul:'NEW',name:'New product',kind:'added',before:null,after:{qty:1,unitPrice:50}}]}]);assert.ok(text(proposal).includes('առաջարկված են'));assert.ok(text(proposal).includes('<img onerror=alert(1)>'));assert.ok(text(proposal).includes('— → 1 × 50 ֏'));
+ const legacy=render([{created:'2026-11-01T15:29:00Z',detail:{kind:'approval_deferred',minutes:7}}]);assert.ok(text(legacy).includes('Մասնակիցը չի պահպանվել'));assert.ok(text(legacy).includes('7 րոպե'));assert.equal(text(legacy).includes('undefined'),false);
+});

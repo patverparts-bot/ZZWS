@@ -122,6 +122,6 @@
  for(const id of ['organizationSelect','contactPersonInput','deliveryAddressInput','deliveryMethodInput','deliveryDateInput','orderCommentInput']){
   const input=el(id);input.addEventListener('input',()=>{input.removeAttribute('aria-invalid');if(step===3&&!busy)changed();});input.addEventListener('change',()=>{input.removeAttribute('aria-invalid');if(step===3&&!busy)changed();});
  }
- window.ZZWS_CHECKOUT={activeCart,payload,ready,go,open,changed,decorateRows,syncSubmitButton,setSubmitting,complete,reset,get busy(){return busy;}};
+ window.ZZWS_CHECKOUT={viewState:()=>({step,excluded:[...excluded]}),restoreView(value){if(busy)return;excluded=new Set((value?.excluded||[]).filter(id=>cart[id]));renderModalItems();go(Math.max(1,Math.min(3,Number(value?.step)||1)));},activeCart,payload,ready,go,open,changed,decorateRows,syncSubmitButton,setSubmitting,complete,reset,get busy(){return busy;}};
  render();
 })();

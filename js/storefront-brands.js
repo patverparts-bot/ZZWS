@@ -1,0 +1,2 @@
+/* Existing verified native brand artwork, reused without alteration. */
+(() => {const brands=["acer","apple","asus","babyliss","blaupunkt","bosch","braun","canon","dell","delonghi","dyson","elica","epson","haier","hp","huawei","indesit","jbl","lenovo","lg","marshall","midea","moulinex","nikon","philips","roborock","samsung","sony","tefal","wanbo","xiaomi"];window.ZZWS_STOREFRONT_BRANDS={src(name){const key=String(name||'').toLowerCase().replace(/[^a-z0-9]/g,'');return brands.includes(key)?'js/brand-logos/'+key+'.png':null;}};})();

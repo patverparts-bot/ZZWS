@@ -14,6 +14,7 @@ async function api(path, options = {}) {
   catch(e) { if(e.status === 401) showLogin(); throw e; }
 }
 function showLogin() {
+  window.ZZWS_ADMIN_VIEW_STATE?.stop();
   window.ZZWS_ADMIN_STOREFRONT?.reset();
   window.ZZWS_OFFERS?.reset();
   window.ZZWS_REPORT_EMAIL?.clearCredentials();
@@ -81,6 +82,7 @@ function rememberedAdminTab(){
   return ZZWS_ADMIN_HOME.can('manager')?'manager':'dashboard';
 }
 async function selectAdminTab(name,options={}){
+  window.ZZWS_ADMIN_VIEW_STATE?.save();
   if(!adminTabs.includes(name)||!ZZWS_ADMIN_HOME.can(name))name='dashboard';
   for(const section of adminTabs)el(section).hidden=section!==name;
   document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('admin-tab-active',b.dataset.tab===name);b.setAttribute('aria-current',b.dataset.tab===name?'page':'false');});
@@ -91,6 +93,7 @@ async function selectAdminTab(name,options={}){
     activeAdminTab=name;updateAdminBackButton();
   }
   ZZWS_ADMIN_WORKBENCH.mount(name);el('adminMoreMenu').open=false;const label=document.querySelector('[data-tab="'+name+'"]')?.cloneNode(true);label?.querySelectorAll('[hidden]').forEach(n=>n.remove());el('adminActiveSection').textContent=name==='templates'?'Հաճախորդի պահպանված զամբյուղները':label?.textContent.trim()||'';
+  window.ZZWS_ADMIN_VIEW_STATE?.prepare(name);
   if(name==='dashboard')await ZZWS_ADMIN_HOME.load();
   if(name==='audit')await loadAudit();
   if(name==='storage')await ZZWS_STORAGE.load();
@@ -99,13 +102,15 @@ async function selectAdminTab(name,options={}){
   if(name==='warehouses')await ZZWS_ADMIN_WAREHOUSES.load();
   if(name==='offers')await ZZWS_OFFERS.load();
   if(name==='email')await ZZWS_REPORT_EMAIL.loadSettings();
+  await window.ZZWS_ADMIN_VIEW_STATE?.loaded(name);
 }
 async function enter() {
   let user = await api('me');
   if(user.needsPasswordSetup){user=await requirePasswordSetup(user);if(!user){showLogin();return;}}
   if (user.role !== 'admin') { showLogin();const e=new Error('Անհրաժեշտ է ադմինիստրատորի հաշիվ');e.status=403;throw e; }
   if(!user.adminScope||!Array.isArray(user.permissions)||!user.permissions.length){showLogin();const e=new Error('Այս հաշվի ադմինիստրատորի իրավունքները դեռ նշանակված չեն։ Դիմեք սեփականատիրոջը։');e.status=403;throw e;}
-  window.ZZWS_ENTRY?.navigation(user);window.ZZWS_HELP_USER=user;ZZWS_ADMIN_HOME.setUser(user);
+  window.ZZWS_ADMIN_VIEW_STATE?.start(user);
+  window.ZZWS_ENTRY?.navigation(user);window.ZZWS_HELP_USER=user;ZZWS_ADMIN_HOME.setUser(user);for(const group of document.querySelectorAll('.admin-nav-group'))group.hidden=![...group.querySelectorAll('[data-tab]')].some(button=>!button.hidden);
   ZZWS_ADMIN_CHANNELS.start(user);
   window.ZZWS_REOPEN_ALERTS?.start(user);
   window.ZZWS_ADMIN_APPROVAL_REMINDERS?.start(user);
@@ -140,7 +145,7 @@ async function loadUsers() {
   const d = await api('admin/users'); users = d.users;categoryLabels={...categoryLabels,...d.categoryLabels};categoryByGroup=d.categoryByGroup||categoryByGroup;
   el('userList').replaceChildren(table(['Հաճախորդի կոդ','Հաճախորդ','Դեր','Գներ','Կատեգորիա','Հասանելիություն',''], users.filter(u=>u.clientRole!=='employee').map(u => [u.role==='admin'?u.login:u.customerCode||'',u.client,u.role==='admin'?'Ադմինիստրատոր':'Հաճախորդ',categoryLabel(u.sheet),u.role==='client'?categoryLabel(u.sheet):'—',u.active?'Միացված է':'Անջատված է',button('Խմբագրել', () => editUser(u))])));
 }
-function editUser(user = {}) {
+async function editUser(user = {}) {
   const f = el('userForm'); f.reset(); f.hidden = false;
   f.elements.sheet.value='Dealers';
   editingUserId=user.id||null;f.elements.id.value=editingUserId||'';
@@ -164,7 +169,7 @@ function editUser(user = {}) {
   el('resetUserPassword').hidden=!user.id;el('issueInvitation').hidden=!user.id||!user.needsPasswordSetup;
   el('passwordSetupState').textContent=!user.id||user.needsPasswordSetup?(user.role==='admin'?'Առաջին մուտք՝ մուտքանունով և մեկանգամյա հրավերի կոդով։':'Հրավերով գրանցում․ օգտատերն ինքն է ընտրում անձնական մուտքանունն ու գաղտնաբառը։'):'Օգտատերն արդեն սահմանել է գաղտնաբառը։';
   el('adminOrdersRefresh').value=user.ordersRefreshSeconds??5;el('saveAdminPolling').hidden=!user.id;el('adminPollingStatus').textContent='';
-  ZZWS_REPORT_EMAIL.edit(user);window.ZZWS_PHONE_CARD?.edit(user);window.ZZWS_CLIENT_CARD?.edit(user);updateClientCategory();ZZWS_ADMIN_RECEIPTS.loadClient(user);ZZWS_CARD_LAYOUT.edit(user,users);
+  ZZWS_REPORT_EMAIL.edit(user);window.ZZWS_PHONE_CARD?.edit(user);updateClientCategory();ZZWS_CARD_LAYOUT.edit(user,users);await Promise.allSettled([window.ZZWS_CLIENT_CARD?.edit(user),ZZWS_ADMIN_RECEIPTS.loadClient(user)]);
   el('userSavedBaskets').hidden=!user.id||user.role!=='client'||!ZZWS_ADMIN_HOME.can('templates');f.scrollIntoView({behavior:'smooth'});
 }
 el('resetUserPassword').onclick=()=>run(async()=>{

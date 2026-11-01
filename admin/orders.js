@@ -71,7 +71,7 @@
   if(o.approval?.state==='pending')approvalInfo.append(ZZWS_ORDER_COMPARE.render(o.lines,o.approval.lines));
   ZZWS_ORDER_LAYOUT.delivery(el('selectedOrderDelivery'),o.delivery);
   ZZWS_ADMIN_RECEIPTS.proof(o,el('selectedOrderReceipt'));
-  renderOrderHistory(o.events||[]);el('editOrderStatus').value=o.status;el('editOrderComment').value=o.approval?.state==='pending'?o.approval.comment:o.comment;renderManual();controls();
+  renderOrderHistory(o.history||o.events||[]);el('editOrderStatus').value=o.status;el('editOrderComment').value=o.approval?.state==='pending'?o.approval.comment:o.comment;renderManual();controls();
   el('adminOrderStatus').textContent='';el('adminOrderEditor').scrollIntoView({behavior:'smooth',block:'start'});try{await request('admin/orders/read',{id:o.id,revision:o.revision});if(ticket===editorEpoch)await refreshUnread();}catch(e){if(ticket===editorEpoch)el('adminOrderStatus').textContent='Չհաջողվեց թարմացնել դիտված նշումը։ '+ZZWS.message(e);}return o;
  }
  function renderManual(){const root=el('manualOrderLines');root.replaceChildren();const table=node('table'),head=table.createTHead().insertRow();for(const h of ['Ապրանք','Քանակ','Միավորի գին',''])head.append(node('th',h));
@@ -133,7 +133,7 @@
    const apply=btn('Կիրառել կազմի նախագծում',async()=>{if(!valid())return;apply.disabled=true;ui.close.disabled=true;try{const latest=await request('admin/orders/template-preview',payload);if(!valid())return;if(JSON.stringify(latest)!==JSON.stringify(result))throw Error('Ձևանմուշը կամ գները փոխվել են։ Կրկին բացեք նախադիտումը։');manualRows=latest.lines;dirty=true;renderManual();close();await selectAdminTab('manager');el('adminOrderStatus').textContent='Ձևանմուշն ավելացված է կազմի նախագծին։ Վերջում պահպանեք պատվերը։';}catch(e){ui.message.textContent=ZZWS.message(e);}finally{apply.disabled=false;ui.close.disabled=false;}});apply.disabled=!result.changes.some(r=>r.added>0);ui.content.append(apply);
   }catch(e){if(valid())ui.message.textContent=ZZWS.message(e);}
  }
- function renderOrderHistory(events){const root=el('adminOrderHistory');root.replaceChildren();for(const event of events){const details=node('details',null,'order-event');details.append(node('summary',date(event.created)+' · '+(event.detail.kind==='approval_requested'?'Սպասում է հաճախորդի համաձայնությանը':event.detail.kind==='approval_deferred'?'Հաճախորդը ժամանակ է խնդրել դիտարկման համար՝ '+event.detail.minutes+' րոպե':event.detail.kind==='approval_approved'?'Հաճախորդը համաձայնեցրել է':event.detail.kind==='approval_declined'?'Հաճախորդը հրաժարվել է պատվերից':statuses[event.detail.status])));for(const c of event.detail.changes||[]){details.append(node('p',c.articul+' · '+({removed:'Ջնջված',added:'Ավելացված',changed:'Փոփոխված'}[c.kind])+(c.before?' · նախկինում՝ '+c.before.qty+' × '+money(c.before.unitPrice):'')+(c.after?' → '+c.after.qty+' × '+money(c.after.unitPrice):'')));}root.append(details);}}
+ function renderOrderHistory(events){el('adminOrderHistory').replaceChildren(ZZWS_ORDER_TIMELINE.render(events));}
  async function saveManual(){
   if(!selected||busy||!canEdit())return;if(!confirm('Պահպանե՞լ պատվեր №'+selected.number+'-ի փոփոխությունները։ Օգտատերը կստանա ծանուցում։'))return;
   const ticket=editorEpoch,id=selected.id,token=begin();
@@ -216,5 +216,5 @@
  el('closeAdminOrder').onclick=()=>{if(busy){waitMessage();return;}if(!dirty||confirm('Փակե՞լ առանց ձեռքով փոփոխությունները պահպանելու։')){++editorEpoch;selected=null;preview=null;dirty=false;el('adminOrderEditor').hidden=true;document.dispatchEvent(new CustomEvent('zzws:admin-order-closed'));}};
  el('viewOrderExport').onclick=()=>run(viewExport);
  el('downloadFinalTemplate').onclick=()=>run(()=>download('admin/orders/template','Final-order-template.xlsx'));el('exportServerOrder').onclick=()=>run(()=>download('admin/orders/export','Order-'+selected.number+'.xlsx',{id:selected.id}));
- window.ZZWS_ADMIN_ORDERS={load,start,reset,poll,refreshUnread,setRefreshSeconds,openNotice:id=>open(id),context:()=>selected?{...selected}:null,previewTemplate};
+ window.ZZWS_ADMIN_ORDERS={navigationState:()=>({selectedId:!el('adminOrderEditor').hidden?selected?.id:null,count:list.length}),async restoreView(state){while(list.length<Math.min(10000,Number(state?.count)||0)&&!el('moreAdminOrders').hidden){const n=list.length;await load(true);if(list.length<=n)break;}if(state?.selectedId)await open(state.selectedId);},load,start,reset,poll,refreshUnread,setRefreshSeconds,openNotice:id=>open(id),context:()=>selected?{...selected}:null,previewTemplate};
 })();
