@@ -19,6 +19,7 @@
   for(const [id,name]of [['favOnlyFilter','favOnly'],['promoOnlyFilter','promoOnly'],['stockOnlyFilter','stockOnly'],['wholesaleOnlyFilter','wholesaleOnly']])value.filters[name]=el(id).checked;
   value.overlay=!el('cabinetModal').classList.contains('hidden')?'orders':!el('orderModal').classList.contains('hidden')?'cart':null;
   const bulletin=window.ZZWS_BULLETINS?.state();if(bulletin){value.overlay='bulletins';value.bulletin=bulletin;}
+  const technical=window.ZZWS_PRODUCT_TECHNICAL?.state();if(technical){value.overlay='technical';value.technical=technical;}
   try{sessionStorage.setItem(key,JSON.stringify(value));}catch{}
  }
  function schedule(){clearTimeout(timer);timer=setTimeout(save,80);}
@@ -48,6 +49,7 @@
    if(state.overlay==='orders')openPersonalCabinet();
    else if(state.overlay==='cart')openOrderModal();
    else if(state.overlay==='bulletins')await window.ZZWS_BULLETINS?.restore(state.bulletin);
+   else if(state.overlay==='technical'){if(state.bulletin)await window.ZZWS_BULLETINS?.restore(state.bulletin);await window.ZZWS_PRODUCT_TECHNICAL?.restore(state.technical);}
   }
   if(ticket!==epoch)return;restoring=false;ready=true;save();
  }
