@@ -2,6 +2,8 @@ import {orderExportData} from './order-export.mjs';
 import {viberContacts} from './contacts.mjs';
 import {priceVersionLabel} from './workbook-layout.mjs';
 import {orderPublic} from './order-public.mjs';
+import {currentOffer,offerStamp,offerDTO} from './special-offers.mjs';
+import {effectiveControls} from './catalog-controls.mjs';
 import {statuses,normalizeLines,totalOf,changesBetween,parseConfirmation,parsePastedConfirmation} from './orders.mjs';
 import {deliveryId,ownedDeliverySnapshot} from './delivery-variants.mjs';
 import {buildOrderContext,calculationRetry} from './order-context.mjs';
@@ -109,11 +111,12 @@ export async function orderRoutes(c){
   const profile=await customerProfile(new URL(req.url).searchParams.get('customerId')),v=await current();
   const memory=await query(table('user_memory').select('data').eq('user_id',profile.id).maybeSingle());
   const hidden=memory?.data?.preferences?.hiddenColumns,hiddenColumns=Array.isArray(hidden)?hidden.filter(key=>['brand','stockStatus','retail','marginVal','resaleWholesale'].includes(key)):[];
-  const version=v.id+':'+v.rulesRevision+':'+v.warehouseRevision+':'+profile.profileRevision+':'+JSON.stringify(hiddenColumns),updated=new Date(v.created).toLocaleDateString('en-GB',{timeZone:'Asia/Yerevan'});
+  const offer=await currentOffer(table,query),version=v.id+':'+v.rulesRevision+':'+v.warehouseRevision+':'+profile.profileRevision+':'+JSON.stringify(hiddenColumns)+':offer:'+offerStamp(offer),updated=new Date(v.created).toLocaleDateString('en-GB',{timeZone:'Asia/Yerevan'});
   if(path.endsWith('/version'))return json({version,updated});
   const products=project(v.products,profile,v.rules,{mainWarehouses:v.mainWarehouses});
   if(path.endsWith('/export'))return file([['Ստացող',profile.client,'Տարբերակ',priceVersionLabel(v.created)],['Արտիկուլ','Բրենդ','Կատեգորիա','Անվանում','Մանրածախ','Ձեր գինը','Առկայություն',...(profile.allowResale?['Վերավաճառքի մեծածախ գին']:[])],...products.map(p=>[p.articul,p.brand,p.category,p.name,p.retail,p.wholesale,p.stockStatus,...(profile.allowResale?[p.resaleWholesale]:[])])],'PriceList.xlsx');
-  return json({customer:customerInfo(profile),hiddenColumns,products,version,updated});
+  const controls=effectiveControls(v.catalogControls,profile.customerId||profile.id);
+  return json({customer:customerInfo(profile),hiddenColumns,products,version,updated,controls,specialOffer:controls.promo?offerDTO(offer,products):null});
  }
  if(path==='admin/orders/customer-quote'&&req.method==='POST'){
   const p=await body(req),profile=await customerProfile(p.customerId);if(!Array.isArray(p.articuls)||p.articuls.length>500||p.articuls.some(a=>typeof a!=='string'||!a||a.length>100))fail(400,'Ստուգեք արտիկուլները');

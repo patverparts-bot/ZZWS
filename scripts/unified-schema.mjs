@@ -45,6 +45,8 @@ export const cleanSchemaFiles=[
   "supabase/migrations/20261101055050_client_deletion.sql",
   "supabase/migrations/20261101061259_client_archive.sql",
   "supabase/migrations/20261101062819_employee_deletion_history.sql",
-  "supabase/migrations/20261101065229_approval_reminder_custom_snooze.sql"
+  "supabase/migrations/20261101065229_approval_reminder_custom_snooze.sql",
+  "supabase/migrations/20261101084043_managed_wholesale_offers.sql",
+  "supabase/migrations/20261101092608_storefront_product_arrivals.sql"
 ];
 export const schemaVersion="zzws-unified-4.1.0-optimized";

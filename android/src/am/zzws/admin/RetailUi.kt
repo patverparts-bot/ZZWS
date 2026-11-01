@@ -59,7 +59,7 @@ internal object PartnerLibrary {
  Box(Modifier.matchParentSize().background(Color.White.copy(alpha=.03f)))
  Row(Modifier.fillMaxWidth().heightIn(min=170.dp).padding(18.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)){Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(8.dp)){
  Text("ZZWS COLLECTION",fontSize=10.sp,letterSpacing=2.sp,color=Color.White.copy(alpha=.85f),fontWeight=FontWeight.SemiBold)
- LocalizedText("Ձեր հաջորդ\nլավ ընտրությունը",fontSize=22.sp,lineHeight=26.sp,fontWeight=FontWeight.Bold,color=Color.White,maxLines=3)
+ LocalizedText(model.publishedOffer?.text("title").orEmpty().ifBlank{"Հատուկ առաջարկներ"},fontSize=22.sp,lineHeight=26.sp,fontWeight=FontWeight.Bold,color=Color.White,maxLines=3)
  Surface(color=Color.White,shape=RoundedCornerShape(6.dp),modifier=Modifier.testTag("home-collection-action")){LocalizedText("Տեսնել առաջարկները  →",Modifier.padding(horizontal=10.dp,vertical=7.dp),fontSize=12.sp,lineHeight=16.sp,fontWeight=FontWeight.Bold,color=Color(0xFF1D4ED8))}}
  val hero=featured.firstOrNull()
  if(hero!=null)Box(Modifier.size(96.dp).background(Color.White,RoundedCornerShape(18.dp)).testTag("home-collection-photo"),contentAlignment=Alignment.Center){ProductPhoto(hero.code,edge=88,interactive=false)}
@@ -83,18 +83,19 @@ private fun categoryIcon(category:String):String{val x=category.lowercase();retu
  val sections=!favorites&&model.catalogSections&&model.control("category")
  val rows=if(favorites)model.products.filter{it.code in PartnerLibrary.favorites}else model.filtered
  val currentDepartment=catalogDepartments.find{it.id==model.department}
- val title=if(favorites)"Ընտրյալներ"else if(sections)"Բաժիններ"else if(model.onlyPromo)"Հատուկ առաջարկներ"else currentDepartment?.title?:"Բոլոր ապրանքները"
+ val title=if(favorites)"Ընտրյալներ"else if(sections)"Բաժիններ"else if(model.offerCollection)"Հատուկ առաջարկներ"else currentDepartment?.title?:"Բոլոր ապրանքները"
  val grid=rememberLazyGridState()
- LaunchedEffect(model.query,model.department,sections,favorites,model.brands.toList(),model.categories.toList(),model.onlyPromo,model.onlyAvailable,model.sort){grid.scrollToItem(0)}
+ LaunchedEffect(model.query,model.department,sections,favorites,model.brands.toList(),model.categories.toList(),model.onlyPromo,model.onlyAvailable,model.sort,model.offerCollection){grid.scrollToItem(0)}
  LazyVerticalGrid(columns=GridCells.Adaptive(if(sections)148.dp else 158.dp),state=grid,modifier=Modifier.fillMaxSize().testTag("catalog-products-grid"),contentPadding=PaddingValues(start=14.dp,end=14.dp,top=8.dp,bottom=14.dp),horizontalArrangement=Arrangement.spacedBy(10.dp),verticalArrangement=Arrangement.spacedBy(10.dp)){
   // Context is part of the scrolling grid, never a pinned toolbar above products.
   item(key="catalog-context",span={GridItemSpan(maxLineSpan)}){
    Column(Modifier.fillMaxWidth().testTag("catalog-scroll-header"),verticalArrangement=Arrangement.spacedBy(4.dp)){
     Row(verticalAlignment=Alignment.CenterVertically){
      LocalizedText(title,fontWeight=FontWeight.Bold,fontSize=20.sp,maxLines=2,modifier=Modifier.weight(1f))
-     if(!favorites&&!sections&&(model.brands.isNotEmpty()||model.categories.isNotEmpty()||model.onlyPromo||model.onlyAvailable||model.query.isNotBlank()))TextButton(onClick={model.showAllProducts()}){LocalizedText("Բոլոր ապրանքները",fontSize=10.sp)}
+     if(!favorites&&!sections&&(model.offerCollection||model.brands.isNotEmpty()||model.categories.isNotEmpty()||model.onlyPromo||model.onlyAvailable||model.query.isNotBlank()))TextButton(onClick={model.showAllProducts()}){LocalizedText("Բոլոր ապրանքները",fontSize=10.sp)}
     }
     LocalizedText(if(sections)"${model.products.size} ապրանք"else if(favorites)"${rows.size} ապրանք"else"Ցուցադրված՝ ${rows.size} / ${model.products.size}",fontSize=11.sp,color=ShopMuted)
+    if(!sections&&model.offerCollection&&model.publishedOffer?.text("title").orEmpty().let{it.isNotBlank()&&it!="Հատուկ առաջարկներ"})LocalizedText(model.publishedOffer?.text("title").orEmpty(),fontSize=13.sp,color=BrandAccent)
     if(!sections&&model.query.isNotBlank())Text(model.query,fontSize=12.sp,color=BrandAccent,maxLines=1,overflow=TextOverflow.Ellipsis)
     model.catalogBuyer?.let{customer->Surface(onClick=onBuyer,enabled=!model.busy&&!model.pendingSubmission,color=Color(0xFFEFF6FF),shape=RoundedCornerShape(8.dp),modifier=Modifier.fillMaxWidth()){
      LocalizedText("Պատվիրատու՝ "+customer.text("client"),Modifier.padding(8.dp),fontSize=12.sp,color=BrandAccent,maxLines=1,overflow=TextOverflow.Ellipsis)

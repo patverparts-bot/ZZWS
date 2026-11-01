@@ -77,7 +77,7 @@ class CatalogChromeRegressionTest {
  }
  private fun assertOffersOnly(){
   ui.runOnIdle{
-   assertEquals("catalog",model.screen);assertTrue(model.onlyPromo);assertFalse(model.catalogSections)
+   assertEquals("catalog",model.screen);assertTrue(model.offerCollection);assertFalse(model.onlyPromo);assertFalse(model.catalogSections)
    assertTrue(model.query.isEmpty());assertTrue(model.brands.isEmpty());assertTrue(model.categories.isEmpty());assertFalse(model.onlyAvailable)
    assertTrue(model.specialOffers.isNotEmpty());assertTrue(model.products.size>model.specialOffers.size)
    assertEquals(model.specialOffers.map{it.code}.toSet(),model.filtered.map{it.code}.toSet())
@@ -99,7 +99,7 @@ class CatalogChromeRegressionTest {
   ui.onNodeWithTag("retail-home-feed").performScrollToNode(hasTestTag("home-offers-shortcut"))
   ui.onNodeWithTag("home-offers-shortcut").performClick();assertOffersOnly()
   ui.onNodeWithText("Բոլոր ապրանքները").performClick()
-  ui.runOnIdle{assertFalse(model.onlyPromo);assertEquals(model.products.size,model.filtered.size)}
+  ui.runOnIdle{assertFalse(model.offerCollection);assertFalse(model.onlyPromo);assertEquals(model.products.size,model.filtered.size)}
  }
  @Test fun offersSectionAllOpensTheCompleteOfferSet(){
   show(catalog=false)
@@ -151,6 +151,23 @@ class CatalogChromeRegressionTest {
   ui.waitUntil(10000){shadowOf(Looper.getMainLooper()).idle();!model.busy}
   assertAbsent()
   ui.runOnIdle{assertEquals(listOf("ordinary"),model.products.map{it.code})}
+ }
+ @Test fun publishedMembershipChangesWithoutAChangeToProductPrices(){
+  fun row(code:String,wholesalePromo:Boolean=false,retailPromo:Boolean=false)=JSONObject().put("articul",code).put("name",code).put("wholesale",90).put("retail",150).put("isWholesalePromo",wholesalePromo).put("isPromo",retailPromo)
+  val sample=listOf(row("included",true),row("retail-only",retailPromo=true),row("unlisted",true),row("ordinary"))
+  val published=mutableListOf("included","retail-only","ordinary")
+  ui.runOnUiThread{model=UnifiedModel(TrialDemoBackend(sample,published))}
+  ui.waitUntil(10000){shadowOf(Looper.getMainLooper()).idle();!model.busy}
+  ui.runOnUiThread{model.enterDemo()};show(catalog=false)
+  ui.onNodeWithTag("home-collection-banner").performClick()
+  ui.runOnIdle{assertEquals(listOf("included"),model.filtered.map{it.code});model.screen="home"}
+  published.clear();published.add("unlisted")
+  ui.runOnUiThread{model.refresh()};ui.waitUntil(10000){shadowOf(Looper.getMainLooper()).idle();!model.busy}
+  ui.onNodeWithTag("home-collection-banner").performClick()
+  ui.runOnIdle{assertEquals(listOf("unlisted"),model.filtered.map{it.code});model.screen="home"}
+  published.clear()
+  ui.runOnUiThread{model.refresh()};ui.waitUntil(10000){shadowOf(Looper.getMainLooper()).idle();!model.busy}
+  ui.onNodeWithTag("home-collection-banner").assertDoesNotExist()
  }
  @Test @Config(qualifiers="w320dp-h740dp") fun bottomSearchAndCartRemainUsableOnANarrowPhone(){
   show();ui.onNodeWithTag("catalog-search-button").assertIsDisplayed().assertWidthIsAtLeast(48.dp).assertHeightIsAtLeast(48.dp)

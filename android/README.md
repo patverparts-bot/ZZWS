@@ -1,6 +1,6 @@
 # ZZWS — primary Android application
 
-Version 7.1.14 (70114), package `am.zzws.admin`, Android 8+. This is the canonical
+Version 7.1.15 (70115), package `am.zzws.admin`, Android 8+. This is the canonical
 application as of 31 October 2026. All Android development, builds, tests and
 releases belong here. The separate Partner prototype was retired and deleted on
 1 November 2026 at the owner's request; do not restore, build or maintain it.
@@ -11,6 +11,24 @@ registration, encrypted-session store and primary `zzws-apk` update channel.
 An APK can therefore update the existing original ZZWS installation.
 The previous 7.1.3 source is preserved in
 `outputs/ZZWS-7.1.3-source-before-promotion.zip`; its signed APK is retained too.
+
+## Managed published wholesale offers — 7.1.15
+
+Home campaigns read the server's specialOffer allowlist from the same catalogue
+response as account prices. Only listed, accessible products with a wholesale
+promotion for the selected account/price mode appear. Retail-only promotions and
+unlisted wholesale campaigns cannot enter this collection. Normal retail campaign
+labels and the separate general-catalogue promotion filter remain independent.
+The collection has its own scope; filtering it never expands into the general
+catalogue. Offer notifications open that same scope. Publishing/editing/disabling,
+expiry or deletion changes the catalogue version even when product prices did not
+change, so the existing minute poll refreshes the collection. No offer metadata
+means no banner, shortcut or offer preview. The server enforces expiry through the
+end of the selected day in Yerevan, including on website bulletin reads.
+
+The administrator retains saved lists, edits their membership, toggles visibility,
+deletes with confirmation and optionally sets an inclusive end date. Deleted
+records remain in history/audit; catalogue products and orders are untouched.
 
 ## Special-offer navigation — 7.1.14
 
