@@ -12,7 +12,7 @@
   const editor=el('adminOrderEditor'),message=el('adminOrderStatus');
   if(tab==='manager'){
    const manual=el('manualOrderLines').closest('details');if(manual)manual.open=true;
-   if(!orderTools){const original=editor.querySelector('.original-order-panel'),confirmation=original.nextElementSibling;orderTools=node('details',null,'manager-order-tools');orderTools.append(node('summary','Սկզբնական կազմ, փոփոխությունների պատմություն և ֆայլով հաստատում'));original.before(orderTools);orderTools.append(original,confirmation);}
+   if(!orderTools){const panel=editor.querySelector('.original-order-panel'),original=panel.closest('.order-secondary-block')||panel,confirmation=editor.querySelector('#confirmationPaste')?.closest('.order-secondary-block');orderTools=node('details',null,'manager-order-tools');orderTools.append(node('summary','Սկզբնական կազմ, փոփոխությունների պատմություն և ֆայլով հաստատում'));original.before(orderTools);orderTools.append(original);if(confirmation&&confirmation!==original)orderTools.append(confirmation);}
    el('managerEditorHost').append(message,editor);document.documentElement.dataset.managerOpen='true';
   }
   else{
