@@ -26,6 +26,8 @@ public class PartnerWebActivity extends ComponentActivity {
  private String token="",downloadUrl="",downloadMime="application/octet-stream",downloadName="ZZWS-export";
  private boolean downloadBusy;private OutputStream activeOutput;
  private ValueCallback<Uri[]> chooser;private PartnerFeature feature;
+ @Override protected void onResume(){super.onResume();VersionReminder.resume(this);}
+ @Override protected void onPause(){VersionReminder.pause(this);super.onPause();}
  @Override public void onCreate(Bundle state){
   super.onCreate(state);AppSession.initialize(getApplicationContext());L10n.initialize(this);
   getOnBackPressedDispatcher().addCallback(this,new OnBackPressedCallback(true){@Override public void handleOnBackPressed(){navigateBack();}});

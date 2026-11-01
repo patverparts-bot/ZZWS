@@ -1,6 +1,6 @@
 # ZZWS — primary Android application
 
-Version 7.1.15 (70115), package `am.zzws.admin`, Android 8+. This is the canonical
+Version 7.1.17 (70117), package `am.zzws.admin`, Android 8+. This is the canonical
 application as of 31 October 2026. All Android development, builds, tests and
 releases belong here. The separate Partner prototype was retired and deleted on
 1 November 2026 at the owner's request; do not restore, build or maintain it.

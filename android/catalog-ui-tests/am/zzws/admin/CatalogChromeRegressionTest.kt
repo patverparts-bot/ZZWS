@@ -152,7 +152,7 @@ class CatalogChromeRegressionTest {
   assertAbsent()
   ui.runOnIdle{assertEquals(listOf("ordinary"),model.products.map{it.code})}
  }
- @Test fun publishedMembershipChangesWithoutAChangeToProductPrices(){
+ @Test fun publishedMembershipAugmentsAutomaticPromotionsWithoutChangingPrices(){
   fun row(code:String,wholesalePromo:Boolean=false,retailPromo:Boolean=false)=JSONObject().put("articul",code).put("name",code).put("wholesale",90).put("retail",150).put("isWholesalePromo",wholesalePromo).put("isPromo",retailPromo)
   val sample=listOf(row("included",true),row("retail-only",retailPromo=true),row("unlisted",true),row("ordinary"))
   val published=mutableListOf("included","retail-only","ordinary")
@@ -160,14 +160,16 @@ class CatalogChromeRegressionTest {
   ui.waitUntil(10000){shadowOf(Looper.getMainLooper()).idle();!model.busy}
   ui.runOnUiThread{model.enterDemo()};show(catalog=false)
   ui.onNodeWithTag("home-collection-banner").performClick()
-  ui.runOnIdle{assertEquals(listOf("included"),model.filtered.map{it.code});model.screen="home"}
+  ui.runOnIdle{assertEquals(setOf("included","retail-only","ordinary","unlisted"),model.filtered.map{it.code}.toSet());model.screen="home"}
   published.clear();published.add("unlisted")
   ui.runOnUiThread{model.refresh()};ui.waitUntil(10000){shadowOf(Looper.getMainLooper()).idle();!model.busy}
   ui.onNodeWithTag("home-collection-banner").performClick()
-  ui.runOnIdle{assertEquals(listOf("unlisted"),model.filtered.map{it.code});model.screen="home"}
+  ui.runOnIdle{assertEquals(setOf("unlisted","included"),model.filtered.map{it.code}.toSet());model.screen="home"}
   published.clear()
   ui.runOnUiThread{model.refresh()};ui.waitUntil(10000){shadowOf(Looper.getMainLooper()).idle();!model.busy}
-  ui.onNodeWithTag("home-collection-banner").assertDoesNotExist()
+  ui.onNodeWithTag("home-collection-banner").assertExists()
+  ui.onNodeWithTag("home-collection-banner").performClick()
+  ui.runOnIdle{assertEquals(setOf("included","unlisted"),model.filtered.map{it.code}.toSet())}
  }
  @Test @Config(qualifiers="w320dp-h740dp") fun bottomSearchAndCartRemainUsableOnANarrowPhone(){
   show();ui.onNodeWithTag("catalog-search-button").assertIsDisplayed().assertWidthIsAtLeast(48.dp).assertHeightIsAtLeast(48.dp)

@@ -17,15 +17,16 @@ internal fun promotionKind(product:Product,isAdmin:Boolean,mode:String,viewingBu
 }
 internal fun promotionProducts(products:List<Product>,isAdmin:Boolean,mode:String,viewingBuyer:Boolean)=products.filter{promotionKind(it,isAdmin,mode,viewingBuyer)!=null}
 
-/** A published collection is an allowlist, never an automatic retail campaign. */
+/** Automatic account wholesale promotions plus the live manually selected list. */
 internal fun publishedOfferProducts(products:List<Product>,offer:org.json.JSONObject?,isAdmin:Boolean,mode:String,viewingBuyer:Boolean):List<Product>{
- if(offer==null)return emptyList()
- val expires=offer.text("expiresOn")
- if(expires.isNotEmpty()&&expires<java.time.LocalDate.now(java.time.ZoneId.of("Asia/Yerevan")).toString())return emptyList()
- val articles=offer.optJSONArray("articles")?:return emptyList()
+ val automatic=products.filter{val kind=promotionKind(it,isAdmin,mode,viewingBuyer);kind==PromotionKind.ACCOUNT||kind==PromotionKind.KP}
+ if(offer==null)return automatic
+ val expires=offer.text("manualExpiresOn").ifEmpty{offer.text("expiresOn")}
+ if(expires.isNotEmpty()&&expires<java.time.LocalDate.now(java.time.ZoneId.of("Asia/Yerevan")).toString())return automatic
+ val articles=offer.optJSONArray("manualArticles")?:offer.optJSONArray("articles")?:return automatic
  val byCode=products.associateBy{it.code}
- return (0 until articles.length()).mapNotNull{byCode[articles.optString(it)]}.distinctBy{it.code}.filter{
-  val kind=promotionKind(it,isAdmin,mode,viewingBuyer)
-  kind==PromotionKind.ACCOUNT||kind==PromotionKind.KP
+ val manual=(0 until articles.length()).mapNotNull{byCode[articles.optString(it)]}.distinctBy{it.code}.filter{
+  val price=nativePrice(it,isAdmin,mode,viewingBuyer);price.isFinite()&&price>0
  }
+ return (manual+automatic).distinctBy{it.code}
 }

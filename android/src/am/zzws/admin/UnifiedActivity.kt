@@ -40,8 +40,8 @@ class UnifiedActivity:ComponentActivity(){
  override fun onCreate(savedInstanceState:Bundle?){super.onCreate(savedInstanceState);AppContext.value=applicationContext;AppLanguage.initialize(applicationContext);AppSession.initialize(applicationContext);setContent{RetailTheme{UnifiedApp()}}}
  override fun onNewIntent(intent:Intent){super.onNewIntent(intent);setIntent(intent);readDestination()}
  override fun onStart(){super.onStart();readDestination()}
- override fun onResume(){super.onResume();AppLanguage.current.value=L10n.language();AppUpdateNotice.resume(this)}
- override fun onPause(){AppUpdateNotice.pause(this);super.onPause()}
+ override fun onResume(){super.onResume();AppLanguage.current.value=L10n.language();VersionReminder.resume(this)}
+ override fun onPause(){VersionReminder.pause(this);super.onPause()}
  private fun readDestination(){val kind=intent.getStringExtra("zzws_kind");if(kind in listOf("order.created","order.status","order.changed","order.comment","catalog.prices","catalog.offers","system")){destination=Pair(kind!!,intent.getStringExtra("zzws_order")?:"");intent.removeExtra("zzws_kind");intent.removeExtra("zzws_order")}}
 }
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,8 +50,8 @@ class UnifiedActivity:ComponentActivity(){
  val language=AppLanguage.current.value
  val activity=context as? UnifiedActivity
  val messages=remember{SnackbarHostState()}
+ LaunchedEffect(model.user?.text("id")){if(model.user!=null&&activity!=null)VersionReminder.check(activity)}
  LaunchedEffect(model.notice,model.user){if(model.user!=null&&model.notice.isNotBlank()&&model.screen!="catalog")messages.showSnackbar(L10n.t(model.notice),duration=SnackbarDuration.Short)}
- LaunchedEffect(model.user?.text("id")){if(model.user!=null&&activity!=null)AppUpdateNotice.check(activity)}
  LaunchedEffect(model.user?.text("id"),model.subscriptions?.optBoolean("enabled")){if(model.user!=null&&!model.demo&&model.subscriptions?.optBoolean("enabled")==true)PushHooks.attach(context,AppSession.api)else PushHooks.detach(context,AppSession.api)}
  LaunchedEffect(model.user,model.busy,activity?.destination){if(model.user!=null&&!model.busy){activity?.destination?.let{(kind,id)->activity.destination=null;model.notification(kind,id)}}}
  var compareDialog by remember{mutableStateOf(false)}

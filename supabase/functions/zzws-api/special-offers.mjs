@@ -11,12 +11,22 @@ export function wholesaleOfferPrice(product,admin=false){
  const price=product.isWholesalePromo?product.wholesale:admin&&product.kpIsPromo?product.kpPrice:0;
  return Number.isFinite(price)&&price>0?price:0;
 }
-export function offerProducts(row,products,admin=false){
+export function offerPrice(product,admin=false){
+ const promo=wholesaleOfferPrice(product,admin),regular=product.wholesale;
+ return promo||(Number.isFinite(regular)&&regular>0?regular:0);
+}
+export function manualOfferProducts(row,products,admin=false){
  if(!offerLive(row))return [];
- const available=new Map(products.filter(p=>wholesaleOfferPrice(p,admin)>0).map(p=>[p.articul,p]));
+ const available=new Map(products.filter(p=>offerPrice(p,admin)>0).map(p=>[p.articul,p]));
  return [...new Set(row.articles)].filter(a=>available.has(a)).map(a=>available.get(a));
+}
+export function offerProducts(row,products,admin=false){
+ // products have already been projected through this account's catalogue and prices.
+ const manual=manualOfferProducts(row,products,admin),automatic=products.filter(p=>wholesaleOfferPrice(p,admin)>0);
+ return [...new Map([...manual,...automatic].map(p=>[p.articul,p])).values()];
 }
 export function offerDTO(row,products,admin=false){
  const eligible=offerProducts(row,products,admin);
- return eligible.length?{id:row.id,title:row.title,revision:row.revision,expiresOn:row.expires_on,articles:eligible.map(p=>p.articul)}:null;
+ const manual=manualOfferProducts(row,products,admin);
+ return eligible.length?{id:row?.id||'wholesale-promotions',title:offerLive(row)?row.title:'Հատուկ առաջարկներ',revision:row?.revision||1,expiresOn:null,manualExpiresOn:offerLive(row)?row.expires_on:null,manualArticles:manual.map(p=>p.articul),articles:eligible.map(p=>p.articul)}:null;
 }

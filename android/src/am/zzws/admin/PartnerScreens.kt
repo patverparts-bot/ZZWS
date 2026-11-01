@@ -39,15 +39,9 @@ import java.time.ZoneId
 }
 @Composable private fun PartnerUpdateControl(model:UnifiedModel){
  val context=androidx.compose.ui.platform.LocalContext.current
- var status by remember{mutableStateOf("")}
- var ready by remember{mutableStateOf(false)}
- LaunchedEffect(model.demo){if(!model.demo)while(true){
-  val state=kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO){BackgroundUpdates.status(context) to BackgroundUpdates.ready(context)}
-  status=state.first;ready=state.second;kotlinx.coroutines.delay(1000)
- }}
- if(status.isNotEmpty())LocalizedText(status,fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
- OutlinedButton(onClick={if(ready)BackgroundUpdates.install(context as android.app.Activity)else AppUpdateNotice.manual(context as android.app.Activity)},enabled=!model.demo&&!model.busy,modifier=Modifier.fillMaxWidth()){
-  LocalizedText(if(ready)"Տեղադրել թարմացումը"else"Ստուգել թարմացումները")
+ LocalizedText("Թարմացումները ներբեռնեք ZZWS կայքի անձնական բաժնից։ Անհրաժեշտության դեպքում կրկին մուտք գործեք։",fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
+ OutlinedButton(onClick={VersionReminder.manual(context as android.app.Activity)},enabled=!model.demo&&!model.busy,modifier=Modifier.fillMaxWidth()){
+  LocalizedText("Ստուգել թարմացումները")
  }
 }
 @Composable internal fun PartnerOrderSearch(model:UnifiedModel){

@@ -6,21 +6,25 @@ import org.junit.Test
 
 class PromotionPolicyTest {
  private fun offer(vararg codes:String)=JSONObject().put("id","published").put("articles",org.json.JSONArray(codes.toList()))
- @Test fun publishedListExcludesRetailOnlyAndUnlistedWholesaleCampaigns(){
+ @Test fun manualListAddsOrdinaryGoodsToAutomaticAccountWholesaleCampaigns(){
   val products=listOf(product("included","isWholesalePromo"),product("retail-only","isPromo"),product("unlisted","isWholesalePromo"),product("ordinary"))
-  assertEquals(listOf("included"),publishedOfferProducts(products,offer("included","retail-only","ordinary"),false,"WS",false).map{it.code})
-  assertTrue(publishedOfferProducts(products,null,false,"WS",false).isEmpty())
+  assertEquals(listOf("included","retail-only","ordinary","unlisted"),publishedOfferProducts(products,offer("included","retail-only","ordinary"),false,"WS",false).map{it.code})
+  assertEquals(listOf("included","unlisted"),publishedOfferProducts(products,null,false,"WS",false).map{it.code})
  }
  @Test fun publishedWholesaleCampaignMustMatchTheAccountPriceContext(){
   val products=listOf(product("kp","kpIsPromo"),product("retail","isPromo"))
-  assertTrue(publishedOfferProducts(products,offer("kp","retail"),true,"WS",false).isEmpty())
-  assertEquals(listOf("kp"),publishedOfferProducts(products,offer("kp","retail"),true,"KP",false).map{it.code})
-  assertTrue(publishedOfferProducts(products,offer("kp","retail"),true,"KP",true).isEmpty())
+  val automatic=offer().put("manualArticles",org.json.JSONArray())
+  assertTrue(publishedOfferProducts(products,automatic,true,"WS",false).isEmpty())
+  assertEquals(listOf("kp"),publishedOfferProducts(products,automatic,true,"KP",false).map{it.code})
+  assertTrue(publishedOfferProducts(products,automatic,true,"KP",true).isEmpty())
  }
- @Test fun expiredOrUnbuyablePublishedProductsAreHiddenWithoutFallback(){
+ @Test fun expiredManualListLeavesAutomaticPromotionsAndHidesUnbuyableGoods(){
   val products=listOf(product("expired","isWholesalePromo"),product("zero","isWholesalePromo",ws=0.0))
-  assertTrue(publishedOfferProducts(products,offer("expired").put("expiresOn","2000-01-01"),false,"WS",false).isEmpty())
-  assertTrue(publishedOfferProducts(products,offer("zero","missing"),false,"WS",false).isEmpty())
+  assertEquals(listOf("expired"),publishedOfferProducts(products,offer("expired").put("manualExpiresOn","2000-01-01"),false,"WS",false).map{it.code})
+  assertEquals(listOf("expired"),publishedOfferProducts(products,offer("zero","missing"),false,"WS",false).map{it.code})
+  val manual=listOf(product("ordinary"),product("zero",ws=0.0))
+  assertTrue(publishedOfferProducts(manual,offer("ordinary").put("manualExpiresOn","2000-01-01"),false,"WS",false).isEmpty())
+  assertEquals(listOf("ordinary"),publishedOfferProducts(manual,offer("ordinary","zero","other-customer-only"),false,"WS",false).map{it.code})
  }
  private fun product(code:String,flag:String?=null,ws:Double=100.0,kp:Double=80.0,retail:Double=150.0):Product{
   val data=JSONObject().put("articul",code).put("name",code).put("brand","Test").put("category","TV").put("wholesale",ws).put("kpPrice",kp).put("retail",retail)
