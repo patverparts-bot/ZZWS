@@ -1,6 +1,6 @@
 const http=require('node:http'),fs=require('node:fs'),path=require('node:path');
 module.exports=async function serveSite(){
- const root=path.resolve(__dirname,'../..'),overlay=process.env.ZZWS_STATIC_OVERLAY?path.resolve(process.env.ZZWS_STATIC_OVERLAY):null,types={'.html':'text/html','.js':'application/javascript','.json':'application/json','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp','.ico':'image/x-icon'};
+ const root=path.resolve(__dirname,'../..'),overlay=process.env.ZZWS_STATIC_OVERLAY?path.resolve(process.env.ZZWS_STATIC_OVERLAY):null,types={'.html':'text/html','.js':'application/javascript','.json':'application/json','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.ico':'image/x-icon'};
  const server=http.createServer((req,res)=>{
   try{
    let name=decodeURIComponent(new URL(req.url,'http://localhost').pathname);if(name.endsWith('/'))name+='index.html';

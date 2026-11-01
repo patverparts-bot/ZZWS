@@ -1,0 +1,72 @@
+{
+  "reviewedAt": "2026-11-02",
+  "policy": "Only manually reviewed whole-product photographs; no guessed URLs, dimension drawings, placeholders or product-order selection.",
+  "photos": [
+    {
+      "category": "tv",
+      "articul": "01472108",
+      "model": "Samsung QE65QN90FAUXRU",
+      "source": "js/product-images/01472108.png",
+      "file": "js/category-photos/tv-185983ca06df.png",
+      "width": 494,
+      "height": 466,
+      "sha256": "185983ca06df5c11e1761dc1944ab732fb65b2bc104d6482c36fe5de7fddb665",
+      "review": "Visually checked: complete physical product, not a technical drawing or detail-only image."
+    },
+    {
+      "category": "washer",
+      "articul": "7201842",
+      "model": "Bosch WGB24410ME",
+      "source": "https://www.zigzag.am/media/catalog/product/cache/6e22448b5f90615b7a8022ae7c490765/7/2/7201842-1.png",
+      "file": "js/category-photos/washer-5ccf37918cfb.png",
+      "width": 453,
+      "height": 630,
+      "sha256": "5ccf37918cfb6cc9479359a4ee01ae740412635cf0cea1e92b8e94090fab3cd8",
+      "review": "Visually checked: complete physical product, not a technical drawing or detail-only image."
+    },
+    {
+      "category": "dishwasher",
+      "articul": "7301020",
+      "model": "Bosch SMP6EMW86Q",
+      "source": "https://www.zigzag.am/media/catalog/product/cache/6e22448b5f90615b7a8022ae7c490765/q/a/qabyuyan_ma_n_bosch_smp6emw86q_1_1.jpeg",
+      "file": "js/category-photos/dishwasher-feef7ffb103b.jpg",
+      "width": 510,
+      "height": 630,
+      "sha256": "feef7ffb103bf4a5cf57a806fcffd67f9169be002fbde8ef1afa42ca669ffdf3",
+      "review": "Visually checked: complete physical product, not a technical drawing or detail-only image."
+    },
+    {
+      "category": "hob",
+      "articul": "5203032",
+      "model": "Bosch PNK6B6P41R",
+      "source": "https://www.zigzag.am/media/catalog/product/cache/6e22448b5f90615b7a8022ae7c490765/6/5/652595458.jpeg",
+      "file": "js/category-photos/hob-f936654bbc4e.jpg",
+      "width": 715,
+      "height": 630,
+      "sha256": "f936654bbc4eda8f939980d17ea645fe452d8ae947870cf88b8cddfd9d36f999",
+      "review": "Visually checked: complete physical product, not a technical drawing or detail-only image."
+    },
+    {
+      "category": "oven",
+      "articul": "528279",
+      "model": "Haier HOQ-F4AAN3GB",
+      "source": "https://www.zigzag.am/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/o/h/ohsv9a3kxu0a7v9ff7xp3wgb9y79lpmt.jpg",
+      "file": "js/category-photos/oven-1d80debd6be1.jpg",
+      "width": 1200,
+      "height": 1200,
+      "sha256": "1d80debd6be10e70ccfe99d09111c7856406545bb0910bdadf3f5afbc8ac2d16",
+      "review": "Visually checked: complete physical product, not a technical drawing or detail-only image."
+    },
+    {
+      "category": "fridge",
+      "articul": "530196",
+      "model": "Bosch KSV36VL30U",
+      "source": "https://www.zigzag.am/media/catalog/product/cache/6e22448b5f90615b7a8022ae7c490765/5/3/530196.png",
+      "file": "js/category-photos/fridge-c6fdbe794654.png",
+      "width": 258,
+      "height": 630,
+      "sha256": "c6fdbe79465474faa41011b68ad0e6eaf73ff1e573ca7e9778519e4936108eaa",
+      "review": "Visually checked: complete physical product, not a technical drawing or detail-only image."
+    }
+  ]
+}
