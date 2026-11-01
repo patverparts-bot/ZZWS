@@ -3,7 +3,11 @@
  let admin=null,owner=false,clientTicket=0,noticeTicket=0,globalTicket=0,noticeDialog=null;
  async function acknowledge(event){
   if(!admin)return;const who=admin;noticeDialog?.remove();const d=node('dialog',null,'receipt-acknowledgement-dialog'),title=node('h2','Ստացման հաստատում'),close=node('button','Փակել'),error=node('p');noticeDialog=d;title.id='receiptAcknowledgementTitle';d.setAttribute('aria-labelledby',title.id);close.type='button';close.onclick=()=>{d.close();d.remove();if(noticeDialog===d)noticeDialog=null;};error.setAttribute('role','status');d.append(title,node('p',event.customer.client||event.customer.customerCode),node('p','Պատվեր №'+event.number),node('p','Հաճախորդը հաստատել է ապրանքների ստացումը։'),error,close);document.body.append(d);d.addEventListener('cancel',e=>{e.preventDefault();close.click();});d.showModal();close.focus();
-  try{await ZZWS.json('admin/orders/receipt-notifications/read',{method:'POST',body:JSON.stringify({id:event.id})});if(who===admin)await poll();}catch(e){if(who===admin&&d.isConnected)error.textContent=ZZWS.message(e);}
+  try{
+   const order=await ZZWS.json('admin/orders/detail',{method:'POST',body:JSON.stringify({id:event.order_id})});if(who!==admin||!d.isConnected)return;
+   const list=node('ul',null,'receipt-acknowledgement-items');for(const item of order.lines||[]){const row=node('li');row.append(node('strong',item.name),node('small',item.articul+' · × '+item.qty));list.append(row);}error.before(list,node('p','Ընդհանուր՝ '+Number(order.total).toLocaleString(window.ZZWS_I18N?.language==='ru'?'ru-RU':'hy-AM')+' ֏','receipt-acknowledgement-total'));
+   await ZZWS.json('admin/orders/receipt-notifications/read',{method:'POST',body:JSON.stringify({id:event.id})});if(who===admin)await poll();
+  }catch(e){if(who===admin&&d.isConnected)error.textContent=ZZWS.message(e);}
  }
  const modeLabel={inherit:'Ընդհանուր կարգավորում',on:'Միացված է',off:'Անջատված է՝ անժամկետ',until:'Ժամանակավորապես անջատված է'};
  function buildControls(root,setting,global,customer=null,state=null){
