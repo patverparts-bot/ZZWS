@@ -1,0 +1,1076 @@
+{
+  "description": "Original brand artwork. Simple Icons marks are CC0; trademarks belong to their respective owners.",
+  "sources": [
+    {
+      "name": "Accesstyle",
+      "file": "accesstyle.png",
+      "source": "https://www.google.com/s2/favicons?domain=accesstyle.ru&sz=128",
+      "officialSource": "https://accesstyle.ru",
+      "kind": "official-site icon cache"
+    },
+    {
+      "name": "Amazon",
+      "file": "amazon.svg",
+      "source": "https://raw.githubusercontent.com/simple-icons/simple-icons/11.15.0/icons/amazon.svg",
+      "officialSource": "https://www.amazon.com",
+      "kind": "Simple Icons 11.15.0"
+    },
+    {
+      "name": "Anker",
+      "file": "anker.png",
+      "source": "https://www.anker.com/favicon.png",
+      "officialSource": "https://www.anker.com/",
+      "kind": "official icon"
+    },
+    {
+      "name": "APC",
+      "file": "apc.svg",
+      "source": "https://www.logo.wine/a/logo/APC_by_Schneider_Electric/APC_by_Schneider_Electric-Logo.wine.svg",
+      "officialSource": "https://apc.com",
+      "kind": "verified official artwork"
+    },
+    {
+      "name": "Aqara",
+      "file": "aqara.svg",
+      "source": "https://www.aqara.com/wp-content/uploads/2023/03/aqara_logo.svg",
+      "officialSource": "https://www.aqara.com/en/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Aquaphor",
+      "file": "aquaphor.svg",
+      "source": "https://aquaphor.com/static/media/logo/aquaphor_en_dark_blue_pl_mZLJoIw.svg",
+      "officialSource": "https://aquaphor.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Aran",
+      "file": "aran.webp",
+      "source": "https://www.arancucine.it/wp-content/uploads/2022/05/Logo_Aran-Cucine_Color.webp",
+      "officialSource": "https://www.arancucine.it/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Ardes - Poly Pool",
+      "file": "ardespolypool.png",
+      "source": "https://ardes.it/wp-content/uploads/2021/07/Ardes_DEF_RGB-01-1.png",
+      "officialSource": "https://ardes.it/",
+      "kind": "verified official artwork"
+    },
+    {
+      "name": "Aroma Gold",
+      "file": "aromagold.png",
+      "source": "https://www.google.com/s2/favicons?domain=aromagold.lt&sz=128",
+      "officialSource": "https://aromagold.lt",
+      "kind": "official-site icon cache"
+    },
+    {
+      "name": "Audio-Technica",
+      "file": "audiotechnica.svg",
+      "source": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/audiotechnica.svg",
+      "officialSource": "https://commons.wikimedia.org/wiki/File:Audio-technica.svg",
+      "kind": "Simple Icons"
+    },
+    {
+      "name": "B & W",
+      "file": "bw.svg",
+      "source": "https://www.bowerswilkins.com/on/demandware.static/-/Library-Sites-bowers_northamerica_shared/default/dwedbc712e/logo-white.svg",
+      "officialSource": "https://www.bowerswilkins.com/en-us/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Baci Milano",
+      "file": "bacimilano.webp",
+      "source": "https://bacimilano.com/baci/2021/12/logo_baci_milano.png",
+      "officialSource": "https://bacimilano.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Ballu",
+      "file": "ballu.svg",
+      "source": "https://www.ballu.ru/images/ballu_logo_2026.svg",
+      "officialSource": "https://www.ballu.ru/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Barazzoni",
+      "file": "barazzoni.svg",
+      "source": "https://www.barazzoni.it/cdn/shop/files/logo_3.svg?v=1761117993&width=200",
+      "officialSource": "https://www.barazzoni.it/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Barry",
+      "file": "barry.png",
+      "source": "https://barry.am/images/logo.png",
+      "officialSource": "https://barry.am/en/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Belkin",
+      "file": "belkin.svg",
+      "source": "https://www.belkin.com/on/demandware.static/Sites-BELKUS-Site/-/default/dw18e37d28/images/brand/belkin_logo_notm.svg",
+      "officialSource": "https://www.belkin.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Benq",
+      "file": "benq.png",
+      "source": "https://www.benq.eu/etc/designs/g6/clientlib-site/img/header-icon/nav-icon-benq-logo.png",
+      "officialSource": "https://www.benq.eu/en-cee/index.html",
+      "kind": "official logo"
+    },
+    {
+      "name": "Beper",
+      "file": "beper.svg",
+      "source": "https://www.beper.com/img/logo_white.svg",
+      "officialSource": "https://www.beper.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Berlinger Haus",
+      "file": "berlingerhaus.png",
+      "source": "https://berlingerhaus.com/wp-content/uploads/2021/04/berlingerhaus-full-new.png",
+      "officialSource": "https://berlingerhaus.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Beurer",
+      "file": "beurer.svg",
+      "source": "https://www.beurer.com/assets/images/header/logo-en_GB.svg",
+      "officialSource": "https://www.beurer.com/global/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Bialetti",
+      "file": "bialetti.png",
+      "source": "https://www.bialetti.com/media/logo/default/5-layers_3x.png",
+      "officialSource": "https://www.bialetti.com/ee_en?___store=ee_en&___from_store=it_it",
+      "kind": "official logo"
+    },
+    {
+      "name": "Bollire",
+      "file": "bollire.svg",
+      "source": "https://bollire.eu/wp-content/uploads/2021/02/black-bollire.svg",
+      "officialSource": "https://bollire.eu/",
+      "kind": "verified official artwork"
+    },
+    {
+      "name": "BQ",
+      "file": "bq.png",
+      "source": "https://www.google.com/s2/favicons?domain=bq.ru&sz=128",
+      "officialSource": "https://bq.ru",
+      "kind": "official-site icon cache"
+    },
+    {
+      "name": "Brandani",
+      "file": "brandani.svg",
+      "source": "https://brandani.it/wp-content/uploads/2024/02/logo_brandani_bianco.svg",
+      "officialSource": "https://brandani.it/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Brita",
+      "file": "brita.webp",
+      "source": "https://images.ctfassets.net/bugnyha6so6z/5uuHeWLRV7O6NgdHtsR4T2/6ce6c984e592eb2a9553cd69cc62b1dc/footer-logo-2x.png?fm=webp&w=640&q=75",
+      "officialSource": "https://www.brita.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Canyon",
+      "file": "canyon.svg",
+      "source": "https://canyon.eu/svg/logo-you-can.svg",
+      "officialSource": "https://canyon.eu/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Cecotec",
+      "file": "cecotec.png",
+      "source": "https://www.google.com/s2/favicons?domain=cecotec.es&sz=128",
+      "officialSource": "https://cecotec.es",
+      "kind": "official-site icon cache"
+    },
+    {
+      "name": "Centek",
+      "file": "centek.svg",
+      "source": "https://centek.ru/wp-content/uploads/2022/08/logo-centek-new.svg",
+      "officialSource": "https://centek.ru/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Cilio",
+      "file": "cilio.png",
+      "source": "https://www.kuechenprofi.de/media/0a/fb/88/1700079710/cilio_logo.png?ts=1700079710",
+      "officialSource": "https://www.kuechenprofi.de/cilio",
+      "kind": "verified official artwork"
+    },
+    {
+      "name": "Cougar",
+      "file": "cougar.png",
+      "source": "https://cougargaming.com/_cgrwdr_/wwdpp/wp-content/uploads/2022/04/cropped-2022logo-small.png",
+      "officialSource": "https://cougargaming.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Cuisinart",
+      "file": "cuisinart.svg",
+      "source": "https://www.cuisinart.com/on/demandware.static/Sites-us-cuisinart-sfra-Site/-/default/dw30ec49df/images/logo.svg",
+      "officialSource": "https://www.cuisinart.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "CUKTECH",
+      "file": "cuktech.jpg",
+      "source": "https://cuktech.com/cdn/shop/files/logo_660x.jpg?v=1764051470",
+      "officialSource": "https://cuktech.com/",
+      "kind": "verified official artwork"
+    },
+    {
+      "name": "D-link",
+      "file": "dlink.png",
+      "source": "https://www.dlink.com/_include/redesign/images/apple-touch-icon.png",
+      "officialSource": "https://www.dlink.com/en",
+      "kind": "official icon"
+    },
+    {
+      "name": "Darboven",
+      "file": "darboven.png",
+      "source": "https://www.darboven.com/build/darboven/images/favicon/apple-touch-icon.png",
+      "officialSource": "https://www.darboven.com/de-de",
+      "kind": "official icon"
+    },
+    {
+      "name": "Deerma",
+      "file": "deerma.png",
+      "source": "https://deerma.ph/wp-content/uploads/2020/12/LOGO1.png",
+      "officialSource": "https://deerma.ph/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Denon",
+      "file": "denon.svg",
+      "source": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/denon.svg",
+      "officialSource": "https://www.denon.com",
+      "kind": "Simple Icons"
+    },
+    {
+      "name": "DJI",
+      "file": "dji.svg",
+      "source": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/dji.svg",
+      "officialSource": "https://www.dji.com",
+      "kind": "Simple Icons"
+    },
+    {
+      "name": "Doogee",
+      "file": "doogee.webp",
+      "source": "https://www.doogee.com/cdn/shop/files/DOOGEE-RGB-logo_947bf174-7f08-4db3-9812-7fa7aa3614ba.png?v=1782440645&width=1687",
+      "officialSource": "https://www.doogee.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Dr. Beckmann",
+      "file": "drbeckmann.svg",
+      "source": "https://www.dr-beckmann.com/_assets/6e0ddf8a12dfb824bd69f231bd60adc6/assets/img/logo.svg",
+      "officialSource": "https://www.dr-beckmann.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Dreame",
+      "file": "dreame.png",
+      "source": "https://assets.dreame.com/dreame/dreame-next/_next/static/media/head_dreame_logo.c693a61e.png",
+      "officialSource": "https://www.dreame.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Easy Life",
+      "file": "easylife.png",
+      "source": "https://www.google.com/s2/favicons?domain=easylife.boutique&sz=128",
+      "officialSource": "https://easylife.boutique",
+      "kind": "official-site icon cache"
+    },
+    {
+      "name": "Elac",
+      "file": "elac.svg",
+      "source": "https://elac.com/img/elac/logo-100-b.svg",
+      "officialSource": "https://elac.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Electrolux",
+      "file": "electrolux.svg",
+      "source": "https://country.electrolux.com/resource/logotype/electrolux-logo.svg",
+      "officialSource": "https://country.electrolux.com/index.html?requested=",
+      "kind": "official logo"
+    },
+    {
+      "name": "Energizer",
+      "file": "energizer.png",
+      "source": "https://energizer.com/eu/armenia/wp-content/uploads/sites/44/2024/04/Energizer_brand.png",
+      "officialSource": "https://energizer.com/eu/armenia/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Espiel",
+      "file": "espiel.jpg",
+      "source": "https://www.espiel.gr/img/espiel-logo-1791210945.jpg",
+      "officialSource": "https://www.espiel.gr/el/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Evelatus",
+      "file": "evelatus.svg",
+      "source": "https://static.tildacdn.net/tild3164-3335-4130-b364-346437366631/logo.svg",
+      "officialSource": "https://evelatus.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Fissman",
+      "file": "fissman.webp",
+      "source": "https://i0.wp.com/fissman.com/wp-content/uploads/2025/03/cropped-icon.webp?fit=180%2C180&#038;ssl=1",
+      "officialSource": "https://fissman.com/",
+      "kind": "official icon"
+    },
+    {
+      "name": "Frog-Is",
+      "file": "frogis.png",
+      "source": "https://www.frog-is.com/wp-content/themes/bones-cua/library/built/img/logo-footer.png",
+      "officialSource": "https://frog-is.com/",
+      "kind": "verified official artwork"
+    },
+    {
+      "name": "Fujifilm",
+      "file": "fujifilm.svg",
+      "source": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/fujifilm.svg",
+      "officialSource": "https://www.fujifilm.com",
+      "kind": "Simple Icons"
+    },
+    {
+      "name": "Garmin",
+      "file": "garmin.svg",
+      "source": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/garmin.svg",
+      "officialSource": "https://creative.garmin.com/styleguide/logo/",
+      "kind": "Simple Icons"
+    },
+    {
+      "name": "Gidrolock",
+      "file": "gidrolock.svg",
+      "source": "https://gidrolock.ru/local/templates/gidrolock/assets/images/icons/logo-small.svg",
+      "officialSource": "https://gidrolock.ru/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Gigabyte",
+      "file": "gigabyte.svg",
+      "source": "https://www.gigabyte.com/favicon.svg",
+      "officialSource": "https://www.gigabyte.com/",
+      "kind": "official icon"
+    },
+    {
+      "name": "Google",
+      "file": "google.svg",
+      "source": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/google.svg",
+      "officialSource": "https://partnermarketinghub.withgoogle.com",
+      "kind": "Simple Icons"
+    },
+    {
+      "name": "GoPro",
+      "file": "gopro.ico",
+      "source": "https://static.gopro.com/favicons/favicon.ico",
+      "officialSource": "https://gopro.com/en/am/",
+      "kind": "official icon"
+    },
+    {
+      "name": "GORENJE",
+      "file": "gorenje.png",
+      "source": "https://www.google.com/s2/favicons?domain=international.gorenje.com&sz=128",
+      "officialSource": "https://international.gorenje.com",
+      "kind": "official-site icon cache"
+    },
+    {
+      "name": "GPTea",
+      "file": "gptea.png",
+      "source": "https://products.gagarinproject.am/apple-touch-icon.png",
+      "officialSource": "https://products.gagarinproject.am/hy/gptea",
+      "kind": "official icon"
+    },
+    {
+      "name": "Graef",
+      "file": "graef.svg",
+      "source": "https://www.graef.de/static/gfx/logo_de.svg",
+      "officialSource": "https://www.graef.de/de/",
+      "kind": "verified official artwork"
+    },
+    {
+      "name": "Hama",
+      "file": "hama.png",
+      "source": "https://www.google.com/s2/favicons?domain=hama.com&sz=128",
+      "officialSource": "https://hama.com",
+      "kind": "official-site icon cache"
+    },
+    {
+      "name": "Harman Kardon",
+      "file": "harmankardon.png",
+      "source": "https://www.google.com/s2/favicons?domain=harmankardon.com%2Fen&sz=128",
+      "officialSource": "https://harmankardon.com/en",
+      "kind": "official-site icon cache"
+    },
+    {
+      "name": "Hitachi",
+      "file": "hitachi.svg",
+      "source": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/hitachi.svg",
+      "officialSource": "https://commons.wikimedia.org/wiki/File:Hitachi_inspire_the_next-Logo.svg",
+      "kind": "Simple Icons"
+    },
+    {
+      "name": "Honor",
+      "file": "honor.svg",
+      "source": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/honor.svg",
+      "officialSource": "https://www.hihonor.com",
+      "kind": "Simple Icons"
+    },
+    {
+      "name": "HyperX",
+      "file": "hyperx.svg",
+      "source": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/hyperx.svg",
+      "officialSource": "https://ca.hyperx.com/cdn/shop/files/image_placeholder.svg",
+      "kind": "Simple Icons"
+    },
+    {
+      "name": "Icewatch",
+      "file": "icewatch.webp",
+      "source": "https://www.ice-watch.com/cdn/shop/files/logo-ice-watch-transp.png?crop=center&height=32&v=1780908923&width=32",
+      "officialSource": "https://www.ice-watch.com/",
+      "kind": "official icon"
+    },
+    {
+      "name": "JLab",
+      "file": "jlab.svg",
+      "source": "https://www.jlab.com/cdn/shop/files/JLogo-BlueBG.svg?v=1753807021&width=600",
+      "officialSource": "https://www.jlab.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Julius Meinl",
+      "file": "juliusmeinl.svg",
+      "source": "https://juliusmeinl.com/App_Themes/Emakina/images/jm-logo-red.svg",
+      "officialSource": "https://juliusmeinl.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "JURA",
+      "file": "jura.png",
+      "source": "https://www.jura.com/apple-touch-icon.png",
+      "officialSource": "https://www.jura.com/de",
+      "kind": "official icon"
+    },
+    {
+      "name": "JVC",
+      "file": "jvc.png",
+      "source": "https://eu.jvc.com/images/_theme/1/jvc_logo.png",
+      "officialSource": "https://eu.jvc.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "K-Array",
+      "file": "karray.svg",
+      "source": "https://static-file.k-array.com/img/Logo.svg",
+      "officialSource": "https://www.k-array.com/en",
+      "kind": "official logo"
+    },
+    {
+      "name": "Karcher",
+      "file": "karcher.svg",
+      "source": "https://s1.kaercher-media.com/versions/2026.3.0/static/img/kaercher_logo.svg",
+      "officialSource": "https://www.kaercher.com/int/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Kenwood",
+      "file": "kenwood.png",
+      "source": "https://www.google.com/s2/favicons?domain=kenwoodworld.com%2Fen&sz=128",
+      "officialSource": "https://kenwoodworld.com/en",
+      "kind": "official-site icon cache"
+    },
+    {
+      "name": "Kikkerland",
+      "file": "kikkerland.png",
+      "source": "https://kikkerland.com/cdn/shop/files/KIK-logo-2018_Horizontal-cropped_5ff31f98-2c7a-45da-9e8b-c9fa944461fe_320x.png?v=1630598844",
+      "officialSource": "https://kikkerland.com/",
+      "kind": "verified official artwork"
+    },
+    {
+      "name": "Kimbo",
+      "file": "kimbo.svg",
+      "source": "https://kimbo.it/cdn/shop/files/logo_lg-white_1000x1000.svg?v=1683639205",
+      "officialSource": "https://kimbo.it/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Kingston",
+      "file": "kingston.png",
+      "source": "https://www.google.com/s2/favicons?domain=kingston.com&sz=128",
+      "officialSource": "https://kingston.com",
+      "kind": "official-site icon cache"
+    },
+    {
+      "name": "KITCHENAID",
+      "file": "kitchenaid.png",
+      "source": "https://images.ctfassets.net/9hu0xqamys79/3vHXf31A1maKNseUL1iTuj/984e967ba230ee1c36ab7d39173bfaa1/Group_88011409.png",
+      "officialSource": "https://www.kitchenaid.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Klipsch",
+      "file": "klipsch.svg",
+      "source": "https://klipsch.imgix.net/general/brand-logos/Klipsch_script_logo_black2.svg?crop=focalpoint&domain=klipsch.imgix.net&fit=crop&fm=webp&fp-x=0.5&fp-y=0.5&h=107&ixlib=php-3.3.1&q=100&w=150",
+      "officialSource": "https://www.klipsch.com/uk/",
+      "kind": "official logo"
+    },
+    {
+      "name": "KONOS",
+      "file": "konos.svg",
+      "source": "https://konos.de/wp-content/uploads/2025/02/Logo-KONOS-2019_druck.svg",
+      "officialSource": "https://konos.de/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Kooduu",
+      "file": "kooduu.webp",
+      "source": "https://kooduu.com/cdn/shop/files/B2C_favicon.png?crop=center&height=32&v=1696250413&width=32",
+      "officialSource": "https://kooduu.com/en-int",
+      "kind": "official icon"
+    },
+    {
+      "name": "Krups",
+      "file": "krups.png",
+      "source": "https://www.krups.com/medias/Digital-Logo-Krups-.png?context=bWFzdGVyfGltYWdlc3w2NzkyMHxpbWFnZS9wbmd8YVcxaFoyVnpMMmczTkM5b01ETXZNVFE1TmpRMU1qa3lNREV4T0RJdWNHNW58ZjY3NWJkZmE1NzcxYTIxZjUwYjdkMTRiOTQyMzY3ODczOTY3ZmZkYmI0ZjkxZjRlMmYzZjJmOTNiYzQ3ZTE0Nw",
+      "officialSource": "https://www.krups.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "L`Atelier du vin",
+      "file": "latelierduvin.svg",
+      "source": "https://www.atelierduvin.com/wp-content/themes/atelier-du-vin/ressources/img/logo/logo-round-head.svg",
+      "officialSource": "https://www.atelierduvin.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "LauraStar",
+      "file": "laurastar.png",
+      "source": "https://www.laurastar.com/dw/image/v2/BCQQ_PRD/on/demandware.static/-/Sites-laurastar-eu-Library/default/dw954ab849/Logo%20Laurastar/Laurastar_logo_50mm_EU_CMJN.png",
+      "officialSource": "https://www.laurastar.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Lavazza",
+      "file": "lavazza.png",
+      "source": "https://www.google.com/s2/favicons?domain=lavazza.com&sz=128",
+      "officialSource": "https://lavazza.com",
+      "kind": "official-site icon cache"
+    },
+    {
+      "name": "Lego",
+      "file": "lego.png",
+      "source": "https://www.google.com/s2/favicons?domain=lego.com&sz=128",
+      "officialSource": "https://lego.com",
+      "kind": "official-site icon cache"
+    },
+    {
+      "name": "Leonardo",
+      "file": "leonardo.png",
+      "source": "https://www.leonardo.de/cdn/shop/files/LEONARDO-Logo_162640_90x.png?v=1751880310",
+      "officialSource": "https://leonardo.de",
+      "kind": "verified official artwork"
+    },
+    {
+      "name": "Liebherr",
+      "file": "liebherr.svg",
+      "source": "https://assets-cdn.liebherr.com/assets/api/6956aee7-a4c9-44b3-ae14-c7518f4f6655/original/lh-logo-black.svg",
+      "officialSource": "https://www.liebherr.com/en-int/group/start-page-3935069",
+      "kind": "official logo"
+    },
+    {
+      "name": "LightWave",
+      "file": "lightwave.webp",
+      "source": "https://lightwaveglobal.com/media/catalog/category/brand_logo/lightwave_brand_logo_1.webp",
+      "officialSource": "https://lightwaveglobal.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Logitech",
+      "file": "logitech.ico",
+      "source": "https://www.logitech.com/favicon.ico",
+      "officialSource": "https://www.logitech.com/en-us/change-location",
+      "kind": "official icon"
+    },
+    {
+      "name": "Lorgar",
+      "file": "lorgar.png",
+      "source": "https://lorgar.com/favicon/apple-touch-icon.png",
+      "officialSource": "https://lorgar.com/",
+      "kind": "official icon"
+    },
+    {
+      "name": "Luigi Ferrero",
+      "file": "luigiferrero.png",
+      "source": "https://luigiferrero.com/web/images/favicons/luigi/favicon.png",
+      "officialSource": "https://luigiferrero.com/",
+      "kind": "official icon"
+    },
+    {
+      "name": "Marantz",
+      "file": "marantz.svg",
+      "source": "https://www.marantz.com/on/demandware.static/-/Library-Sites-marantz_europe_shared/default/dw39525550/Marantz_Logo_White.svg",
+      "officialSource": "https://www.marantz.com/en/",
+      "kind": "official logo"
+    },
+    {
+      "name": "MDV",
+      "file": "mdv.svg",
+      "source": "https://mdv-aircond.ru/images/svg/mdv-logo.svg",
+      "officialSource": "https://mdv-aircond.ru/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Microsoft",
+      "file": "microsoft.svg",
+      "source": "https://raw.githubusercontent.com/simple-icons/simple-icons/11.15.0/icons/microsoft.svg",
+      "officialSource": "https://developer.microsoft.com",
+      "kind": "Simple Icons 11.15.0"
+    },
+    {
+      "name": "Monitor Audio",
+      "file": "monitoraudio.png",
+      "source": "https://www.monitoraudio.com/site/assets/files/1016/ma-logo_website_white.png",
+      "officialSource": "https://www.monitoraudio.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Mova",
+      "file": "mova.webp",
+      "source": "https://www.mova.tech/cdn/shop/files/MOVA_LOGO_f4a43962-86b7-40b4-a4b1-857777ed89b2.png?v=1765937681",
+      "officialSource": "https://www.mova.tech/",
+      "kind": "official logo"
+    },
+    {
+      "name": "MPM",
+      "file": "mpm.jpg",
+      "source": "https://mpm.pl/img/logo-1763980420.jpg",
+      "officialSource": "https://mpm.pl/pl/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Muhler",
+      "file": "muhler.png",
+      "source": "https://www.google.com/s2/favicons?domain=muhler.bg&sz=128",
+      "officialSource": "https://muhler.bg",
+      "kind": "official-site icon cache"
+    },
+    {
+      "name": "Nescafe",
+      "file": "nescafe.png",
+      "source": "https://www.nescafe.com/sites/default/files/latest_logo_white.png",
+      "officialSource": "https://www.nescafe.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Nespresso",
+      "file": "nespresso.png",
+      "source": "https://www.google.com/s2/favicons?domain=nespresso.com&sz=128",
+      "officialSource": "https://nespresso.com",
+      "kind": "official-site icon cache"
+    },
+    {
+      "name": "Nothing",
+      "file": "nothing.webp",
+      "source": "https://cdn.shopify.com/oxygen-v2/43495/38485/80939/4894965/assets/Bkp3sDzU.png",
+      "officialSource": "https://nothing.tech/",
+      "kind": "official icon"
+    },
+    {
+      "name": "Nutribullet",
+      "file": "nutribullet.svg",
+      "source": "https://www.nutribullet.com/wp-content/themes/nutribullet/dist/images/newHeader/nav-logo-nutribullet.svg",
+      "officialSource": "https://www.nutribullet.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Oclean",
+      "file": "oclean.svg",
+      "source": "https://www.oclean.com/cdn/shop/files/logo.svg?v=1684479948&width=51",
+      "officialSource": "https://www.oclean.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Onkyo",
+      "file": "onkyo.svg",
+      "source": "https://onkyo.com/images/Logo%20-%20Onkyo%20Wide%20Wht.svg",
+      "officialSource": "https://onkyo.com/emea/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Panasonic",
+      "file": "panasonic.svg",
+      "source": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/panasonic.svg",
+      "officialSource": "https://www.panasonic.com",
+      "kind": "Simple Icons"
+    },
+    {
+      "name": "Piu Forty",
+      "file": "piuforty.png",
+      "source": "https://piuforty.com/front-assets/170/assets/img/root/favicon.png",
+      "officialSource": "https://piuforty.com/IT",
+      "kind": "official icon"
+    },
+    {
+      "name": "Polar",
+      "file": "polar.svg",
+      "source": "https://www.polar.com/welcome/img/polar-logo.svg",
+      "officialSource": "https://www.polar.com/welcome/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Potensic",
+      "file": "potensic.ico",
+      "source": "https://www.potensic.com/favicon.ico",
+      "officialSource": "https://www.potensic.com/",
+      "kind": "official icon"
+    },
+    {
+      "name": "Prestigio",
+      "file": "prestigio.ico",
+      "source": "https://prestigio.com/assets/img/favicon/favicon.ico",
+      "officialSource": "https://prestigio.com/",
+      "kind": "official icon"
+    },
+    {
+      "name": "Raskat",
+      "file": "raskat.png",
+      "source": "https://raskat.ru/assets/img/favicons/apple-touch-icon-precomposed.png",
+      "officialSource": "https://raskat.ru/",
+      "kind": "official icon"
+    },
+    {
+      "name": "Ray-Ban",
+      "file": "rayban.png",
+      "source": "https://www.google.com/s2/favicons?domain=ray-ban.com&sz=128",
+      "officialSource": "https://ray-ban.com",
+      "kind": "official-site icon cache"
+    },
+    {
+      "name": "Razer",
+      "file": "razer.svg",
+      "source": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/razer.svg",
+      "officialSource": "https://press.razer.com",
+      "kind": "Simple Icons"
+    },
+    {
+      "name": "Redmond",
+      "file": "redmond.gif",
+      "source": "https://redmond.company/local/templates/rc/img/logo/logo.gif",
+      "officialSource": "https://redmond.company/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Rivacase",
+      "file": "rivacase.png",
+      "source": "https://rivacase.com/media/yootheme/cache/1f/logo-riva-w-1f75b4cd.png",
+      "officialSource": "https://rivacase.com/en/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Rona",
+      "file": "rona.png",
+      "source": "https://rona.glass/wp-content/uploads/2019/07/rona_logo_rgb.png",
+      "officialSource": "https://rona.glass/sk/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Rowenta",
+      "file": "rowenta.png",
+      "source": "https://dam.groupeseb.com/m/2c0faee40a4aae06/Digital-Logo-Rowenta-Techline.png",
+      "officialSource": "https://www.rowenta.com/home",
+      "kind": "official logo"
+    },
+    {
+      "name": "Royal VKB",
+      "file": "royalvkb.png",
+      "source": "https://www.royalvkb.com/images/logo-royalvkb.png",
+      "officialSource": "https://www.royalvkb.com/",
+      "kind": "verified official artwork"
+    },
+    {
+      "name": "Ruijie & Reyee",
+      "file": "ruijiereyee.svg",
+      "source": "https://eo-sgp-cos.ruijie.com/site_style/new_navs/fer/upimg/logo.svg",
+      "officialSource": "https://www.ruijie.com/en-global/",
+      "kind": "verified official artwork"
+    },
+    {
+      "name": "Satechi",
+      "file": "satechi.png",
+      "source": "https://satechi.com/cdn/shop/files/logo_2.png?v=1769640076&width=300",
+      "officialSource": "https://satechi.com/",
+      "kind": "verified official artwork"
+    },
+    {
+      "name": "Sati",
+      "file": "sati.png",
+      "source": "https://cafesati.com/app/uploads/2026/06/logo-sati-2026.png",
+      "officialSource": "https://cafesati.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Seagate",
+      "file": "seagate.svg",
+      "source": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/seagate.svg",
+      "officialSource": "https://branding.seagate.com/productpage/3fc51aba-c35a-4eff-a833-a258b0440bd2",
+      "kind": "Simple Icons"
+    },
+    {
+      "name": "SEB",
+      "file": "seb.png",
+      "source": "https://www.seb.fr/medias/seb.png?context=bWFzdGVyfGltYWdlc3w0MTI4fGltYWdlL3BuZ3xhVzFoWjJWekwyaGpZUzlvTlRrdk9EZzBOemd6TlRNMk5UUXdOaTV3Ym1jfGQ2MTIyYjhjYzQzMDFlYTNjMDcxNGMyZDQ1YTFiNDBlZTA1YzljNWQ2N2NjM2JhZGQ4YWQ3NmI5NzhjMWNmZWU",
+      "officialSource": "https://www.seb.fr/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Segafredo",
+      "file": "segafredo.svg",
+      "source": "https://www.segafredo.it/cdn/shop/files/logo_8c851372-a399-44ab-ab58-1ba72697a6ef.svg?v=1770993325",
+      "officialSource": "https://www.segafredo.it/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Sennheiser",
+      "file": "sennheiser.svg",
+      "source": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/sennheiser.svg",
+      "officialSource": "https://sennheiser.com",
+      "kind": "Simple Icons"
+    },
+    {
+      "name": "Shark",
+      "file": "shark.png",
+      "source": "https://upload.wikimedia.org/wikipedia/commons/c/cf/Shark_logo_black.png",
+      "officialSource": "https://sharkclean.co.uk",
+      "kind": "verified official artwork"
+    },
+    {
+      "name": "Skullcandy",
+      "file": "skullcandy.svg",
+      "source": "https://www.skullcandy.com/cdn/shop/files/skdylogosvg.svg?v=1710432982",
+      "officialSource": "https://www.skullcandy.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Smeg",
+      "file": "smeg.svg",
+      "source": "https://www.smeg.com/webfiles/1793266747463/images/smeg_logo_black.svg",
+      "officialSource": "https://www.smeg.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Sonos",
+      "file": "sonos.svg",
+      "source": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/sonos.svg",
+      "officialSource": "https://www.sonos.com/en-gb/home",
+      "kind": "Simple Icons"
+    },
+    {
+      "name": "Spero",
+      "file": "spero.png",
+      "source": "https://duomondi.com/favicon-32x32.png",
+      "officialSource": "https://duomondi.com/en/",
+      "kind": "official icon"
+    },
+    {
+      "name": "Stuco",
+      "file": "stuco.webp",
+      "source": "https://fullservice-stuco.de/wp-content/uploads/elementor/thumbs/Untitled-1-1-pg3yfd1eozsm1k55av86k1ncak8w2jay31nnjq80b4.png",
+      "officialSource": "https://fullservice-stuco.de/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Sven",
+      "file": "sven.svg",
+      "source": "https://sven.fi/bitrix/templates/sven_fi_new/images/css/svan-logo.svg",
+      "officialSource": "https://sven.fi/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Taitu",
+      "file": "taitu.png",
+      "source": "https://taitu.it/wp-content/uploads/2021/06/logo.png",
+      "officialSource": "https://taitu.it/",
+      "kind": "official logo"
+    },
+    {
+      "name": "TCL",
+      "file": "tcl.svg",
+      "source": "https://aws-obg-image-lb-1.tcl.com/content/dam/brandsite/it-resources/common/navigation/tcl-logo.svg",
+      "officialSource": "https://www.tcl.com/global/en",
+      "kind": "verified official artwork"
+    },
+    {
+      "name": "Technics",
+      "file": "technics.svg",
+      "source": "https://www.technics.com/content/dam/technics/global/en/Technics-logo-184.svg",
+      "officialSource": "https://www.technics.com/global/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Teka",
+      "file": "teka.png",
+      "source": "https://www.google.com/s2/favicons?domain=teka.com%2Fen&sz=128",
+      "officialSource": "https://teka.com/en",
+      "kind": "official-site icon cache"
+    },
+    {
+      "name": "Tescoma",
+      "file": "tescoma.ico",
+      "source": "http://www.tescoma.com/favicon.ico",
+      "officialSource": "https://tescoma.com/tescoma.html",
+      "kind": "official icon"
+    },
+    {
+      "name": "Timberk",
+      "file": "timberk.svg",
+      "source": "https://www.timberk.com/local/templates/timberk.v2/assets/img/svg/logo_eng.svg?v=2",
+      "officialSource": "https://www.timberk.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Transcend",
+      "file": "transcend.png",
+      "source": "https://www.google.com/s2/favicons?domain=transcend-info.com&sz=128",
+      "officialSource": "https://transcend-info.com",
+      "kind": "official-site icon cache"
+    },
+    {
+      "name": "Turboair",
+      "file": "turboair.png",
+      "source": "https://turboair.com/row/wp-content/uploads/sites/9/2019/02/turboair_logo_2019.png",
+      "officialSource": "https://turboair.com/row/",
+      "kind": "official logo"
+    },
+    {
+      "name": "UB+",
+      "file": "ub.png",
+      "source": "https://ub-plus.com/cdn/shop/files/Logo_2.png?v=1746431999&width=512",
+      "officialSource": "https://ub-plus.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "UGREEN",
+      "file": "ugreen.svg",
+      "source": "https://www.ugreen.com/cdn/shop/files/ugreen_logo-_1_e168f1f4-de2e-4509-bd2e-8ea001ac3a12.svg?height=22&v=1761026731",
+      "officialSource": "https://www.ugreen.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Urevo",
+      "file": "urevo.webp",
+      "source": "https://www.urevo.com/cdn/shop/files/LOGO-3.png?v=1729245315",
+      "officialSource": "https://www.urevo.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Vidivi",
+      "file": "vidivi.svg",
+      "source": "https://vidivi.it/wp-content/uploads/2022/10/vidivi-logo-grey.svg",
+      "officialSource": "https://vidivi.it/",
+      "kind": "official logo"
+    },
+    {
+      "name": "ViewSonic",
+      "file": "viewsonic.png",
+      "source": "https://www.viewsonic.com/media/wysiwyg/VS-Logo-Black_1_.png",
+      "officialSource": "https://www.viewsonic.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Villeroy&Boch",
+      "file": "villeroyboch.jpg",
+      "source": "https://www.google.com/s2/favicons?domain=villeroy-boch.com&sz=128",
+      "officialSource": "https://villeroy-boch.com",
+      "kind": "official-site icon cache"
+    },
+    {
+      "name": "Viomi",
+      "file": "viomi.png",
+      "source": "https://www.google.com/s2/favicons?domain=viomi.com&sz=128",
+      "officialSource": "https://viomi.com",
+      "kind": "official-site icon cache"
+    },
+    {
+      "name": "VLP",
+      "file": "vlp.png",
+      "source": "https://vlpco.ru/wp-content/themes/vlp/assets/img/favicon/apple-touch-icon.png",
+      "officialSource": "https://vlpco.ru/",
+      "kind": "official icon"
+    },
+    {
+      "name": "Vogel's",
+      "file": "vogels.png",
+      "source": "https://www.google.com/s2/favicons?domain=vogels.com&sz=128",
+      "officialSource": "https://vogels.com",
+      "kind": "official-site icon cache"
+    },
+    {
+      "name": "Wacaco",
+      "file": "wacaco.png",
+      "source": "https://www.wacaco.com/cdn/shop/files/Group_36_2.png?v=1697093582",
+      "officialSource": "https://www.wacaco.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "Wellmax",
+      "file": "wellmax.png",
+      "source": "https://wellmaxgroup.com/wp-content/uploads/2021/10/cropped-favicon-wellmax-180x180.png",
+      "officialSource": "https://wellmaxgroup.com/",
+      "kind": "official icon"
+    },
+    {
+      "name": "Whirlpool",
+      "file": "whirlpool.svg",
+      "source": "https://www.whirlpool.com/content/dam/global/brandlogos/whirlpool_grey.svg",
+      "officialSource": "https://www.whirlpool.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "WMF",
+      "file": "wmf.svg",
+      "source": "https://www.wmf.com/static/version1793351152/frontend/wmf/hyva/de_DE/images/logo.svg",
+      "officialSource": "https://www.wmf.com/de/de/",
+      "kind": "verified official artwork"
+    },
+    {
+      "name": "Yandex",
+      "file": "yandex.png",
+      "source": "https://yastatic.net/s3/home-static/_/nova3/ZKozwZ-k.png",
+      "officialSource": "https://yandex.com/",
+      "kind": "official icon"
+    },
+    {
+      "name": "Yeelight",
+      "file": "yeelight.png",
+      "source": "https://www.google.com/s2/favicons?domain=yeelight.com&sz=128",
+      "officialSource": "https://yeelight.com",
+      "kind": "official-site icon cache"
+    },
+    {
+      "name": "Zanussi",
+      "file": "zanussi.svg",
+      "source": "https://country.zanussi.com/static/media/zanussi-logo.svg",
+      "officialSource": "https://country.zanussi.com/",
+      "kind": "official logo"
+    },
+    {
+      "name": "ZOOM",
+      "file": "zoom.png",
+      "source": "https://zoomcorp.com/static/img/favicons/zoomicon-57.png",
+      "officialSource": "https://zoomcorp.com/en/",
+      "kind": "official icon"
+    }
+  ]
+}

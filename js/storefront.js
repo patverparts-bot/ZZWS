@@ -89,6 +89,18 @@
   const partners=node('aside',null,'sf-partners');partners.append(node('h2','Գործընկերների համար'),button('Ներբեռնել գնացուցակը',()=>downloadFullPriceList(),'sf-partner-link'),button('Իմ պատվերները',()=>openPersonalCabinet(),'sf-partner-link'));
   if(config.sections?.terms?.enabled&&(config.sections.terms.hy||config.sections.terms.ru))partners.append(button(labels.terms,()=>openSection('terms'),'sf-partner-link'));row.append(hero,partners);const previous=home.querySelector('.sf-hero-row');if(previous)previous.replaceWith(row);else home.append(row);
  }
+ let brandObserver=null,brandAnimation=null;
+ function disposeBrands(){brandObserver?.disconnect();brandObserver=null;brandAnimation?.cancel();brandAnimation=null;}
+ function renderBrands(){
+  disposeBrands();const names=[...new Set(allProducts.map(p=>p.brand).filter(Boolean))];if(!names.length||controls.brand===false)return;
+  const brands=node('section',null,'sf-brands'),track=node('div',null,'sf-brand-track');brands.setAttribute('aria-label','Բրենդներ');brands.style.setProperty('--brand-rows',String(Math.min(2,names.length)));
+  function group(copy=false){const group=node('div',null,'sf-brand-group');if(copy){group.setAttribute('aria-hidden','true');group.hidden=true;}for(const brand of names){const tile=button('',()=>{navigate('catalog');selectedBrands=[brand];updateBrandSelectionSummary();resetAndRender();},'sf-brand');tile.setAttribute('aria-label',brand);tile.title=brand;if(copy){tile.dataset.marqueeCopy='true';tile.tabIndex=-1;}const src=ZZWS_STOREFRONT_BRANDS.src(brand);if(src){if(ZZWS_STOREFRONT_BRANDS.dark(brand))tile.classList.add('sf-brand-logo-dark');const image=node('img');image.src=src;image.alt=brand;image.width=64;image.height=40;image.loading='lazy';image.onerror=()=>tile.replaceChildren(node('span',brand));tile.append(image);}else tile.append(node('span',brand));group.append(tile);}return group;}
+  const original=group(),copy=group(true);track.append(original,copy);brands.append(track);home.append(brands);
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+  function update(){brandAnimation?.cancel();brandAnimation=null;const width=brands.clientWidth;if(!width)return;const distance=original.offsetWidth+12,overflow=original.offsetWidth>width;copy.hidden=!overflow||reduced.matches;brands.classList.toggle('sf-brands-moving',overflow&&!reduced.matches);if(overflow&&!reduced.matches)brandAnimation=track.animate([{transform:'translateX(0)'},{transform:'translateX(-'+distance+'px)'}],{duration:distance/36*1000,iterations:Infinity,easing:'linear'});}
+  brands.addEventListener('focusin',e=>{if(e.target.matches(':focus-visible'))brandAnimation?.pause();});brands.addEventListener('focusout',()=>brandAnimation?.play());
+  brandObserver=new ResizeObserver(update);brandObserver.observe(brands);update();
+ }
  function render(){
   home.replaceChildren();if(!catalogLoaded){home.append(node('p','Կատալոգը բեռնվում է…','sf-home-loading'));return;}renderHero();
   const groups=new Map();for(const p of allProducts)if(p.category&&!groups.has(p.category))groups.set(p.category,p);
@@ -99,7 +111,7 @@
   const strip=node('section',null,'sf-editorial');strip.append(node('div','Համեմատեք, ընտրեք և առաջարկեք գնորդին'),button('Վաճառողի գործիքներ',()=>{tools.open=true;tools.querySelector('button')?.focus();window.scrollTo({top:0});},'sf-button'));home.append(strip);
   collection('Նորույթներ',available.filter(isNew),'new');
   if(!available.some(isPromo)&&!available.some(isNew))collection('Առկա ապրանքներ',available,'catalog');
-  const brands=node('section',null,'sf-brands');brands.setAttribute('aria-label','Բրենդներ');for(const brand of [...new Set(allProducts.map(p=>p.brand).filter(Boolean))].filter(name=>ZZWS_STOREFRONT_BRANDS.src(name)).slice(0,12)){const tile=button('',()=>{navigate('catalog');selectedBrands=[brand];updateBrandSelectionSummary();resetAndRender();},'sf-brand');tile.setAttribute('aria-label',brand);tile.title=brand;const image=node('img');image.src=ZZWS_STOREFRONT_BRANDS.src(brand);image.alt=brand;image.width=64;image.height=40;image.loading='lazy';image.onerror=()=>tile.remove();tile.append(image);brands.append(tile);}if(brands.childElementCount&&controls.brand!==false)home.append(brands);
+  renderBrands();
   renderFooter();ZZWS_I18N.refresh(home);
  }
  function startBannerTimer(){clearInterval(bannerTimer);bannerTimer=null;if(bannerPaused||(config.banners||[]).length<2||matchMedia('(prefers-reduced-motion: reduce)').matches)return;bannerTimer=setInterval(()=>{if(!owner||document.hidden||route!=='home'||document.querySelector('dialog[open]')||home.contains(document.activeElement)||el('storefrontHero')?.matches(':hover'))return;bannerIndex++;renderHero();},(config.bannerSeconds||8)*1000);}
@@ -108,7 +120,7 @@
   const next=Math.min(...allProducts.filter(isNew).map(p=>Date.parse(p.newUntil)).filter(Number.isFinite));if(Number.isFinite(next))expiryTimer=setTimeout(()=>{refresh();if(route!=='home')resetAndRender();},Math.max(50,Math.min(2147483647,next-Date.now()+50)));
  }
  function configure(data){config=data.storefront||{};controls=data.controls||{};if(route==='promo'&&controls.promo===false)navigate('catalog',false,'replace');search.hidden=controls.search===false;nav.querySelector('[data-sf-route=promo]').hidden=controls.promo===false;offer=new Set(data.specialOffer?.articles||[]);const stamp=JSON.stringify([config,[...offer],controls]);if(stamp!==lastStamp&&catalogLoaded)refresh();lastStamp=stamp;}
- function reset(){owner=null;config={};controls={};lastStamp='';offer.clear();clearInterval(bannerTimer);bannerTimer=null;bannerPaused=false;clearTimeout(expiryTimer);home.replaceChildren();footer.replaceChildren();sectionDialog?.remove();sectionDialog=null;route='home';document.documentElement.dataset.storefrontPage='home';account.open=false;tools.open=false;}
+ function reset(){disposeBrands();owner=null;config={};controls={};lastStamp='';offer.clear();clearInterval(bannerTimer);bannerTimer=null;bannerPaused=false;clearTimeout(expiryTimer);home.replaceChildren();footer.replaceChildren();sectionDialog?.remove();sectionDialog=null;route='home';document.documentElement.dataset.storefrontPage='home';account.open=false;tools.open=false;}
  window.ZZWS_STOREFRONT={viewState:()=>({section:sectionDialog?.open?sectionDialog.dataset.key:null,bannerIndex}),restoreView(value){if(!value)return;if(Number.isSafeInteger(value.bannerIndex)){bannerIndex=value.bannerIndex;if(route==='home')renderHero();}if(value.section&&config.sections?.[value.section]?.enabled)openSection(value.section);},card,ribbons,isPromo,isNew,inStock,configure,refresh,navigate,reset,matches:p=>route==='new'?isNew(p)&&inStock(p):route!=='promo'||inStock(p),start(){const next=window.ZZWS_PAGE_STATE?.route()||'home';reset();owner=serverIdentity?.id;ZZWS_DEALER.setView('cards');navigate(next,false,'replace');history.replaceState({...history.state,zzwsStorefront:true},'','#'+route);}};
  el('searchInput').addEventListener('input',()=>{if(owner&&route==='home'&&el('searchInput').value.trim())navigate('catalog',false);});
  window.addEventListener('popstate',()=>{if(owner)navigate(location.hash.slice(1),true,'restore');});window.addEventListener('zzws:languagechange',()=>{if(owner){refresh();if(sectionDialog?.open){const key=sectionDialog.dataset.key;if(key)openSection(key);}}});
