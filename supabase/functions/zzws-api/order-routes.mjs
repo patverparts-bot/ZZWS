@@ -6,6 +6,7 @@ import {orderPublic} from './order-public.mjs';
 import {projectOrderHistory} from './order-history.mjs';
 import {currentOffer,offerStamp,offerDTO} from './special-offers.mjs';
 import {effectiveControls} from './catalog-controls.mjs';
+import {storefrontSettings} from './storefront.mjs';
 import {statuses,normalizeLines,totalOf,changesBetween,parseConfirmation,parsePastedConfirmation} from './orders.mjs';
 import {deliveryId,ownedDeliverySnapshot} from './delivery-variants.mjs';
 import {buildOrderContext,calculationRetry} from './order-context.mjs';
@@ -117,7 +118,7 @@ export async function orderRoutes(c){
   const hidden=memory?.data?.preferences?.hiddenColumns,hiddenColumns=Array.isArray(hidden)?hidden.filter(key=>['brand','stockStatus','retail','marginVal','resaleWholesale'].includes(key)):[];
   const offer=await currentOffer(table,query),version=v.id+':'+v.rulesRevision+':'+v.warehouseRevision+':'+profile.profileRevision+':'+JSON.stringify(hiddenColumns)+':offer:'+offerStamp(offer),updated=new Date(v.created).toLocaleDateString('en-GB',{timeZone:'Asia/Yerevan'});
   if(path.endsWith('/version'))return json({version,updated});
-  const products=project(v.products,profile,v.rules,{mainWarehouses:v.mainWarehouses});
+  const products=project(v.products,profile,v.rules,{mainWarehouses:v.mainWarehouses,newDays:storefrontSettings(v.catalogControls).newDays});
   if(path.endsWith('/export'))return file([['Ստացող',profile.client,'Տարբերակ',priceVersionLabel(v.created)],['Արտիկուլ','Բրենդ','Կատեգորիա','Անվանում','Մանրածախ','Ձեր գինը','Առկայություն',...(profile.allowResale?['Վերավաճառքի մեծածախ գին']:[])],...products.map(p=>[p.articul,p.brand,p.category,p.name,p.retail,p.wholesale,p.stockStatus,...(profile.allowResale?[p.resaleWholesale]:[])])],'PriceList.xlsx');
   const controls=effectiveControls(v.catalogControls,profile.customerId||profile.id);
   return json({customer:customerInfo(profile),hiddenColumns,products,version,updated,controls,specialOffer:controls.promo?offerDTO(offer,products):null});

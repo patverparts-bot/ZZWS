@@ -50,6 +50,7 @@ export const cleanSchemaFiles=[
   "supabase/migrations/20261101092608_storefront_product_arrivals.sql",
   "supabase/migrations/20261101124958_independent_report_recipients.sql",
   "supabase/migrations/20261101133339_flatten_current_application_snapshot.sql",
-  "supabase/migrations/20261101142222_company_primary_order_responses.sql"
+  "supabase/migrations/20261101142222_company_primary_order_responses.sql",
+  "supabase/migrations/20261101211600_recover_historical_product_arrivals.sql"
 ];
 export const schemaVersion="zzws-unified-4.1.0-optimized";
