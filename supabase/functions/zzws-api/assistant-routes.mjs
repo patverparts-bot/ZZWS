@@ -18,6 +18,8 @@ export async function assistantRoutes(c) {
     // The request may select KP only for an authenticated administrator.
     // Prices still come from the server-projected catalogue on every turn.
     const orderPriceMode=user.role==='admin'&&payload.orderPriceMode==='KP'?'KP':'WS';
-    return json(await answerQuestion(payload, products, knowledge, {...options,orderPriceMode,publicCatalog}));
+    // Production assistant is fully deterministic: no provider request or usage charge,
+    // even if legacy free-tier provider variables remain configured on the project.
+    return json(await answerQuestion(payload, products, knowledge, {...options,freeTierConfirmed:false,orderPriceMode,publicCatalog}));
   } finally { gate.active--; }
 }

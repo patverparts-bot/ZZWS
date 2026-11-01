@@ -1,6 +1,6 @@
 (() => {
   const copy = {
-    hy: {subtitle:'Ձեր օգնականը տեխնիկայի աշխարհում',title:'Բարև, ես ԶիգԶագն AI եմ։',intro:'Գտնենք բնութագրերը և համեմատենք տեխնիկան։ Գրեք ապրանքի մոդելը կամ արտիկուլը։',placeholder:'Մոդել, արտիկուլ կամ հարց…',send:'Ուղարկել',close:'Փակել',clear:'Նոր զրույց',you:'Դուք',pending:'Ստուգում եմ բնութագրերը…',mode:'Բնութագրերի որոնում',ai:'Խելացի օգնական',note:'Տվյալների աղբյուրը՝ zigzag.am · ստուգման ամսաթիվը՝ պատասխանում',choose:'Համեմատել',compare:'Համեմատել ընտրվածները',resetContext:'Մաքրել ընտրությունը',missing:'Ճշգրիտ մոդելի հաստատված բնութագրեր դեռ չկան։',checked:'Ստուգված է՝ ',saved:'Պահպանված տվյալներ',live:'Հենց նոր ստուգված',refresh:'Թարմացնել zigzag.am-ից',unavailable:'Կայքն այժմ հասանելի չէ թարմացման համար։ Ցուցադրված են պահպանված տվյալները։',modelUnavailable:'AI պատասխանը հիմա հասանելի չէ։ Ցուցադրված են հաստատված բնութագրերը։',error:'Չհաջողվեց ստանալ պատասխանը։ Կրկին փորձեք։',notDeployed:'Օգնականը պատրաստվում է գործարկման։ Փորձեք ավելի ուշ։',retry:'Կրկին փորձել',limit:'Համեմատելու համար ընտրեք առավելագույնը երկու ապրանք։',example:'Բնութագրեր՝ ',ask:'Հարցնել ԶիգԶագն AI-ին'},
+    hy: {subtitle:'Ձեր օգնականը տեխնիկայի աշխարհում',title:'Բարև, ես ԶիգԶագ AI եմ։',intro:'Գտնենք բնութագրերը և համեմատենք տեխնիկան։ Գրեք ապրանքի մոդելը կամ արտիկուլը։',placeholder:'Մոդել, արտիկուլ կամ հարց…',send:'Ուղարկել',close:'Փակել',clear:'Նոր զրույց',you:'Դուք',pending:'Ստուգում եմ բնութագրերը…',mode:'Բնութագրերի որոնում',ai:'Խելացի օգնական',note:'Տվյալների աղբյուրը՝ zigzag.am · ստուգման ամսաթիվը՝ պատասխանում',choose:'Համեմատել',compare:'Համեմատել ընտրվածները',resetContext:'Մաքրել ընտրությունը',missing:'Ճշգրիտ մոդելի հաստատված բնութագրեր դեռ չկան։',checked:'Ստուգված է՝ ',saved:'Պահպանված տվյալներ',live:'Հենց նոր ստուգված',refresh:'Թարմացնել zigzag.am-ից',unavailable:'Կայքն այժմ հասանելի չէ թարմացման համար։ Ցուցադրված են պահպանված տվյալները։',modelUnavailable:'AI պատասխանը հիմա հասանելի չէ։ Ցուցադրված են հաստատված բնութագրերը։',error:'Չհաջողվեց ստանալ պատասխանը։ Կրկին փորձեք։',notDeployed:'Օգնականը պատրաստվում է գործարկման։ Փորձեք ավելի ուշ։',retry:'Կրկին փորձել',limit:'Համեմատելու համար ընտրեք առավելագույնը երկու ապրանք։',example:'Բնութագրեր՝ ',ask:'Հարցնել ԶիգԶագ AI-ին'},
   };
   const shoppingCopy={
     hy:{intro:'Նկարագրեք՝ ինչ տեխնիկա է պետք։ Կօգնեմ ընտրել ըստ բյուջեի, չափի և ցանկությունների, իսկ անհրաժեշտության դեպքում կհարցնեմ մանրամասները։',placeholder:'Օրինակ՝ մատչելի լվացքի մեքենա, 60 սմ…',selection:'Տեխնիկայի ընտրություն',shoppingExample:'Պետք է մատչելի լվացքի մեքենա, 60 սմ',price:'Ձեր գինը',retailPrice:'Մանրածախ գին',catalogPrice:'Գինը՝ ձեր ընթացիկ կատալոգից',offerDetails:'Բնութագրերը',newSelection:'Նոր ընտրություն'},
@@ -10,6 +10,8 @@
   Object.assign(copy.hy,{detailsTitle:'Ապրանքի մանրամասները',details:'Բոլոր բնութագրերը',requirements:'Ընտրված պայմանները',exactMatch:'Ճշգրիտ համապատասխանություն',nearMatch:'Մոտ չափերով տարբերակ',nearGroup:'Մոտ չափերով այլընտրանքներ',nearNote:'Այս տարբերակների չափերը տարբերվում են ձեր նշածից։ Համեմատեք չափերը նախքան ընտրելը։',width:'Լայնություն',depth:'Խորություն',height:'Բարձրություն',requested:'Ձեր նշածը',cm:'սմ'});
   Object.assign(copy.hy,{orderableGroup:'Կարելի է ավելացնել զամբյուղ',managerGroup:'Ճշտել մենեջերի հետ',managerNote:'Այս ապրանքները հիմա հնարավոր չէ ավելացնել զամբյուղ։ Գինը և պատվիրելու հնարավորությունը ճշտեք մենեջերի հետ։',notOrderable:'Այս ապրանքի գինը և պատվիրելու հնարավորությունը ճշտեք մենեջերի հետ։',retailReference:'Մանրածախ գինը՝ որպես տեղեկություն։ Պատվերի գինը ճշտեք մենեջերի հետ։'});
   Object.assign(copy.hy,{contactManager:'Կապվել մենեջերի հետ',copyInquiry:'Պատճենել հարցումը',inquiryCopied:'Հարցումը պատճենված է։',copyFailed:'Չհաջողվեց պատճենել։ Կարող եք բացել նամակը։',sku:'Արտիկուլ',publicGroup:'Ձեր կատալոգից դուրս մոդելներ',publicNote:'Այս մոդելները կան zigzag.am-ի ստուգված տվյալներում, բայց ձեր ընթացիկ կատալոգում չկան։ Գինը, հասանելիությունը և պատվիրելու հնարավորությունը ճշտեք մենեջերի հետ։',outsideCatalog:'Այս ապրանքը ձեր կատալոգում չկա։ Գինը, հասանելիությունը և պատվիրելու հնարավորությունը ճշտեք մենեջերի հետ։',budgetUnconfirmed:'Ձեր բյուջեին համապատասխանությունը դեռ հաստատված չէ։',pricePending:'Գինը՝ ճշտել մենեջերի հետ'});
+  Object.assign(copy.hy,{reason:'Ինչու է առաջարկվում',managerNote:'Գինը և պատվերի պայմանները կարող եք ճշտել մենեջերի հետ։',publicGroup:'Լրացուցիչ տարբերակներ',publicNote:'Այս տարբերակների գինը, պատվերի պայմանները և ձեր բյուջեին համապատասխանությունը ճշտեք մենեջերի հետ։',outsideCatalog:'Գինը և պատվերի պայմանները կարող եք ճշտել մենեջերի հետ։',missing:'Եկեք հստակեցնենք, թե որ բնութագիրն է կարևոր ձեզ համար։ Ես դեռ սովորում եմ և կօգնեմ հաստատված տվյալներով։'});
+  Object.assign(copy.hy,{typing:'ԶիգԶագ AI-ն գրում է',ready:'Սպասում եմ ձեր հարցին',listening:'Ուղարկեք հաղորդագրությունը՝ կօգնեմ ընտրել'});
   let locale = window.ZZWS_I18N?.language||'hy';
   // Existing administrator reply-to address, checked in the current settings.
   const managerEmail = 'levon.grigoryan@zigzag.am';
@@ -20,10 +22,10 @@
   const button = (text, onClick, className) => { const b = create('button', className, text); b.type = 'button'; b.addEventListener('click', onClick); return b; };
   const avatar = size => { const img = create('img'); img.src = 'zigzag-avatar.svg?v=1.2-hy-blue'; img.alt = ''; img.width = img.height = size; return img; };
   const launcher = button('', open, 'zigzag-launcher'); launcher.id = 'zigzagLauncher'; launcher.setAttribute('aria-haspopup', 'dialog'); launcher.append(avatar(43));
-  const launcherText = create('span', '', 'ԶիգԶագն AI'); launcherText.append(create('small', '', 'արհեստական բանականություն')); launcher.append(launcherText,create('b','zigzag-ai-badge','AI'));
+  const launcherText = create('span', '', 'ԶիգԶագ AI'); launcherText.append(create('small', '', 'արհեստական բանականություն')); launcher.append(launcherText,create('b','zigzag-ai-badge','AI'));
   document.getElementById('mainApp').append(launcher);
   const dialog = create('dialog', 'zigzag-dialog'); dialog.id = 'zigzagAssistant'; dialog.setAttribute('aria-labelledby', 'zigzagTitle');
-  const header = create('header', 'zigzag-header'), headingCopy = create('div', 'zigzag-header-copy'), title = create('h2'); title.id = 'zigzagTitle';title.append(create('span','zigzag-persona-name','ԶիգԶագն '),create('b','zigzag-ai-badge','AI'));
+  const header = create('header', 'zigzag-header'), headingCopy = create('div', 'zigzag-header-copy'), title = create('h2'); title.id = 'zigzagTitle';title.append(create('span','zigzag-persona-name','ԶիգԶագ '),create('b','zigzag-ai-badge','AI'));
   const subtitle = create('p'); headingCopy.append(title, subtitle); const close = button('×', () => dialog.close(), 'zigzag-close'); header.append(avatar(52), headingCopy, close);
   const toolbar = create('div', 'zigzag-toolbar'), mode = create('span', 'zigzag-mode');
   const clear = button('', () => reset(false)); toolbar.append(mode, clear);
@@ -36,7 +38,8 @@
   const detailsHeader=create('header','zigzag-details-header'),detailsTitle=create('h2','',t('detailsTitle')),detailsBody=create('div','zigzag-details-body');detailsTitle.id='zigzagDetailsTitle';
   const detailsClose=button('×',()=>detailsDialog.close(),'zigzag-details-close');detailsClose.setAttribute('aria-label',t('close'));detailsHeader.append(detailsTitle,detailsClose);detailsDialog.append(detailsHeader,detailsBody);document.body.append(detailsDialog);
   detailsDialog.addEventListener('close',syncCartControls);
-  function labels() { dialog.lang = locale;title.querySelector('.zigzag-persona-name').textContent=locale==='ru'?'ЗигЗаг ':'ԶիգԶագն ';for(const badge of document.querySelectorAll('.zigzag-ai-badge')){badge.lang='en';badge.dataset.i18nSkip='true';badge.setAttribute('aria-label',locale==='ru'?'Искусственный интеллект':'արհեստական բանականություն');} subtitle.textContent = t('subtitle'); close.setAttribute('aria-label', t('close')); clear.textContent = t('clear'); input.placeholder = t('placeholder'); input.setAttribute('aria-label', t('placeholder')); send.setAttribute('aria-label', t('send')); note.textContent = t('note'); mode.textContent = t(currentMode==='selection'?'selection':currentMode==='ai'?'ai':'mode'); launcher.setAttribute('aria-label', t('ask')); }
+  function chatStatus(){subtitle.textContent=t(busy?'typing':input.value.trim()?'listening':'ready');subtitle.classList.add('zigzag-chat-status');subtitle.classList.toggle('is-typing',busy);}
+  function labels() { dialog.lang = locale;title.querySelector('.zigzag-persona-name').textContent=locale==='ru'?'ЗигЗаг ':'ԶիգԶագ ';for(const badge of document.querySelectorAll('.zigzag-ai-badge')){badge.lang='en';badge.dataset.i18nSkip='true';badge.setAttribute('aria-label',locale==='ru'?'Искусственный интеллект':'արհեստական բանականություն');} chatStatus(); close.setAttribute('aria-label', t('close')); clear.textContent = t('clear'); input.placeholder = t('placeholder'); input.setAttribute('aria-label', t('placeholder')); send.setAttribute('aria-label', t('send')); note.textContent = t('note'); mode.textContent = t(currentMode==='selection'?'selection':currentMode==='ai'?'ai':'mode'); launcher.setAttribute('aria-label', t('ask')); }
   function visibleProduct(id) { return allProducts.find(p => p.articul === id); }
   function updateContext() {
     contextBar.replaceChildren();
@@ -57,15 +60,15 @@
     if (!serverIdentity || document.getElementById('mainApp').classList.contains('hidden')) return;
     if (owner !== serverIdentity.id) { reset(true); owner = serverIdentity.id; }
     if (!dialog.open) dialog.showModal();
-    if (!messages.children.length) welcome(); syncCartControls(); input.focus();
+    if (!messages.children.length) welcome(); syncCartControls();chatStatus(); input.focus();
   }
   function reset(closeDialog = true) {
     if(detailsDialog.open)detailsDialog.close();detailsBody.replaceChildren();
     revision++; controller?.abort(); busy = false; controller = null; send.disabled = false; input.value = ''; context = []; selected = []; advisor = null; requirements = ''; currentMode = 'specifications'; messages.replaceChildren(); messages.removeAttribute('aria-busy'); updateContext(); mode.textContent = t('mode');
-    if (closeDialog) { if (dialog.open) dialog.close(); owner = null; } else { welcome(); input.focus(); }
+    chatStatus();if (closeDialog) { if (dialog.open) dialog.close(); owner = null; } else { welcome(); input.focus(); }
   }
-  function bubble(text, user = false) { const el = create('div', 'zigzag-message' + (user ? ' zigzag-message-user' : '')); if(user)el.dataset.i18nSkip='true'; el.append(create('span', 'zigzag-message-label', user ? t('you') : 'ԶիգԶագն AI'), document.createTextNode(text)); messages.append(el); return el; }
-  function scroll() { messages.scrollTop = messages.scrollHeight; }
+  function bubble(text, user = false) { const el = create('div', 'zigzag-message' + (user ? ' zigzag-message-user' : '')); if(user)el.dataset.i18nSkip='true'; el.append(create('span', 'zigzag-message-label', user ? t('you') : 'ԶիգԶագ AI'), document.createTextNode(text)); messages.append(el); return el; }
+  function scroll() { messages.scrollTo({top:messages.scrollHeight,behavior:'instant'}); }
   function revealReply(reply){messages.scrollTo({top:reply.getBoundingClientRect().top-messages.getBoundingClientRect().top+messages.scrollTop-8,behavior:'instant'});}
   function syncCartControls(){for(const root of [messages,detailsBody])for(const widget of root.querySelectorAll('.zigzag-cart-controls'))cartWidgets.get(widget)?.();}
   const canOrderProduct=product=>product.catalogScope!=='public'&&serverIdentity?.id===owner&&!!getProduct(product.articul)&&getItemWholesalePrice({articul:product.articul})>0;
@@ -117,6 +120,7 @@
     // Use the catalogue's verified SKU photo map and existing safe image fallbacks.
     if((visibleProduct(product.articul)||product.catalogScope==='public'&&product.status==='verified')&&typeof getProductImageHtml==='function')photo.innerHTML=getProductImageHtml(product.articul,product.name);else photo.append(create('span','',t('noPhoto')));
     info.append(create('h4','',product.name),create('small','zigzag-product-sku',t('sku')+': '+product.articul));summary.append(photo,info);box.append(summary,productCartControls(product));
+    if(product.reasons?.length){const reasons=create('div','zigzag-reasons');reasons.append(create('strong','',t('reason')));const list=create('ul');for(const text of product.reasons.slice(0,6))list.append(create('li','',text));reasons.append(list);box.append(reasons);}
     if(product.catalogScope==='public'){
       info.append(create('p','zigzag-price-pending',t('pricePending')));
       if(product.budgetStatus==='unconfirmed')box.append(create('p','zigzag-budget-unconfirmed',t('budgetUnconfirmed')));
@@ -154,8 +158,9 @@
     if (messages.querySelector('.zigzag-welcome')) messages.replaceChildren();
     // A bounded, in-memory transcript is discarded at logout and on a new conversation.
     if (messages.children.length > 42) messages.replaceChildren(...Array.from(messages.children).slice(-30));
-    bubble(message, true); input.value = ''; busy = true; send.disabled = true; messages.setAttribute('aria-busy', 'true');
-    const pending = create('div', 'zigzag-pending', t('pending')); messages.append(pending); scroll(); controller = new AbortController();
+    bubble(message, true); input.value = ''; busy = true; send.disabled = true; messages.setAttribute('aria-busy', 'true');chatStatus();
+    const pending = create('div', 'zigzag-pending');pending.setAttribute('role','status');pending.append(avatar(28),create('span','zigzag-pending-label',t('typing')));
+    const dots=create('span','zigzag-typing-dots');dots.setAttribute('aria-hidden','true');for(let i=0;i<3;i++)dots.append(create('i'));pending.append(dots);messages.append(pending); scroll(); controller = new AbortController();
     const requestController = controller, timeout = setTimeout(() => requestController.abort(), 45000);
     try {
       const orderPriceMode=isAdminUser()&&adminOrderPriceMode==='KP'?'KP':'WS';
@@ -211,10 +216,11 @@
       pending.remove(); const reply = bubble(error.status === 404 ? t('notDeployed') : error.status === 429 ? error.message : t('error')); reply.classList.add('zigzag-message-error');
       reply.append(create('br'), button(t('retry'), () => submit(message, refresh), 'zigzag-refresh')); scroll();
     } finally {
-      clearTimeout(timeout); if (currentRevision === revision) { pending.remove(); busy = false; send.disabled = false; controller = null; messages.removeAttribute('aria-busy'); }
+      clearTimeout(timeout); if (currentRevision === revision) { pending.remove(); busy = false; send.disabled = false; controller = null; messages.removeAttribute('aria-busy');chatStatus(); }
     }
   }
   form.addEventListener('submit', event => { event.preventDefault(); submit(input.value); });
+  input.addEventListener('input',chatStatus);
   function askProduct(articul){if(busy)return;open();advisor=null;requirements='';context=[];selected=[];updateContext();return submit(t('example')+articul);}
   document.addEventListener('click', event => { const b = event.target.closest?.('[data-zigzag-art]'); if (b) askProduct(b.dataset.zigzagArt); });
   window.addEventListener('zzws:languagechange',()=>{locale=ZZWS_I18N.language;labels();updateContext();for(const email of document.querySelectorAll('.zigzag-contact-manager'))inquiries.get(email)?.();});

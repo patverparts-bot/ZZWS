@@ -1,5 +1,6 @@
 import {advise, validateAdvisor} from './advisor.mjs';
 import {publicCatalogueProducts} from './public-catalog.mjs';
+import {preferenceCopy} from './assistant-preferences.mjs';
 // The same module runs in Deno and Node, so retrieval and authorization can be tested locally.
 export const normalize = value => String(value || '').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 const compact = value => normalize(value).replaceAll(' ', '');
@@ -98,7 +99,16 @@ export function fallbackAnswer(message, products, choices, locale) {
     ru: {choose: 'Выберите товар или напишите модель / артикул. Для сравнения укажите две модели.', missing: 'Подтверждённые характеристики точной модели с zigzag.am пока недоступны.', specs: 'Вот подтверждённые характеристики с zigzag.am. Источник и дата проверки указаны под каждым товаром.', none: 'Товар не найден в вашем каталоге. Напишите полную модель или артикул.'},
     en: {choose: 'Choose a product or enter its model / article code. To compare, enter two models.', missing: 'Verified specifications for this exact model are not yet available from zigzag.am.', specs: 'Here are the verified specifications from zigzag.am. Each product includes its source and verification date.', none: 'Product not found in your catalogue. Enter the full model or article code.'}
   }[lang];
-  return !products.length ? choices.length ? texts.choose : texts.none : products.some(p => p.status !== 'verified') ? texts.missing : texts.specs;
+  return !products.length ? choices.length ? texts.choose : preferenceCopy[lang].learn : products.some(p => p.status !== 'verified') ? preferenceCopy[lang].refine : texts.specs;
+}
+
+export function compareVerified(products,locale='ru'){
+ if(products.length!==2||products.some(p=>p.status!=='verified'))return null;
+ const [a,b]=products,other=new Map(b.specifications.map(s=>[normalize(s.name),s]));
+ const differences=a.specifications.flatMap(s=>{const second=other.get(normalize(s.name));return second&&normalize(s.value)!==normalize(second.value)?[s.name+': '+a.name+' — '+s.value+'; '+b.name+' — '+second.value]:[];}).slice(0,6);
+ const intro=locale==='hy'?'Համեմատում եմ միայն հաստատված բնութագրերը։':locale==='en'?'Comparing verified specifications only.':'Сравниваю только подтверждённые характеристики.';
+ const same=locale==='hy'?'Համատեղ հաստատված բնութագրերում տարբերություն չեմ տեսնում։ Հստակեցրեք՝ որ հատկանիշն է կարևոր ձեզ համար։':locale==='en'?'I do not see differences in the jointly verified specifications. Which feature matters to you?':'В общих подтверждённых характеристиках различий не вижу. Уточните, какое свойство для вас важно.';
+ return intro+'\n'+(differences.length?differences.join('\n'):same);
 }
 
 // This model has a documented free tier. No paid-provider/model fallback is allowed.
@@ -123,11 +133,21 @@ export async function modelAnswer(message, products, {apiKey, freeTierConfirmed 
 
 export async function answerQuestion(payload, visibleProducts, knowledge, options = {}) {
   const {message, context, refresh, advisor, locale} = validateQuestion(payload);
+  if(!refresh&&/^(?:привет|здравствуй(?:те)?|добрый день|hello|hi|բարև)[!.\s]*$/i.test(message)||!refresh&&/что.*(?:умеешь|можешь)|как.*(?:поможешь|пользоваться)|what can you|ինչ.*(?:կարող|գիտես)/i.test(message)){
+    const lang=locale||language(message),answer=lang==='hy'?'Բարև։ Կօգնեմ ընտրել և համեմատել տեխնիկան ըստ բյուջեի, չափի, բրենդի և հաստատված գործառույթների։ Կարող եք գրել՝ «լուռ սառնարան մինչև 300 հազար դրամ», «լվացքի մեքենա 8 կգ», «Smart TV 4K 55 դյույմ», կամ հարցնել՝ «ինչո՞ւ այս մոդելները», «ցույց տուր ավելին»։':lang==='en'?'Hello! I can help choose and compare appliances by budget, size, brand and verified features. Try “quiet fridge up to 300 thousand AMD”, “8 kg washing machine”, “55 inch Smart TV 4K”, “why these models?” or “show more”.':'Здравствуйте! Помогу подобрать и сравнить технику по бюджету, размерам, бренду и подтверждённым функциям. Например: «тихий холодильник до 300 тысяч драм», «стиральная машина 8 кг», «телевизор Smart TV 4K 55 дюймов», «почему эти модели?» или «покажи ещё».';
+    return {name:'ԶիգԶագ',answer,mode:'selection',modelUnavailable:false,products:[],choices:[],context:[],advisor,quickReplies:[],recommendations:[],publicRecommendations:[]};
+  }
   const visibleIds=new Set(visibleProducts.map(p=>p.articul));
   const publicProducts=publicCatalogueProducts(knowledge,options.publicCatalog).filter(p=>!visibleIds.has(p.articul));
-  const found = findProducts(message, visibleProducts, advisor ? [] : context);
+  let found = findProducts(message, visibleProducts, advisor ? [] : context);
+  // Prior IDs are hints only; authorization and identity are checked again each turn.
+  const shown=(advisor?.shown||[]).map(id=>visibleProducts.find(p=>p.articul===id)).filter(Boolean);
+  const implicitCompare=shown.length>=2&&/сравни.*(?:эти|их|первые)|compare.*(?:these|them)|համեմատ.*(?:այս|առաջին)/i.test(message);
+  const ordinal=/подробнее.*(?:перв|втор|трет)|расскажи.*(?:перв|втор|трет)|details.*(?:first|second|third)|մանրամասն.*(?:առաջին|երկրորդ|երրորդ)/i.test(message)?/втор|second|երկրորդ/i.test(message)?1:/трет|third|երրորդ/i.test(message)?2:0:null;
+  if(!found.selected.length&&implicitCompare)found={selected:shown.slice(0,2),choices:[]};
+  else if(!found.selected.length&&ordinal!=null&&shown[ordinal])found={selected:[shown[ordinal]],choices:[]};
   const explicitModel = found.selected.length && (/[a-z][\w/-]*\d|\d[\w/-]*[a-z]/i.test(message) || (!advisor && visibleProducts.some(p => normalize(message) === normalize(p.articul))));
-  if (!refresh && !explicitModel) {
+  if (!refresh && !explicitModel&&!implicitCompare&&ordinal==null) {
     const selection = advise(message, advisor, visibleProducts, p => knowledgeProduct(p, knowledge), locale, options.orderPriceMode==='KP'?'KP':'WS', publicProducts);
     if (selection) return selection;
   }
@@ -136,8 +156,11 @@ export async function answerQuestion(payload, visibleProducts, knowledge, option
     try { return await refreshProduct(found.selected[i], options.fetcher); }
     catch { return {...p, refreshUnavailable: true}; }
   }));
-  let answer = fallbackAnswer(message, products, found.choices, locale), mode = 'specifications', modelUnavailable = false;
-  try { const generated = await modelAnswer(message, products, {...options,responseLanguage:locale}); if (generated) { answer = generated; mode = 'ai'; } }
+  const compared=compareVerified(products,locale||language(message));
+  let answer = compared||fallbackAnswer(message, products, found.choices, locale), mode = 'specifications', modelUnavailable = false;
+  // Selection/comparison needs no model. The existing explicitly confirmed free-tier
+  // description integration is used only for a single verified exact product.
+  if(!compared)try { const generated = await modelAnswer(message, products, {...options,responseLanguage:locale}); if (generated) { answer = generated; mode = 'ai'; } }
   catch { modelUnavailable = true; }
   return {name: 'ԶիգԶագ', answer, mode, modelUnavailable, products, advisor: null,
     choices: products.length ? [] : found.choices.map(p => ({articul: p.articul, name: p.name})), context: products.map(p => p.articul)};
