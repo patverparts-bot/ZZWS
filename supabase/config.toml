@@ -1,0 +1,12 @@
+[functions.zzws-api]
+# The handler validates opaque, hashed, immediately revocable application sessions.
+# This endpoint also serves login and the one-time bootstrap operation.
+verify_jwt = false
+
+[functions.zzws-apk]
+# APK routes validate the same revocable opaque application sessions.
+verify_jwt = false
+
+[functions.zzws-partner-apk]
+# This independent updater validates the same opaque, hashed application sessions.
+verify_jwt = false

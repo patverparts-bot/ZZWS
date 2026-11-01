@@ -1,0 +1,29 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {createRuntime} from './support/runtime.mjs';
+import {createTrackedApkRuntime} from './support/apk-runtime.mjs';
+
+test('APK accounting: authenticated requests, verified completion, ownership, observed versions, search, pagination and backups',{timeout:120000},async()=>{
+ const runtime=await createRuntime({memory:true,debug:true}),apk=createTrackedApkRuntime(runtime),origin='http://127.0.0.1:8080';
+ const request=async(path,token,body,method=body===undefined?'GET':'POST',headers={})=>{const handler=path.startsWith('apk/')?apk.handle:runtime.handle,url=origin+'/functions/v1/'+(path.startsWith('apk/')?'zzws-apk/'+path.slice(4):'zzws-api/'+path);return handler(new Request(url,{method,headers:{...(token?{Authorization:'Bearer '+token}:{}),...(body===undefined?{}:{'Content-Type':'application/json'}),...headers},...(body===undefined?{}:{body:typeof body==='string'?body:JSON.stringify(body)})}));};
+ const ok=async(...args)=>{const response=await request(...args),data=await response.json();assert.equal(response.status,200,JSON.stringify(data));return data;};
+ try{
+  const owner=(await ok('login',null,{login:'zzws-test-owner',password:'24681012'})).sessionToken,client=(await ok('login',null,{login:'zzws-test-dealer',password:'24681012'})).sessionToken,viewer=(await ok('login',null,{login:'zzws-test-viewer',password:'24681012'})).sessionToken;
+  assert.equal((await request('admin/users/apk-downloads?versionCode=70112',client)).status,403);assert.equal((await request('admin/users/apk-downloads?versionCode=70112',viewer)).status,403);assert.equal((await request('apk/download?versionCode=70112')).status,401);
+  const before=await ok('admin/users/apk-downloads?versionCode=70112',owner);assert.equal(before.total,8);assert.equal(before.totals.downloaded,0);assert.equal(before.totals.unknown,8);
+  assert.equal((await request('apk/download?versionCode=70112',client,undefined,'HEAD')).status,200);assert.equal((await runtime.db.query('select count(*) n from zzws_apk_downloads')).rows[0].n,0);
+  const link=await ok('apk/download-link?versionCode=70112',client);assert.match(link.downloadId,/^[a-f0-9-]{36}$/);let report=await ok('admin/users/apk-downloads?versionCode=70112',owner);assert.equal(report.totals.requested,1);assert.equal(report.totals.downloaded,0);
+  const receipt={downloadId:link.downloadId,sha256:apk.release.sha256,bytes:apk.release.bytes};assert.equal((await request('apk/download-complete',owner,receipt)).status,404);assert.equal((await request('apk/download-complete',client,{...receipt,sha256:'0'.repeat(64)})).status,404);assert.equal((await request('apk/download-complete',client,'x'.repeat(1001))).status,413);
+  await ok('apk/download-complete',client,receipt);const first=(await runtime.db.query('select completed_at from zzws_apk_downloads where id=$1',[link.downloadId])).rows[0].completed_at;await ok('apk/download-complete',client,receipt);assert.equal(String((await runtime.db.query('select completed_at from zzws_apk_downloads where id=$1',[link.downloadId])).rows[0].completed_at),String(first));
+  report=await ok('admin/users/apk-downloads?versionCode=70112&status=downloaded',owner);assert.equal(report.total,1);assert.equal(report.rows[0].role,'manager');assert.equal(report.rows[0].sources,'android');assert.equal(report.rows[0].status,'downloaded');
+  const file=await request('apk/download?versionCode=70112',owner),downloadId=file.headers.get('X-ZZWS-Download-Id');assert.equal(file.status,200);assert.ok(downloadId);assert.deepEqual(Buffer.from(await file.arrayBuffer()),apk.bytes);await ok('apk/download-complete',owner,{...receipt,downloadId});
+  await ok('me/mobile/session',viewer,{},'POST',{'X-ZZWS-App-Version':'7.1.12','X-ZZWS-App-Code':'70112'});report=await ok('admin/users/apk-downloads?versionCode=70112',owner);const viewerId=(await ok('me',viewer)).id,observed=report.rows.find(r=>r.id===viewerId);assert.equal(observed.observed_version,'7.1.12');assert.equal(observed.status,'unknown');assert.equal(observed.completed_at,null);
+  const ownerId=(await ok('me',owner)).id;assert.equal((await ok('admin/users/apk-downloads?versionCode=70112&search=zzws-test-owner',owner)).rows[0].id,ownerId);assert.equal((await ok('admin/users/apk-downloads?versionCode=70112&search=%25',owner)).total,0);assert.equal((await request('admin/users/apk-downloads?versionCode=no',owner)).status,400);
+  // A valid receipt remains idempotent after file retention removes the old release.
+  apk.objects.delete('releases/0000070112.json');await ok('apk/download-complete',client,receipt);assert.equal((await request('apk/download?versionCode=70112',client)).status,503);
+  const profile=(await runtime.db.query('select profile from zzws_users where id=$1',[ownerId])).rows[0].profile;
+  for(let i=0;i<53;i++){const id=crypto.randomUUID();await runtime.db.query('insert into auth.users(id,email) values($1,$2)',[id,'qa-'+id+'@example.invalid']);await runtime.db.query('insert into zzws_users(id,login,profile,needs_password_setup) values($1,$2,$3,false)',[id,'page-'+i,JSON.stringify({...profile,role:'client',client:'Pagination '+i,customerCode:''})]);}
+  const page=await ok('admin/users/apk-downloads?versionCode=70112&offset=50',owner);assert.equal(page.total,61);assert.equal(page.rows.length,11);assert.equal(page.offset,50);
+  const backup=(await runtime.db.query('select zzws_application_snapshot() as value')).rows[0].value;assert.equal(backup.tables.apk_downloads.length,2);assert.equal(backup.tables.apk_usage.length,1);
+  const privileges=(await runtime.db.query("select has_table_privilege('anon','public.zzws_apk_downloads','select') table_read,has_function_privilege('authenticated','public.zzws_apk_download_report(integer,text,text,integer)','execute') report_read")).rows[0];assert.equal(privileges.table_read,false);assert.equal(privileges.report_read,false);
+ }finally{await runtime.close();}
+});

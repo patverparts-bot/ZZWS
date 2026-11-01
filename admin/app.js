@@ -25,7 +25,7 @@ function showLogin() {
   document.getElementById('categoryManagerDialog')?.close();
   for(const key of ['orderRead','orderWrite','priceWrite'])document.documentElement.dataset[key]='false';
   finishSessionLoading();
-  window.ZZWS_STORAGE?.reset();
+  window.ZZWS_STORAGE?.reset();window.ZZWS_APK_DOWNLOADS?.reset();
   window.ZZWS_ADMIN_ORDERS?.reset();
   window.ZZWS_ADMIN_CHANNELS?.reset();
   el('workspace').hidden=true;el('login').hidden=false;el('logout').hidden=true;draft=null;userDraft=null;
@@ -42,7 +42,7 @@ function table(headers, rows) {
 }
 function button(label, callback) { const b = document.createElement('button'); b.type='button'; b.textContent = label; b.onclick = () => run(callback); return b; }
 async function run(fn) { try { await fn(); } catch(e) { if(!e.staleSession)status(ZZWS.message(e), true); } }
-const adminTabs=['dashboard','manager','orders','templates','price','users','rules','audit','storage','email','offers','catalogControls','warehouses','operations'];
+const adminTabs=['dashboard','manager','orders','templates','price','users','rules','audit','storage','email','offers','catalogControls','warehouses','operations','apkDownloads'];
 let adminNavigationActive=false,adminHistoryPosition=0,activeAdminTab=null;
 const adminBackButton=document.createElement('button');adminBackButton.id='adminBackSection';adminBackButton.type='button';adminBackButton.textContent='← Նախորդ բաժին';
 const adminSectionTrail=document.createElement('div');adminSectionTrail.className='admin-section-trail';el('adminActiveSection').before(adminSectionTrail);adminSectionTrail.append(adminBackButton,el('adminActiveSection'));
@@ -92,6 +92,7 @@ async function selectAdminTab(name,options={}){
   if(name==='audit')await loadAudit();
   if(name==='storage')await ZZWS_STORAGE.load();
   if(name==='orders')await ZZWS_ADMIN_ORDERS.load();if(name==='manager')await ZZWS_ADMIN_WORKBENCH.load();if(name==='templates')await ZZWS_ADMIN_TEMPLATES.load();if(name==='catalogControls')await ZZWS_ADMIN_CATALOG_CONTROLS.load();if(name==='operations')await ZZWS_ADMIN_OPERATIONS.load();
+  if(name==='apkDownloads')await ZZWS_APK_DOWNLOADS.load();
   if(name==='warehouses')await ZZWS_ADMIN_WAREHOUSES.load();
   if(name==='offers')await ZZWS_OFFERS.load();
   if(name==='email')await ZZWS_REPORT_EMAIL.loadSettings();

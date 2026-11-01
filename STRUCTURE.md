@@ -1,5 +1,53 @@
 # ZZWS file layout
 
+## Visible client catalogue access (published 1 November 2026)
+
+The client's all-brands/category checkbox is now a large blue control at the top
+of product access, with a live status and an orange notice for an empty permission
+list. Choosing KP/Dealers preserves the separately configured all/selected and
+excluded product rules. The read-only catalogue preview now permits POST only
+for administrators with user-management permission. No existing customer product
+permissions, prices, credentials or orders were changed by this fix.
+
+Frontend commit `7eb87822c76190e194b559dc39bf0b1be4cc4d60`, successful Pages
+workflow 41253277669; production API version 45. The full isolated client/team
+browser workflow, category/access regression, desktop/mobile control checks and
+preview permission tests passed. All four live frontend assets match the tested
+files. Evidence: `work/client-catalog-fix/live-verification.json` and
+`output/client-catalog-access/`.
+
+## APK download accounting — 1 November 2026
+
+The owner opens More → APK downloads to search accounts, select a release and
+filter verified downloads, unconfirmed requests or missing data. Reports retain
+inactive accounts and show each person's name/login, customer and last request /
+confirmation dates in Yerevan time. Pagination is server-side, 50 accounts per page.
+
+The private APK service records authenticated file/link requests. HEAD/current
+checks never count. Only an account-owned receipt matching the saved attempt,
+SHA-256 and byte count marks a download completed; retries preserve the first
+completion time. Browser downloads acknowledge after local integrity checks.
+Android 7.1.12 acknowledges after byte/hash/package/signer verification and retries
+accounting independently of the installable file. Older apps can record requests
+but cannot confirm completion. Drive downloads and pre-accounting history are not
+reconstructed. A separately reported app version describes the last authenticated
+session check; it does not imply a download receipt or an installation timestamp.
+
+The client cabinet exposes the same authenticated primary APK download already
+permitted by the server. Catalogue conditions and delivery variants are unchanged.
+The report and the two new tables are owner/service-only; ordinary client users
+cannot read other accounts' activity or acknowledge another account's download.
+Both tables are included in encrypted application snapshots and restore checks.
+
+Migration: `supabase/migrations/20261031231945_apk_download_tracking.sql`.
+Deploy `zzws-api`, `zzws-apk`, website assets and Android 7.1.12 together. Both Edge
+Functions validate revocable application sessions with gateway JWT verification
+disabled. Evidence and rollout metadata are in `work/apk-download-tracking`.
+Validation includes real SQL/API and actual staging Auth, browser downloads from
+owner/client cabinets, both languages and guides, filters/pagination/mobile layout,
+existing client-account workflows and 113 release unit tests. No production test
+orders or customer emails are created during verification.
+
 ## Client accounts and report recipients (published 1 November 2026)
 
 `client-accounts.mjs` separates the customer business code (`profile.customerCode`)

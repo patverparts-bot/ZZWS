@@ -4,9 +4,15 @@ const fail=(status,message,extra={})=>{throw Object.assign(new Error(message),{s
 const hash=async data=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',data)),b=>b.toString(16).padStart(2,'0')).join('');
 const checked=async q=>{const result=await q;if(result.error)fail(503,'Չհաջողվեց կատարել գործողությունը։ Փորձեք կրկին։');return result.data;};
 const releasePath=code=>'releases/'+String(code).padStart(10,'0')+'.json';
+async function downloadReceipt(req){
+ const reader=req.body?.getReader();if(!reader)fail(400,'Ստուգեք APK-ի ներբեռնման տվյալները');const chunks=[];let size=0;
+ try{for(;;){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>1000){void reader.cancel().catch(()=>{});fail(413,'Ստուգեք APK-ի ներբեռնման տվյալները');}chunks.push(value);}}finally{reader.releaseLock();}
+ const bytes=new Uint8Array(size);let at=0;for(const chunk of chunks){bytes.set(chunk,at);at+=chunk.length;}try{return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));}catch{fail(400,'Ստուգեք APK-ի ներբեռնման տվյալները');}
+}
 function validRelease(r){return r?.schemaVersion===1&&Number.isInteger(r.versionCode)&&r.versionCode>0&&r.versionCode<=2147483647&&r.package==='am.zzws.admin'&&/^[0-9][A-Za-z0-9.+_-]{0,79}$/.test(r.version)&&/^[a-f0-9]{64}$/.test(r.sha256)&&r.filename==='ZZWS-'+r.version+'-production.apk'&&r.objectPath==='files/'+r.sha256+'.apk'&&Number.isInteger(r.bytes)&&r.bytes>21&&r.bytes<=MAX_APK_BYTES&&typeof r.description==='string'&&r.description.length<=4000;}
 export function createApkHandler({service,origins,baselineVersionCode=70008,now=()=>Date.now(),uploadReadTimeoutMs=90000}){
  const store=()=>service.storage.from(BUCKET);
+ const downloadStart=(actor,r,source)=>checked(service.rpc('zzws_apk_download_start',{p_user:actor.id,p_release:{versionCode:r.versionCode,version:r.version,bytes:r.bytes,sha256:r.sha256},p_source:source}));
  async function bucket(create=false){
   const result=await service.storage.getBucket(BUCKET);if(!result.error){if(result.data.public)fail(503,'APK պահոցը պետք է լինի փակ։');return true;}
   if(String(result.error.statusCode||result.error.status)!=='404')fail(503,'APK պահոցը ժամանակավորապես հասանելի չէ։');
@@ -46,7 +52,11 @@ export function createApkHandler({service,origins,baselineVersionCode=70008,now=
  async function identity(req,upload=false){
   const token=(req.headers.get('authorization')||'').replace(/^Bearer /,'');if(!/^[a-f0-9]{64}$/.test(token))fail(401,'Մուտք գործեք համակարգ։');
   const session=await checked(service.from('zzws_sessions').select('user_id,expires,setup_only,confirmed_until').eq('hash',await hash(new TextEncoder().encode(token))).gt('expires',new Date(now()).toISOString()).maybeSingle());if(!session)fail(401,'Մուտք գործեք համակարգ։');
-  const user=await checked(service.from('zzws_users').select('id,active,profile,needs_password_setup').eq('id',session.user_id).eq('active',true).maybeSingle());if(!user)fail(401,'Հասանելիությունն անջատված է։');
+  const user=await checked(service.from('zzws_users').select('id,active,profile,needs_password_setup,customer_id').eq('id',session.user_id).eq('active',true).maybeSingle());if(!user)fail(401,'Հասանելիությունն անջատված է։');
+  if(user.customer_id&&!await checked(service.from('zzws_users').select('id').eq('id',user.customer_id).eq('active',true).maybeSingle()))fail(401,'Հասանելիությունն անջատված է։');
+  if(user.needs_password_setup||session.setup_only)fail(403,'Նախ ավարտեք մուտքի կարգավորումը։');
+  // The primary app now serves customers too; publication remains restricted to the owner.
+  if(!upload&&user.profile?.role==='client')return {id:user.id,mobile:true,owner:false};
   if(user.profile?.role!=='admin'||user.needs_password_setup||session.setup_only)fail(403,'Անհրաժեշտ է ադմինիստրատորի իրավունք։');
   const scope=await checked(service.from('zzws_admin_scopes').select('scope').eq('user_id',user.id).maybeSingle());if(!['owner','manager','viewer','price'].includes(scope?.scope))fail(403,'Հասանելիությունն արգելված է։');
   const channels=await checked(service.from('zzws_user_channels').select('mobile_admin_enabled').eq('user_id',user.id).maybeSingle());
@@ -56,24 +66,30 @@ export function createApkHandler({service,origins,baselineVersionCode=70008,now=
   return {id:user.id,mobile:channels?.mobile_admin_enabled===true,owner:scope.scope==='owner'};
  }
  return async req=>{
-  const origin=req.headers.get('origin'),headers={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Access-Control-Allow-Headers':'authorization,apikey,content-type','Access-Control-Allow-Methods':'GET,HEAD,POST,OPTIONS','Access-Control-Expose-Headers':'Content-Disposition,Content-Length','Vary':'Origin',...(origins.includes(origin)?{'Access-Control-Allow-Origin':origin}:{})};
+  const origin=req.headers.get('origin'),headers={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Access-Control-Allow-Headers':'authorization,apikey,content-type,x-zzws-client','Access-Control-Allow-Methods':'GET,HEAD,POST,OPTIONS','Access-Control-Expose-Headers':'Content-Disposition,Content-Length,X-ZZWS-Download-Id','Vary':'Origin',...(origins.includes(origin)?{'Access-Control-Allow-Origin':origin}:{})};
   const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{...headers,'Content-Type':'application/json; charset=utf-8'}});
   try{
    if(origin&&!origins.includes(origin))fail(403,'Հասանելիությունն արգելված է։');if(req.method==='OPTIONS')return new Response(null,{status:204,headers});
    const url=new URL(req.url),path=url.pathname.split('/zzws-apk/')[1]||'';
    if(path==='health'&&req.method==='GET')return json({ok:true,service:'zzws-apk',version:3,retainedVersions:2});
-   if(!['current','download','download-link','publish','upload-check'].includes(path))fail(404,'Չի գտնվել։');
+   if(!['current','download','download-link','download-complete','publish','upload-check'].includes(path))fail(404,'Չի գտնվել։');
    const uploading=['publish','upload-check'].includes(path);
-   if(uploading&&req.method!=='POST'||!uploading&&!['GET','HEAD'].includes(req.method))fail(405,'Գործողությունը թույլատրված չէ։');
+   if((uploading||path==='download-complete')?req.method!=='POST':!['GET','HEAD'].includes(req.method))fail(405,'Գործողությունը թույլատրված չէ։');
    const actor=await identity(req,uploading);
    if(path==='upload-check')return json({ok:true,maxBytes:MAX_APK_BYTES});
    if(path==='current')return json({release:await latest(),canPublish:actor.owner,maxBytes:MAX_APK_BYTES});
+   if(path==='download-complete'){
+    if(!actor.mobile)fail(403,'APK հասանելիությունը թույլատրված չէ։');
+    const p=await downloadReceipt(req);
+    if(!p||typeof p!=='object'||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(p.downloadId||'')||!/^[a-f0-9]{64}$/.test(p.sha256||'')||!Number.isSafeInteger(p.bytes)||p.bytes<22||p.bytes>MAX_APK_BYTES)fail(400,'Ստուգեք APK-ի ներբեռնման տվյալները');
+    const done=await checked(service.rpc('zzws_apk_download_complete',{p_user:actor.id,p_download:p.downloadId,p_sha256:p.sha256,p_bytes:p.bytes}));if(!done)fail(404,'APK-ի ներբեռնման գրառումը չի գտնվել');return json({ok:true});
+   }
    if(path==='download'||path==='download-link'){
     if(!actor.mobile)fail(403,'APK հասանելիությունը թույլատրված չէ։');const code=Number(url.searchParams.get('versionCode'));if(!Number.isInteger(code)||code<1||code>2147483647)fail(400,'Ստուգեք APK տարբերակը։');
     const r=await release(code);
-    if(path==='download-link'){const result=await checked(store().createSignedUrl(r.objectPath,120,{download:r.filename}));return json({url:result.signedUrl,expiresIn:120});}
+    if(path==='download-link'){const result=await checked(store().createSignedUrl(r.objectPath,120,{download:r.filename}));const downloadId=req.method==='HEAD'?null:await downloadStart(actor,r,'android');return json({url:result.signedUrl,expiresIn:120,downloadId});}
     const h={...headers,'Content-Type':MIME,'Content-Disposition':'attachment; filename="'+r.filename+'"','Content-Length':String(r.bytes)};if(req.method==='HEAD')return new Response(null,{headers:h});
-    const blob=await checked(store().download(r.objectPath));if(blob.size!==r.bytes)fail(503,'APK ֆայլը հասանելի չէ ամբողջությամբ։');return new Response(blob,{headers:h});
+    const blob=await checked(store().download(r.objectPath));if(blob.size!==r.bytes)fail(503,'APK ֆայլը հասանելի չէ ամբողջությամբ։');h['X-ZZWS-Download-Id']=await downloadStart(actor,r,'web');return new Response(blob,{headers:h});
    }
    if(Number(req.headers.get('content-length')||0)>MAX_APK_BYTES+100000)fail(413,'APK ֆայլը չպետք է գերազանցի 50 ՄԲ-ը։');
    // Binary envelope: 4-byte big-endian JSON length, UTF-8 metadata, APK bytes.

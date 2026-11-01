@@ -1,6 +1,6 @@
 # ZZWS — primary Android application
 
-Version 7.1.11 (70111), package `am.zzws.admin`, Android 8+. This is the canonical
+Version 7.1.12 (70112), package `am.zzws.admin`, Android 8+. This is the canonical
 application as of 31 October 2026. The former Partner interface is now the primary
 ZZWS interface. Future Android changes belong here. `android-partner/` is a
 separately installed prototype/reference and is no longer the primary target.
@@ -18,6 +18,14 @@ Each client manager and employee has personal credentials and contacts. Existing
 clients complete missing personal details before opening the catalogue. Delivery
 continues to use the selected original client-card variant and its recipient
 contact. Managers can open the authenticated team cabinet through the website.
+
+## Download accounting — 7.1.12
+
+Background downloads acknowledge their own server-issued attempt only after byte,
+hash, package and signature verification. A failed accounting call never removes
+a verified APK; ready-file checks retry the idempotent receipt. Login/session
+refresh reports the app version separately from a completed download. Older APKs
+can still request updates but cannot acknowledge download completion.
 
 ## Interface and behavior
 

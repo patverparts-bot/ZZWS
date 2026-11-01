@@ -4,7 +4,7 @@
  const apkEndpoint=path=>new URL('../zzws-apk/'+path,ZZWS_CONFIG.api).href;
  const assetOptions={credentials:'omit',cache:'no-store',referrerPolicy:'no-referrer',redirect:'error'};
  const maxApkBytes=150*1024*1024;
- let owner=null,ticket=0,mount=null,loading=false;
+ let owner=null,ticket=0,mount=null,loading=false,clientAccount=false;
  const node=(tag,text)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;return n;};
  function root(){
   if(mount?.isConnected)return mount;
@@ -12,7 +12,7 @@
   if(!mount){const cabinet=document.getElementById('cabinetModal');if(!cabinet)return null;mount=node('section');mount.id='catalogAdminResources';mount.hidden=true;const subtitle=document.getElementById('cabinetUserSubtitle');(subtitle?.parentElement||cabinet).append(mount);}
   return mount;
  }
- function reset(){owner=null;++ticket;loading=false;const box=root();if(box){box.replaceChildren();box.hidden=true;}}
+ function reset(){owner=null;clientAccount=false;++ticket;loading=false;const box=root();if(box){box.replaceChildren();box.hidden=true;}}
  function textError(error){return window.ZZWS?.message(error)||'Չհաջողվեց կատարել գործողությունը։';}
  async function readRelease(){
   const current=await ZZWS.json(apkEndpoint('current'));
@@ -51,9 +51,9 @@
  async function download(button,notice,card,who,requestTicket){
   if(loading||owner!==who||requestTicket!==ticket)return;loading=true;button.disabled=true;notice.textContent='Ֆայլը բեռնվում է…';
   try{
-   const permission=await ZZWS.json('me/resources');
+   const permission=await ZZWS.json(clientAccount?'me':'me/resources');
    if(owner!==who||requestTicket!==ticket)return;
-   if(permission.mobileAdminEnabled!==true)throw Error('Ներբեռնման թույլտվությունը փոխվել է։');
+   if(clientAccount?(permission.id!==who||permission.role!=='client'):permission.mobileAdminEnabled!==true)throw Error('Ներբեռնման թույլտվությունը փոխվել է։');
    const release=await readRelease();
    if(owner!==who||requestTicket!==ticket)return;
    showRelease(card,release);
@@ -66,11 +66,12 @@
    const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',await blob.arrayBuffer())),v=>v.toString(16).padStart(2,'0')).join('');
    if(digest!==release.sha256)throw Error('APK ֆայլի ստուգումը ձախողվել է։ Թարմացրեք էջը կամ դիմեք սեփականատիրոջը։');
    if(owner!==who||requestTicket!==ticket)return;
-   const current=await ZZWS.json('me/resources');
+   const current=await ZZWS.json(clientAccount?'me':'me/resources');
    if(owner!==who||requestTicket!==ticket)return;
-   if(current.mobileAdminEnabled!==true)throw Error('Ներբեռնման թույլտվությունը փոխվել է։');
+   if(clientAccount?(current.id!==who||current.role!=='client'):current.mobileAdminEnabled!==true)throw Error('Ներբեռնման թույլտվությունը փոխվել է։');
    const link=node('a'),url=URL.createObjectURL(blob);link.href=url;link.download=release.filename;link.hidden=true;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
    notice.textContent='APK ֆայլը ներբեռնված է։ Տեղադրեք այն ձեր Android սարքում։';
+   const downloadId=response.headers.get('X-ZZWS-Download-Id');if(release.server&&downloadId){try{await ZZWS.json(apkEndpoint('download-complete'),{method:'POST',body:JSON.stringify({downloadId,sha256:release.sha256,bytes:release.bytes})});}catch{if(owner===who&&requestTicket===ticket)notice.textContent='APK ֆայլը ներբեռնված է, բայց հաշվառման հաստատումը չի ուղարկվել։ Տեղադրեք այն ձեր Android սարքում։';}}
   }catch(error){if(owner===who&&requestTicket===ticket)notice.textContent=textError(error);}
   finally{if(owner===who&&requestTicket===ticket){loading=false;if(button.isConnected)button.disabled=false;}}
  }
@@ -84,10 +85,10 @@
   const content=node('div');content.style.cssText='display:grid;gap:12px;padding-top:12px;max-height:34vh;overflow:auto;font-size:13px;min-width:0;overflow-wrap:anywhere';details.append(summary,content);box.append(details);
   const notice=node('p');notice.setAttribute('role','status');notice.style.fontSize='13px';
   if(mobile){
-   const card=node('div');card.style.cssText='display:grid;gap:6px;min-width:0';card.append(node('h4','ZZWS Admin՝ Android հավելված'));
+   const card=node('div');card.style.cssText='display:grid;gap:6px;min-width:0';card.append(node('h4','ZZWS՝ Android հավելված'));
    const button=node('button');button.type='button';button.dataset.resource='apk';button.style.cssText='padding:10px 14px;border:1px solid #2563eb;border-radius:8px;background:#1d4ed8;color:white;cursor:pointer;justify-self:start;max-width:100%;white-space:normal';card.append(button);
    const version=node('p');version.dataset.apkVersion='';card.append(version);const description=node('p');description.dataset.apkDescription='';description.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere';card.append(description);availability(button,notice,card,who,requestTicket);
-   card.append(node('p','Մուտք գործեք ձեր ZZWS ադմինիստրատորի հաշվով։ Հավելվածը չի ընդլայնում հաշվի իրավունքները։'));content.append(card);
+   card.append(node('p','Մուտք գործեք ձեր անձնական ZZWS հաշվով։ Հավելվածը չի ընդլայնում հաշվի իրավունքները։'));content.append(card);
   }
   if(telegram){
    const card=node('div');card.dataset.resource='telegram';card.style.cssText='display:grid;gap:6px;min-width:0';card.append(node('h4','Telegram ծանուցումների միացում'));
@@ -112,12 +113,12 @@
  }
  async function start(user,options={}){
   reset();if(options.root)mount=options.root;
-  if(user?.role!=='admin'||!user.id||(user.mobileAdminEnabled!==true&&user.telegramEnabled!==true))return;
-  owner=user.id;const who=owner,requestTicket=++ticket;
-  try{const data=await ZZWS.json('me/resources');if(who!==owner||requestTicket!==ticket)return;render(data,who,requestTicket);}
+  if(!['admin','client'].includes(user?.role)||!user.id||(user.role==='admin'&&user.mobileAdminEnabled!==true&&user.telegramEnabled!==true))return;
+  clientAccount=user.role==='client';owner=user.id;const who=owner,requestTicket=++ticket;
+  try{const data=clientAccount?{mobileAdminEnabled:true,telegramEnabled:false}:await ZZWS.json('me/resources');if(who!==owner||requestTicket!==ticket)return;render(data,who,requestTicket);}
   catch{if(who===owner&&requestTicket===ticket){const box=root();if(box){box.replaceChildren();box.hidden=true;}}}
  }
- async function refresh(){try{await start(await ZZWS.json('me'));}catch{reset();}}
+ async function refresh(){const who=owner,at=ticket;try{const user=await ZZWS.json('me');if(owner!==who||ticket!==at)return;const opened=root()?.querySelector('[data-resource-instructions]')?.open;await start(user);const details=root()?.querySelector('[data-resource-instructions]');if(opened&&details)details.open=true;}catch{if(owner===who&&ticket===at)reset();}}
  window.ZZWS_ADMIN_RESOURCES=Object.freeze({start,reset,refresh});
  window.addEventListener('zzws:session-changed',event=>event.detail?.user?start(event.detail.user):reset());
 })();

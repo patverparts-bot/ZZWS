@@ -1,3 +1,4 @@
+import {apkDownloadsRoute} from './apk-downloads.mjs';
 import {warehouseRoutes,mainWarehouses} from './warehouses.mjs';
 import {dealerRoutes} from './dealer.mjs';
 import {replacementRoutes} from './replacements.mjs';
@@ -241,7 +242,7 @@ export async function handle(req:Request){
     if(user.needsPasswordSetup||setupOnly)fail(403,'Նախ սահմանեք նոր գաղտնաբառը');
     if(path==='account/profile'){const response=await accountRoutes({path,req,user,hash,setupOnly,invitationHash,table,query,body,json,fail,service,security,email});if(response)return response;}
     if(user.role==='client'&&user.needsProfileSetup)fail(403,'Լրացրեք անունը, ազգանունը, հեռախոսը և էլ․ փոստը ձեր անձնական կաբինետում');
-    if(req.method==='POST'&&path==='me/mobile/session'){const expires=new Date(Date.now()+30*24*3600000).toISOString();await query(table('sessions').update({expires}).eq('hash',hash));return json({expires});}
+    if(req.method==='POST'&&path==='me/mobile/session'){const expires=new Date(Date.now()+30*24*3600000).toISOString();const appVersion=req.headers.get('x-zzws-app-version'),appCode=Number(req.headers.get('x-zzws-app-code'));if(appVersion&&/^[0-9][A-Za-z0-9.+_-]{0,79}$/.test(appVersion)&&Number.isSafeInteger(appCode)&&appCode>0&&appCode<=2147483647)await query(service.rpc('zzws_apk_usage_record',{p_user:user.id,p_version_code:appCode,p_version:appVersion}));await query(table('sessions').update({expires}).eq('hash',hash));return json({expires});}
     if(path.startsWith('admin/')&&(user.role!=='admin'||!canAccess(user.adminScope,path,req.method)))fail(403,'Այս գործողության իրավունքը չունեք');
     if(req.method==='POST'&&path==='account/reauth'){
       const p=await body(req),ip=await digest((req.headers.get('x-forwarded-for')||'unknown').split(',')[0].trim());
@@ -252,6 +253,7 @@ export async function handle(req:Request){
     }
     if(req.method==='POST'&&['admin/users','admin/users/scope','admin/users/team/access','admin/users/reset-password','admin/users/delete','admin/storage/clear','admin/price/publish','admin/price/rollback','admin/rules','admin/users/import','admin/users/channels','admin/users/polling','admin/users/invitation-email/send','admin/email-settings','admin/receipt-control','admin/users/receipt-control'].includes(path)&&!(confirmedUntil&&Date.parse(confirmedUntil)>Date.now()))return json({error:'Հաստատեք ձեր ընթացիկ գաղտնաբառը',reauthRequired:true},428);
 
+    const apkDownloadResponse=await apkDownloadsRoute({path,req,user,service,query,json,fail});if(apkDownloadResponse)return apkDownloadResponse;
     const accountResponse=await accountRoutes({path,req,user,hash,setupOnly,invitationHash,table,query,body,json,fail,service,security,email,audit});if(accountResponse)return accountResponse;
     if(['me/resources','me/resources/apk','admin/resources','admin/users/channels','admin/devices/register','admin/devices/revoke'].includes(path)){const response=await channelRoutes({path,req,user,service,table,query,body,json,fail});if(response)return response;}
     const bulletinResponse=await bulletinRoutes({path,req,user,service,table,query,body,json,current,project,fail});if(bulletinResponse)return bulletinResponse;
