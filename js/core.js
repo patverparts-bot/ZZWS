@@ -54,18 +54,20 @@ async function copyArticul(articul) {
   } catch (e) {}
 
   if (!copied) {
+    const origin = document.activeElement;
     const temporaryInput = document.createElement('textarea');
     temporaryInput.value = String(articul);
     temporaryInput.setAttribute('readonly', '');
     temporaryInput.style.position = 'fixed';
     temporaryInput.style.opacity = '0';
     temporaryInput.style.left = '-9999px';
-    document.body.appendChild(temporaryInput);
+    (origin?.closest('dialog[open]') || document.body).appendChild(temporaryInput);
     temporaryInput.focus({ preventScroll: true });
     temporaryInput.select();
     temporaryInput.setSelectionRange(0, temporaryInput.value.length);
     try { copied = document.execCommand('copy'); } catch (e) {}
     temporaryInput.remove();
+    origin?.focus({ preventScroll: true });
   }
 
   const toast = document.getElementById('copyToast');
@@ -75,6 +77,7 @@ async function copyArticul(articul) {
     if (copyToastTimer) clearTimeout(copyToastTimer);
     copyToastTimer = setTimeout(() => toast.classList.add('hidden'), 1800);
   }
+  return copied;
 }
 
 let cart = {};
