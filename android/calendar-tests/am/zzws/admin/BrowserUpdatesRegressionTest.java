@@ -34,25 +34,21 @@ public class BrowserUpdatesRegressionTest {
   public boolean onStartJob(JobParameters p){return false;}
   public boolean onStopJob(JobParameters p){return false;}
  }
- @Test public void websiteOpensExternallyWithoutSessionOrInstallerData()throws Exception{
-  JSONObject previous=AppSession.user;
-  String token=AppSession.api.sessionToken();
+ @Test public void downloadsOpensTheSystemManagerWithoutAWebsiteOrInstaller()throws Exception{
   try(ActivityController<Activity> controller=Robolectric.buildActivity(Activity.class).setup()){
-   AppSession.user=new JSONObject().put("role","client");
-   AppSession.api.restoreToken(new String(new char[64]).replace('\0','a'));
-   BrowserUpdates.open(controller.get());
+   UserUpdateDownload.showDownloads(controller.get());
    Intent intent=Shadows.shadowOf(controller.get()).getNextStartedActivity();
-   assertEquals(Intent.ACTION_VIEW,intent.getAction());
-   assertEquals("https://patverparts-bot.github.io/ZZWS/",intent.getDataString());
-   assertTrue(intent.hasCategory(Intent.CATEGORY_BROWSABLE));
+   assertEquals(DownloadManager.ACTION_VIEW_DOWNLOADS,intent.getAction());
+   assertNull(intent.getDataString());
    assertNull(intent.getComponent());assertNull(intent.getExtras());assertNull(intent.getClipData());assertNull(intent.getType());
    assertEquals(0,intent.getFlags()&Intent.FLAG_GRANT_READ_URI_PERMISSION);
-  }finally{AppSession.user=previous;if(token.isEmpty())AppSession.api.clear();else AppSession.api.restoreToken(token);}
+  }
  }
- @Test public void noBrowserLaunchWithoutAnAuthenticatedUser(){
+ @Test public void noDownloadWithoutAnAuthenticatedUser(){
   JSONObject previous=AppSession.user;
   try(ActivityController<Activity> controller=Robolectric.buildActivity(Activity.class).setup()){
-   AppSession.user=null;BrowserUpdates.open(controller.get());assertNull(Shadows.shadowOf(controller.get()).getNextStartedActivity());
+   AppSession.user=null;UserUpdateDownload.start(controller.get(),new AppUpdatePolicy.Release(70119,"7.1.19","","",100));assertNull(Shadows.shadowOf(controller.get()).getNextStartedActivity());
+   try(Cursor rows=controller.get().getSystemService(DownloadManager.class).query(new DownloadManager.Query())){assertEquals(0,rows.getCount());}
   }finally{AppSession.user=previous;}
  }
  @Test public void reminderWaitsForAUserActionAndLaterDoesNotLaunchAnything()throws Exception{
@@ -67,16 +63,15 @@ public class BrowserUpdatesRegressionTest {
    assertNull(Shadows.shadowOf(a).getNextStartedActivity());VersionReminder.reset();
   }finally{VersionReminder.reset();}
  }
- @Test public void reminderConfirmationOnlyOpensTheWebsite()throws Exception{
-  JSONObject previous=AppSession.user;
+ @Test public void reminderConfirmationRunsOnlyTheDownloadAction()throws Exception{
   try(ActivityController<Activity> controller=Robolectric.buildActivity(Activity.class).setup()){
-   Activity a=controller.get();AppSession.user=new JSONObject().put("role","client");
-   VersionReminder.prompt(a,new AppUpdatePolicy.Release(70117,"7.1.17","","",100));
+   Activity a=controller.get();java.util.concurrent.atomic.AtomicInteger requested=new java.util.concurrent.atomic.AtomicInteger();
+   VersionReminder.prompt(a,new AppUpdatePolicy.Release(70119,"7.1.19","Very long release notes must not obscure the update button","",100),requested::incrementAndGet);
+   assertEquals(0,requested.get());assertEquals(L10n.t("Թարմացնել"),ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).getText().toString());
    ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).performClick();
    Shadows.shadowOf(android.os.Looper.getMainLooper()).idle();
-   Intent intent=Shadows.shadowOf(a).getNextStartedActivity();assertEquals(Intent.ACTION_VIEW,intent.getAction());
-   assertEquals(BrowserUpdates.WEBSITE,intent.getDataString());assertNull(intent.getExtras());assertNull(intent.getType());VersionReminder.reset();
-  }finally{VersionReminder.reset();AppSession.user=previous;}
+   assertEquals(1,requested.get());assertNull(Shadows.shadowOf(a).getNextStartedActivity());VersionReminder.reset();
+  }finally{VersionReminder.reset();}
  }
  @Test public void migrationCancelsOnlyOldUpdaterAndPreservesAccountAndUnrelatedResources()throws Exception{
   Context c=RuntimeEnvironment.getApplication();

@@ -1,6 +1,6 @@
 # ZZWS — primary Android application
 
-Version 7.1.17 (70117), package `am.zzws.admin`, Android 8+. This is the canonical
+Version 7.1.18 (70118), package `am.zzws.admin`, Android 8+. This is the canonical
 application as of 31 October 2026. All Android development, builds, tests and
 releases belong here. The separate Partner prototype was retired and deleted on
 1 November 2026 at the owner's request; do not restore, build or maintain it.
@@ -46,6 +46,21 @@ The banner grows to fit its translated action instead of clipping it at a fixed
 height. Compose regression checks exercise all entry points, exact product details,
 filter clearing, Armenian/Russian at 320dp, and offers appearing/disappearing after
 catalogue refresh. The existing price-context policy checks remain in place.
+
+## Direct downloads — 7.1.18
+
+At the owner's request, the foreground reminder now has Update and Later buttons.
+Update obtains a short-lived signed link for that release and starts Android
+DownloadManager directly. No website, automatic download, recurring job or embedded
+installer is used. Android shows transfer progress; Downloads opens the downloaded
+APK. Android 10+ uses public Downloads; Android 8–9 uses app-specific Downloads
+without a storage permission. Completion verifies size, SHA-256, package, version
+and the installed signing identity before acknowledging the exact download receipt.
+A failed receipt call preserves the verified file.
+
+Existing 7.1.16/7.1.17 binaries keep their old website button until the owner installs
+7.1.18 once. This change does not alter their code remotely. Physical-device testing
+and a new Play Protect verdict have not been performed.
 
 ## Viber reminders — 7.1.13
 

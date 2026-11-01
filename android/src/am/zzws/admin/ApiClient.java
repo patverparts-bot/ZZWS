@@ -25,6 +25,11 @@ final class ApiClient {
   return request(method,new URL(base+path),body,true);
  }
  JSONObject apkRelease() throws Exception {return request("GET",new URL(new URL(base),"../zzws-apk/current"),null,false);}
+ JSONObject apkDownloadLink(long versionCode) throws Exception {
+  if(versionCode<1||versionCode>2147483647L)throw new Exception("Սխալ APK տարբերակ");
+  return request("GET",new URL(new URL(base),"../zzws-apk/download-link?versionCode="+versionCode),null,false);
+ }
+ JSONObject apkDownloadComplete(String downloadId,String sha256,long bytes) throws Exception {return request("POST",new URL(new URL(base),"../zzws-apk/download-complete"),new JSONObject().put("downloadId",downloadId).put("sha256",sha256).put("bytes",bytes),false);}
  private JSONObject request(String method,URL url,JSONObject body,boolean sessionResponse) throws Exception {
   final String sentToken=token;
   HttpURLConnection c=(HttpURLConnection)url.openConnection();c.setInstanceFollowRedirects(false);c.setRequestMethod(method);c.setConnectTimeout(10000);c.setReadTimeout(15000);c.setUseCaches(false);c.setRequestProperty("apikey",key);c.setRequestProperty("Accept","application/json");c.setRequestProperty("X-ZZWS-Client","android");if(EndpointConfiguration.RELEASE){c.setRequestProperty("X-ZZWS-App-Version",BuildConfig.VERSION_NAME);c.setRequestProperty("X-ZZWS-App-Code",String.valueOf(BuildConfig.VERSION_CODE));}

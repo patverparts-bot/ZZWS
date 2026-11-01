@@ -1,22 +1,16 @@
 package am.zzws.admin;
 
-import android.app.Activity;
 import android.app.DownloadManager;
 import android.app.NotificationManager;
 import android.app.job.JobScheduler;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Environment;
-import android.widget.Toast;
 import java.io.File;
 import org.json.JSONObject;
 
-/** Updates are a manual action on our website in the external browser.
- * No APK download, staging, installer, or scheduled update work remains. */
+/** One-time cleanup of the obsolete automatic updater. New downloads require a user tap. */
 final class BrowserUpdates {
- static final String WEBSITE="https://patverparts-bot.github.io/ZZWS/";
  private static boolean initialized;
  static synchronized void initialize(Context context){
   if(initialized)return;
@@ -42,11 +36,5 @@ final class BrowserUpdates {
   }catch(Exception ignored){}
   // Retain a failed cancellation ID so a subsequent launch can retry it.
   if(removed)old.edit().clear().commit();
- }
- static Intent websiteIntent(){return new Intent(Intent.ACTION_VIEW,Uri.parse(WEBSITE)).addCategory(Intent.CATEGORY_BROWSABLE);}
- static void open(Activity activity){
-  if(!AppSession.authenticated()||activity.isFinishing()||activity.isDestroyed())return;
-  try{activity.startActivity(websiteIntent());}
-  catch(android.content.ActivityNotFoundException e){Toast.makeText(activity,L10n.t("Չհաջողվեց բացել հավելվածը"),Toast.LENGTH_LONG).show();}
  }
 }

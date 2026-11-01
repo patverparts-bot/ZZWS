@@ -11,7 +11,7 @@ import android.widget.Toast;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.Executors;
 
-/** Foreground metadata only. Never downloads an APK or opens an installer. */
+/** Foreground checks show a reminder; only the explicit Update button starts a download. */
 final class VersionReminder {
  private static final Handler main=new Handler(Looper.getMainLooper());
  private static final java.util.concurrent.ExecutorService io=Executors.newSingleThreadExecutor();
@@ -21,7 +21,7 @@ final class VersionReminder {
  private static boolean checking;
  private static AlertDialog visible;
  private static final Runnable tick=new Runnable(){public void run(){Activity a=foreground.get();if(a!=null){check(a);main.postDelayed(this,AppUpdatePolicy.CHECK_INTERVAL);}}};
- static void resume(Activity a){foreground=new WeakReference<>(a);main.removeCallbacks(tick);check(a);main.postDelayed(tick,AppUpdatePolicy.CHECK_INTERVAL);}
+ static void resume(Activity a){foreground=new WeakReference<>(a);UserUpdateDownload.reconcile(a.getApplicationContext());main.removeCallbacks(tick);check(a);main.postDelayed(tick,AppUpdatePolicy.CHECK_INTERVAL);}
  static void pause(Activity a){if(foreground.get()==a){foreground.clear();main.removeCallbacks(tick);if(visible!=null){visible.dismiss();visible=null;}}}
  static void reset(){checkedToken="";lastCheck=-1;if(visible!=null){visible.dismiss();visible=null;}}
  private static boolean eligible(Activity a){return EndpointConfiguration.RELEASE&&!BuildConfig.DEBUG&&AppSession.authenticated()&&!AppSession.api.sessionToken().isEmpty()&&foreground.get()==a&&!a.isFinishing()&&!a.isDestroyed();}
@@ -53,11 +53,14 @@ final class VersionReminder {
  }
  private static void information(Activity a,String text){Toast.makeText(a,L10n.t(text),Toast.LENGTH_LONG).show();}
  static boolean prompt(Activity a,AppUpdatePolicy.Release release){
+  return prompt(a,release,()->UserUpdateDownload.start(a,release));
+ }
+ static boolean prompt(Activity a,AppUpdatePolicy.Release release,Runnable confirmed){
   if(visible!=null&&visible.isShowing())return false;
   visible=new AlertDialog.Builder(a)
    .setTitle(L10n.t("Հասանելի է ZZWS-ի նոր տարբերակ՝ ")+release.version)
-   .setMessage((release.description.isEmpty()?"":release.description+"\n\n")+L10n.t("Թարմացումը ներբեռնեք ZZWS կայքից։ Ներբեռնումն ու տեղադրումը կատարում եք ձեռքով։"))
-   .setPositiveButton(L10n.t("Բացել կայքը՝ թարմացման համար"),(dialog,which)->BrowserUpdates.open(a))
+   .setMessage(L10n.t("Սեղմեք «Թարմացնել»՝ հավելվածի նոր տարբերակը ներբեռնելու համար։"))
+   .setPositiveButton(L10n.t("Թարմացնել"),(dialog,which)->confirmed.run())
    .setNegativeButton(L10n.t("Ավելի ուշ"),(dialog,which)->{}).create();
   AlertDialog shown=visible;
   shown.setOnDismissListener(dialog->{if(visible==shown)visible=null;});

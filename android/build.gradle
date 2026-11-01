@@ -30,7 +30,7 @@ android {
  buildToolsVersion '36.0.0'
  buildFeatures { buildConfig true; compose true }
  defaultConfig {
-  applicationId 'am.zzws.admin'; minSdk 26; targetSdk 36; versionCode 70117; versionName stagingBuild?'7.1.17-staging':'7.1.17'
+  applicationId 'am.zzws.admin'; minSdk 26; targetSdk 36; versionCode 70118; versionName stagingBuild?'7.1.18-staging':'7.1.18'
   buildConfigField 'boolean','ZZWS_PRODUCTION','false'
   buildConfigField 'String','ZZWS_API_URL','""'
   buildConfigField 'String','ZZWS_PUBLIC_KEY','""'
