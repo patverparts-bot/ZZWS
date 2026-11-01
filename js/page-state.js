@@ -18,6 +18,7 @@
   for(const name of ['search','sortBy','sortPrice','sortColumn'])value.filters[name]=el(name==='search'?'searchInput':name).value;
   for(const [id,name]of [['favOnlyFilter','favOnly'],['promoOnlyFilter','promoOnly'],['stockOnlyFilter','stockOnly'],['wholesaleOnlyFilter','wholesaleOnly']])value.filters[name]=el(id).checked;
   value.overlay=!el('cabinetModal').classList.contains('hidden')?'orders':!el('orderModal').classList.contains('hidden')?'cart':null;
+  const bulletin=window.ZZWS_BULLETINS?.state();if(bulletin){value.overlay='bulletins';value.bulletin=bulletin;}
   try{sessionStorage.setItem(key,JSON.stringify(value));}catch{}
  }
  function schedule(){clearTimeout(timer);timer=setTimeout(save,80);}
@@ -46,6 +47,7 @@
    window.scrollTo({top:Math.max(0,Math.min(1000000,Number(state.scrollY)||0)),behavior:'instant'});
    if(state.overlay==='orders')openPersonalCabinet();
    else if(state.overlay==='cart')openOrderModal();
+   else if(state.overlay==='bulletins')await window.ZZWS_BULLETINS?.restore(state.bulletin);
   }
   if(ticket!==epoch)return;restoring=false;ready=true;save();
  }

@@ -1,9 +1,9 @@
 (() => {
  const node=(tag,text)=>{const e=document.createElement(tag);if(text!=null)e.textContent=text;return e;},money=n=>Number(n).toLocaleString((window.ZZWS_I18N?.language==='ru'?'ru-RU':'hy-AM'))+' ֏';
- let user=null,generation=0,timer=null,started=0,items=[],dialog=null,shown=new Set(),cursor='',polling=false,selection=null,dialogStamp='';
+ let user=null,generation=0,timer=null,started=0,items=[],dialog=null,shown=new Set(),cursor='',polling=false,selection=null,dialogStamp='',inflight=null;
  const key=item=>item.id+':'+(item.revision||1),stamp=list=>JSON.stringify(list.map(i=>[key(i),i.title,i.products]));
  const button=node('button','Ծանուցումներ · գներ և առաջարկներ');button.type='button';button.id='catalogBulletinsButton';button.hidden=true;button.className='catalog-bulletins-button';document.querySelector('.catalog-header')?.append(button);
- function reset(){user=null;++generation;clearInterval(timer);timer=null;items=[];cursor='';polling=false;shown.clear();dialog?.close();dialog?.remove();dialog=null;button.hidden=true;}
+ function reset(){user=null;++generation;clearInterval(timer);timer=null;items=[];cursor='';polling=false;inflight=null;shown.clear();dialog?.close();dialog?.remove();dialog=null;button.hidden=true;}
  async function mark(item){shown.add(key(item));item.seen=true;await ZZWS.json('me/bulletins/read',{method:'POST',body:JSON.stringify({id:item.id})}).catch(()=>{});}
  function open(selected=null){if(!user)return;selection=selected?.id||null;dialog?.remove();dialog=node('dialog');dialog.className='catalog-bulletins-dialog';const head=node('div');head.className='bulletin-dialog-heading';head.append(node('h2',selected?.title||'Գներ և հատուկ առաջարկներ'));const close=node('button','Փակել');close.type='button';close.onclick=()=>dialog.close();head.append(close);dialog.append(head);
   const copyStatus=node('p');copyStatus.className='bulletin-copy-status';copyStatus.setAttribute('role','status');
@@ -13,9 +13,16 @@
   }
   dialog.append(copyStatus);dialogStamp=stamp(list);document.body.append(dialog);dialog.showModal();
  }
- async function refresh(){if(!user||document.hidden||polling)return;const who=user.id,ticket=generation;polling=true;try{const r=await ZZWS.json('me/bulletins'+(cursor?'?cursor='+encodeURIComponent(cursor):''));if(user?.id!==who||generation!==ticket)return;if(!r.unchanged)items=r.bulletins;cursor=r.cursor||'';button.hidden=false;button.textContent='Ծանուցումներ · '+items.filter(i=>!i.seen&&!shown.has(key(i))).length;
+ async function load(){if(!user||document.hidden||polling)return;const who=user.id,ticket=generation;polling=true;try{const r=await ZZWS.json('me/bulletins'+(cursor?'?cursor='+encodeURIComponent(cursor):''));if(user?.id!==who||generation!==ticket)return;if(!r.unchanged)items=r.bulletins;cursor=r.cursor||'';button.hidden=false;button.textContent='Ծանուցումներ · '+items.filter(i=>!i.seen&&!shown.has(key(i))).length;
    if(dialog?.open){const selected=selection?items.find(i=>i.id===selection):null;if(selection&&!selected){dialog.close();dialog.remove();dialog=null;}else if(dialogStamp!==stamp(selection?[selected]:items))open(selected);return;}const next=items.find(i=>!i.seen&&!shown.has(key(i))&&(i.kind==='prices'||Date.now()-started>=120000));if(next)open(next);
   }catch(e){if(e.status===404)button.hidden=true;}finally{if(generation===ticket)polling=false;}
  }
- button.onclick=()=>open();window.ZZWS_BULLETINS={reset,start(identity){reset();user=identity;started=Date.now();button.hidden=false;refresh();timer=setInterval(refresh,60000);},refresh,open};
+ function refresh(){if(inflight)return inflight;const request=load();inflight=request;request.finally(()=>{if(inflight===request)inflight=null;});return request;}
+ async function restore(state){
+  if(!user||!state||!(state.id===null||typeof state.id==='string'))return;
+  const who=user.id,ticket=generation;await refresh();if(user?.id!==who||generation!==ticket)return;
+  const selected=state.id===null?null:items.find(i=>i.id===state.id);if(state.id!==null&&!selected)return;
+  open(selected);dialog.scrollTop=Math.max(0,Math.min(1000000,Number(state.scrollTop)||0));
+ }
+ button.onclick=()=>open();window.ZZWS_BULLETINS={reset,start(identity){reset();user=identity;started=Date.now();button.hidden=false;refresh();timer=setInterval(refresh,60000);},refresh,open,restore,state:()=>dialog?.open?{id:selection,scrollTop:dialog.scrollTop}:null};
 })();
