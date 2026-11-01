@@ -51,6 +51,8 @@ class UnifiedActivity:ComponentActivity(){
  val context=androidx.compose.ui.platform.LocalContext.current
  val language=AppLanguage.current.value
  val activity=context as? UnifiedActivity
+ val lifecycle=androidx.lifecycle.compose.LocalLifecycleOwner.current
+ DisposableEffect(lifecycle,model){val observer=SessionResumeObserver{if(model.user!=null)model.resume()};lifecycle.lifecycle.addObserver(observer);onDispose{lifecycle.lifecycle.removeObserver(observer)}}
  if(model.restoringSession){SessionRestoringScreen();return}
  val messages=remember{SnackbarHostState()}
  LaunchedEffect(model.user?.text("id")){if(model.user!=null&&activity!=null)VersionReminder.check(activity)}
@@ -64,7 +66,6 @@ class UnifiedActivity:ComponentActivity(){
  var catalogSearch by rememberSaveable(model.user?.text("id")){mutableStateOf(false)}
  var buyerDialog by remember{mutableStateOf(false)};var confirmSend by remember{mutableStateOf(false)};var confirmReloadCart by remember{mutableStateOf(false)}
  LaunchedEffect(model.user){if(!canSelectCustomer(model.user))buyerDialog=false}
- val lifecycle=androidx.lifecycle.compose.LocalLifecycleOwner.current
  LaunchedEffect(lifecycle,model.user?.text("id")){
   if(model.user!=null)lifecycle.lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.RESUMED){
    while(true){kotlinx.coroutines.delay(CATALOG_CHECK_INTERVAL_MS);model.pollCatalog()}
@@ -75,7 +76,6 @@ class UnifiedActivity:ComponentActivity(){
    while(true){model.pollApprovalReminder(!appMenu&&!confirmLogout&&!filters&&!catalogSearch&&product==null&&!buyerDialog&&!confirmSend&&!confirmReloadCart&&!compareDialog&&model.successOrder==null);kotlinx.coroutines.delay(15000)}
   }
  }
- DisposableEffect(lifecycle){val observer=androidx.lifecycle.LifecycleEventObserver{_,event->if(event==androidx.lifecycle.Lifecycle.Event.ON_RESUME&&model.user!=null)model.resume()};lifecycle.lifecycle.addObserver(observer);onDispose{lifecycle.lifecycle.removeObserver(observer)}}
  BackHandler(model.user!=null&&model.screen!="home"){if(model.screen=="order"&&model.user?.text("role")=="admin"){model.screen="home";model.openOrders(context)}else if(model.screen=="catalog"&&!model.catalogSections&&model.control("category"))model.showDepartments()else model.screen=mainBackDestination(model.screen)}
  val catalogue=model.user!=null&&usesCatalogChrome(model.screen)
  Scaffold(topBar={if(model.user!=null&&!catalogue)RetailHeader(model)},bottomBar={if(model.user!=null){

@@ -1,0 +1,45 @@
+{
+  "status": "published and verified through the customer update channel",
+  "nativeChecks": {
+    "errors": 0,
+    "tests": 278,
+    "failures": 0,
+    "skipped": 1
+  },
+  "sha256": "8728e7c1727cf7ec1ce8554e4ca2d3cd29fd34b3101da7a5ca9370774682acfd",
+  "versionCode": 70128,
+  "newPermissions": false,
+  "signatureValid": true,
+  "signerSha256": "85e2356e5269ac94f016858551b5c06ede293c31b649b8e1acedc05a407a0115",
+  "zipValid": true,
+  "deviceTested": false,
+  "package": "am.zzws.admin",
+  "size": 13383138,
+  "releaseUnitTests": {
+    "errors": 0,
+    "tests": 163,
+    "failures": 0,
+    "skipped": 1
+  },
+  "updateChannelPublished": true,
+  "changes": [
+    "Concurrent authenticated startup reads for catalogue, account state and notification preferences",
+    "Apply the complete startup batch after checking the session and customer context",
+    "Refresh on actual foreground return without replaying login at the first screen"
+  ],
+  "version": "7.1.28",
+  "file": "ZZWS-7.1.28-production.apk",
+  "startupChecks": 10,
+  "systemVerification": {
+    "verifiedAt": "2026-11-01T22:16:42.588Z",
+    "version": "7.1.28",
+    "versionCode": 70128,
+    "bytes": 13383138,
+    "sha256": "8728e7c1727cf7ec1ce8554e4ca2d3cd29fd34b3101da7a5ca9370774682acfd",
+    "normalClientCurrent": true,
+    "normalClientDownload": true,
+    "androidSignedLinkVerified": true,
+    "downloadReceiptAccepted": true,
+    "installedOnDevice": false
+  }
+}
