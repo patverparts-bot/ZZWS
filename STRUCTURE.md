@@ -1,5 +1,35 @@
 # ZZWS file layout
 
+## Employee removal by the customer manager
+
+The main customer manager removes their own employee from My employees, through a
+red warning and their current personal password. Server-side password checks keep
+the existing rate limits and MFA rules, and SQL checks the active manager/session,
+customer ownership and employee revision before revoking sessions/invitations and
+marking the employee deleted. Other customers, employees, administrators and the
+manager account itself cannot be removed through this endpoint.
+
+The employee disappears from the manager's working team and cannot sign in again.
+The administrator's client card retains a read-only Deleted employee history with
+name, login, personal contacts, deletion date in Yerevan time, and a snapshot of the
+manager's name/login at deletion. Orders, sales-report recipients, account IDs and
+backups retain the original employee. Archived/restored customers never resurrect
+removed staff. Stale access/password/invitation actions reject deleted employees.
+
+Deleted staff do not consume the 200 working-employee slots or block subsequent
+customer profile/price changes. Whole-customer deletion skips already deleted rows,
+so the original employee deletion actor/date remain immutable.
+
+Migration: `supabase/migrations/20261101062819_employee_deletion_history.sql`.
+API: POST `team/delete`; historical rows appear only in `admin/users/team`.
+UI: `js/client-team.js`, `admin/client-card.js`, both complete guides and existing
+context help. Android 7.1.12 opens this authenticated website team screen; no native
+package change is required. Tests cover own-team authorization, current password,
+revision conflicts, active/disabled/pending employees, old orders/report authors,
+quota reuse, archive/restore, later profile changes and whole-customer deletion.
+Browser checks cover cancellation, password errors, history identity/date, saved
+state, both languages/guides and phone/desktop layouts.
+
 ## Customer archive and access closure
 
 The owner can choose Close access and move to archive from a main customer card.

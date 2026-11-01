@@ -69,8 +69,8 @@ async function uploadRows(req:Request){
 }
 const workbook=(rows:any[][],columns:any[]=[])=>{const book=XLSX.utils.book_new();const sheet=XLSX.utils.aoa_to_sheet(rows.map(r=>r.map(v=>typeof v==='string'&&/^[=+@-]/.test(v)?"'"+v:v)));sheet['!cols']=columns.length?columns:workbookColumns(rows);sheet['!merges']=catalogMetadataMerge(rows);XLSX.utils.book_append_sheet(book,sheet,'ZZWS');return XLSX.write(book,{type:'array',bookType:'xlsx'});};
 const cleanUser=accountDTO;
-async function confirmAdminPassword(req:Request,user:any,hash:string,password:unknown,mfaVerified:boolean){
-  if(typeof password!=='string'||!password||password.length>256)fail(400,'Մուտքագրեք ձեր ընթացիկ ադմինիստրատորի գաղտնաբառը');
+async function confirmAccountPassword(req:Request,user:any,hash:string,password:unknown,mfaVerified:boolean){
+  if(typeof password!=='string'||!password||password.length>256)fail(400,'Մուտքագրեք ձեր ընթացիկ գաղտնաբառը');
   const ip=await digest((req.headers.get('x-forwarded-for')||'unknown').split(',')[0].trim());
   const attempt=await query(service.rpc('zzws_login_gate',{p_login:user.login,p_ip:ip}));if(!attempt)fail(429,'Չափազանց շատ փորձեր։ Կրկնեք 15 րոպեից');
   const client=authClient(),r=await client.auth.signInWithPassword({email:email(user.login),password});if(r.error||r.data.user?.id!==user.id)fail(400,'Գաղտնաբառը սխալ է');
@@ -268,7 +268,7 @@ export async function handle(req:Request){
     if(req.method==='POST'&&['admin/users','admin/users/scope','admin/users/team/access','admin/users/reset-password','admin/storage/clear','admin/price/publish','admin/price/rollback','admin/rules','admin/users/import','admin/users/channels','admin/users/polling','admin/users/invitation-email/send','admin/email-settings','admin/receipt-control','admin/users/receipt-control'].includes(path)&&!(confirmedUntil&&Date.parse(confirmedUntil)>Date.now()))return json({error:'Հաստատեք ձեր ընթացիկ գաղտնաբառը',reauthRequired:true},428);
 
     const apkDownloadResponse=await apkDownloadsRoute({path,req,user,service,query,json,fail});if(apkDownloadResponse)return apkDownloadResponse;
-    const accountResponse=await accountRoutes({path,req,user,hash,setupOnly,invitationHash,table,query,body,json,fail,service,security,email,audit});if(accountResponse)return accountResponse;
+    const accountResponse=await accountRoutes({path,req,user,hash,setupOnly,invitationHash,table,query,body,json,fail,service,security,email,audit,confirmPassword:(password:unknown)=>confirmAccountPassword(req,user,hash,password,mfaVerified)});if(accountResponse)return accountResponse;
     if(['me/resources','me/resources/apk','admin/resources','admin/users/channels','admin/devices/register','admin/devices/revoke'].includes(path)){const response=await channelRoutes({path,req,user,service,table,query,body,json,fail});if(response)return response;}
     const bulletinResponse=await bulletinRoutes({path,req,user,service,table,query,body,json,current,project,fail});if(bulletinResponse)return bulletinResponse;
     const mobileResponse=await mobileRoutes({path,req,user,service,table,query,body,json,fail});if(mobileResponse)return mobileResponse;
@@ -410,6 +410,7 @@ export async function handle(req:Request){
     if(req.method==='POST'&&path==='admin/users/reset-password'){
       const p=await body(req),target=await query(table('users').select('*').eq('id',p.id).maybeSingle());
       if(!target)fail(404,'Օգտատերը չի գտնվել');
+      if(target.deleted_at)fail(409,'Հաճախորդը ջնջված է։ Թարմացրեք հաճախորդների ցանկը');
       if(target.archived_at)fail(409,'Հաճախորդն արխիվում է։ Օգտագործեք արխիվից վերականգնելու գործողությունը');
       if(target.id===user.id)fail(400,'Այս ձևից չեք կարող վերակայել ձեր սեփական գաղտնաբառը');
       await query(table('sessions').delete().eq('user_id',target.id));
@@ -421,7 +422,7 @@ export async function handle(req:Request){
     if(req.method==='POST'&&path==='admin/users/delete'){
       const p=await body(req);
       if(typeof p.id!=='string'||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(p.id)||!Number.isSafeInteger(p.expectedProfileRevision)||p.expectedProfileRevision<1)fail(400,'Վերաբացեք հաճախորդի քարտը՝ ջնջելու համար');
-      await confirmAdminPassword(req,user,hash,p.password,mfaVerified);
+      await confirmAccountPassword(req,user,hash,p.password,mfaVerified);
       const result=await service.rpc('zzws_delete_customer',{p_actor:user.id,p_hash:hash,p_customer:p.id,p_expected:p.expectedProfileRevision});
       if(result.error?.code==='PT404')fail(404,'Հաճախորդը չի գտնվել');
       return json(await query(result));
@@ -436,7 +437,7 @@ export async function handle(req:Request){
       if(typeof p.id!=='string'||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(p.id)||!Number.isSafeInteger(p.expectedProfileRevision)||p.expectedProfileRevision<1)fail(400,'Վերաբացեք հաճախորդի քարտը՝ շարունակելու համար');
       const reason=typeof p.reason==='string'?p.reason.trim():'';
       if(!restore&&(reason.length<3||reason.length>1000||/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u.test(reason)))fail(400,'Նշեք հասանելիությունը փակելու պատճառը՝ 3-ից 1000 նիշ');
-      await confirmAdminPassword(req,user,hash,p.password,mfaVerified);
+      await confirmAccountPassword(req,user,hash,p.password,mfaVerified);
       const result=await service.rpc('zzws_archive_customer',{p_actor:user.id,p_hash:hash,p_customer:p.id,p_expected:p.expectedProfileRevision,p_reason:reason,p_restore:restore});
       if(result.error?.code==='PT404')fail(404,'Հաճախորդը չի գտնվել');
       return json(await query(result));

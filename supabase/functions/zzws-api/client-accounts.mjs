@@ -29,13 +29,13 @@ export async function activateClient(c,p){
 
 export async function accountRoutes(c){
  const {path,req,user,hash,setupOnly,invitationHash,table,query,body,json,fail,service,security,email:authEmail}=c;
- if(!['account/profile','team','team/invite','team/access','team/invitation','admin/users/team','admin/users/team/access'].includes(path))return null;
+ if(!['account/profile','team','team/invite','team/access','team/invitation','team/delete','admin/users/team','admin/users/team/access'].includes(path))return null;
  if(path==='admin/users/team/access'){
   if(req.method!=='POST'||user.role!=='admin'||!user.permissions?.includes('users'))fail(403,'Հասանելիությունն արգելված է');
   const p=await body(req);if(typeof p.active!=='boolean')fail(400,'Ստուգեք հասանելիությունը');const target=await query(table('users').select('id,customer_id').eq('id',p.id).maybeSingle());if(!target?.customer_id)fail(404,'Աշխատակիցը չի գտնվել');
   await query(table('users').update({active:p.active}).eq('id',target.id));await query(table('sessions').delete().eq('user_id',target.id));await c.audit(user.id,'employee_access',JSON.stringify({employeeId:target.id,active:p.active}));return json({ok:true});
  }
- const staff=row=>({id:row.id,login:row.needs_password_setup&&row.login.startsWith('pending.')?'':row.login,person:row.person||{},clientRole:row.customer_id?'employee':'manager',status:!row.active?'disabled':row.needs_password_setup?'invited':'active',lastLogin:row.last_login||null});
+ const staff=row=>({id:row.id,login:row.needs_password_setup&&row.login.startsWith('pending.')?'':row.login,person:row.person||{},profileRevision:row.profile_revision,clientRole:row.customer_id?'employee':'manager',status:row.deleted_at?'deleted':!row.active?'disabled':row.needs_password_setup?'invited':'active',lastLogin:row.last_login||null,...(path==='admin/users/team'&&row.deleted_at?{deletedAt:row.deleted_at,deletedBy:row.deletion_actor||null}:{})});
  if(path==='account/profile'){
   if(req.method!=='POST'||user.role!=='client'||setupOnly)fail(403,'Հասանելիությունն արգելված է');
   const p=await body(req),person=accountPerson(p);
@@ -48,11 +48,12 @@ export async function accountRoutes(c){
   root=new URL(req.url).searchParams.get('id');const r=await query(table('users').select('*').eq('id',root).maybeSingle());if(!r||r.profile.role!=='client'||r.customer_id)fail(404,'Հաճախորդը չի գտնվել');
  }else if(user.role!=='client'||user.clientRole!=='manager'||setupOnly)fail(403,'Միայն գլխավոր մենեջերը կարող է կառավարել աշխատակիցներին');
  if((path==='team'||path==='admin/users/team')&&req.method==='GET'){
-  const manager=await query(table('users').select('*').eq('id',root).single()),employees=await query(table('users').select('*').eq('customer_id',root).order('login'));
+  const manager=await query(table('users').select('*').eq('id',root).single());let selection=table('users').select('*').eq('customer_id',root).order('login');if(path==='team')selection=selection.is('deleted_at',null);const employees=await query(selection);
   return json({members:[staff(manager),...employees.map(staff)]});
  }
  if(req.method!=='POST')fail(405,'Մեթոդը չի թույլատրվում');
  const p=await body(req);
+ if(path==='team/delete'&&(typeof p.id!=='string'||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(p.id)||!Number.isSafeInteger(p.expectedProfileRevision)||p.expectedProfileRevision<1))fail(400,'Թարմացրեք աշխատակիցների ցանկը՝ ջնջելու համար');
  if(path==='team/invite'){
   const label=String(p.label||'').trim().slice(0,200),login='pending.'+crypto.randomUUID(),result=await service.auth.admin.createUser({email:authEmail(login),password:crypto.randomUUID()+crypto.randomUUID(),email_confirm:true});
   if(result.error)fail(400,'Չհաջողվեց ստեղծել հրավերը');const id=result.data.user.id;
@@ -61,6 +62,11 @@ export async function accountRoutes(c){
   return json({id,invitation:await security.invite(id,user.id)});
  }
  const target=await query(table('users').select('*').eq('id',p.id).eq('customer_id',root).maybeSingle());if(!target)fail(404,'Աշխատակիցը չի գտնվել');
+ if(path==='team/delete'){
+  if(target.deleted_at)fail(404,'Աշխատակիցը չի գտնվել');
+  await c.confirmPassword(p.password);
+  const result=await service.rpc('zzws_team_delete',{p_manager:user.id,p_hash:hash,p_employee:target.id,p_expected:p.expectedProfileRevision});if(result.error?.code==='PT404')fail(404,'Աշխատակիցը չի գտնվել');return json(await query(result));
+ }
  if(path==='team/access'){
   if(typeof p.active!=='boolean')fail(400,'Ստուգեք հասանելիությունը');
   await query(service.rpc('zzws_team_access',{p_manager:user.id,p_user:target.id,p_active:p.active}));return json({ok:true});
