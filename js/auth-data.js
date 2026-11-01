@@ -50,12 +50,17 @@ async function acceptIdentity(user) {
   window.ZZWS_BULLETINS?.start(user);
   window.ZZWS_ADMIN_RESOURCES?.start(user);window.ZZWS_TEAM?.start(user);
   configureSortPrices();
+  // Start the current, authorized catalogue while account state is restored.
+  // Rendering still waits for that state, so a restored basket is never replaced.
+  const initialCatalog={owner:user.id,session:sessionStorage.getItem('zzws_session_v3'),context:window.ZZWS_CATALOG_VIEW?.key()||'',promise:requestCatalog()};
+  initialCatalog.promise.catch(()=>{}); // The error is handled by loadPriceData after state restoration.
   await ZZWS_MEMORY.start(user);
+  if(serverIdentity?.id!==user.id||sessionStorage.getItem('zzws_session_v3')!==initialCatalog.session)return;
   window.ZZWS_PAGE_STATE?.restoreFilters();
   ZZWS_ORDERS.start(user);
   document.getElementById('authScreen').classList.add('hidden');
   document.getElementById('passwordInput').value = '';
-  showPriceUpdatePopupAndStart();
+  showPriceUpdatePopupAndStart(false,initialCatalog);
 }
 let loginInProgress=false;
 async function checkPassword() {
@@ -136,8 +141,8 @@ function clearUserCartAndFilters(client) {
   updateMobileFilterBadge();
 }
 
-function showPriceUpdatePopupAndStart(isBackgroundUpdate = false) {
-  if (!isBackgroundUpdate) { initAppAfterAuth(); startBackgroundPricePolling(); return; }
+function showPriceUpdatePopupAndStart(isBackgroundUpdate = false,initialCatalog = null) {
+  if (!isBackgroundUpdate) { initAppAfterAuth(initialCatalog); startBackgroundPricePolling(); return; }
   const popup = document.getElementById('priceUpdatePopup');
   document.getElementById('popupDateText').innerText = `📅 Թարմացում՝ ${cachedPriceDateText || '—'}`;
   document.getElementById('popupTitle').innerText = 'Գնացուցակը թարմացված է!';
@@ -240,7 +245,7 @@ async function logout() {
   document.getElementById('passwordInput').value = '';
 }
 
-function initAppAfterAuth() {
+function initAppAfterAuth(initialCatalog = null) {
   document.getElementById('mainApp').classList.remove('hidden');
   document.getElementById('mainApp').classList.add('flex');
   document.getElementById('welcomeMsg').innerText = `Բարև ձեզ, ${authorizedClient}։`;
@@ -252,7 +257,7 @@ function initAppAfterAuth() {
 
   loadFavorites();
   setupTableHeader();
-  loadPriceData();
+  loadPriceData(initialCatalog);
   loadCartFromStorage(true);
 }
 
@@ -393,8 +398,10 @@ function priceDateFromRows(rows) {
   return rows && rows[0] && rows[0][0] ? formatExcelDateText(rows[0][0]) : '';
 }
 
-async function fetchPriceRows() {
-  const identity=serverIdentity?.id,context=window.ZZWS_CATALOG_VIEW?.key()||'';const data=window.ZZWS_CATALOG_VIEW?.active()?await ZZWS_CATALOG_VIEW.fetch():await secureApi('catalog');if(identity!==serverIdentity?.id||context!==(window.ZZWS_CATALOG_VIEW?.key()||''))throw {staleCatalog:true};
+function requestCatalog(){return window.ZZWS_CATALOG_VIEW?.active()?ZZWS_CATALOG_VIEW.fetch():secureApi('catalog');}
+async function fetchPriceRows(initialCatalog = null) {
+  const identity=serverIdentity?.id,session=sessionStorage.getItem('zzws_session_v3'),context=window.ZZWS_CATALOG_VIEW?.key()||'';
+  const data=await (initialCatalog&&initialCatalog.owner===identity&&initialCatalog.session===session&&initialCatalog.context===context?initialCatalog.promise:requestCatalog());if(identity!==serverIdentity?.id||session!==sessionStorage.getItem('zzws_session_v3')||context!==(window.ZZWS_CATALOG_VIEW?.key()||''))throw {staleCatalog:true};
   if(data.account?.id===identity){serverIdentity=data.account;window.ZZWS_HELP_USER=data.account;authorizedClient=data.account.client;userSheetType=data.account.sheet;clientRowsData=data.account.rowsList;}window.ZZWS_STOREFRONT?.configure(data);window.ZZWS_CATALOG_CONTROLS?.apply(data);return {rows:data.products, dateText:data.updated};
 }
 
@@ -404,7 +411,7 @@ function applyPriceDate(dateText) {
   document.getElementById('priceDateBadge').innerText = `📅 Թարմացում ${dateText}`;
 }
 
-async function loadPriceData() {
+async function loadPriceData(initialCatalog = null) {
   const skeleton = document.getElementById('skeletonLoader');
   const errorBox = document.getElementById('dataErrorBox');
   const content = document.getElementById('catalogContent');
@@ -412,7 +419,7 @@ async function loadPriceData() {
   skeleton.classList.remove('hidden');
   content.classList.add('opacity-40');
   try {
-    const result = await fetchPriceRows();
+    const result = await fetchPriceRows(initialCatalog);
     loadedPriceFingerprint = fingerprintRows(result.rows);
     applyPriceDate(result.dateText);
     parseExcelRows(result.rows);

@@ -8,13 +8,14 @@ const {chromium}=require(process.env.ZZWS_PLAYWRIGHT||'playwright');
  const orders=Array.from({length:61},(_,i)=>({id:uuid(i+1),user_id:user.id,customer_id:user.id,number:i+1,status:['new','confirmed','in_progress','completed','rejected','received'][i%6],revision:2,created:'2026-11-01T08:00:00Z',updated:'2026-11-01T09:00:00Z',customer:{client:'Export test',customerCode:'000123',author:{firstName:'Export',lastName:'Sender'}},delivery:{organization:'Branch',address:'Delivery address',phone:'+37400123456'},lines:[{articul:'001234',name:'Bosch EXPORT1',qty:2,unitPrice:70}],original_lines:[{articul:'001234',name:'Bosch EXPORT1',qty:1,unitPrice:60}],total:140})).reverse();
  let failNext=false,holdNext=false,releaseHeld,heldReady;const exports=[],errors=[];
  try{
-  const page=await browser.newPage({viewport:{width:390,height:844},acceptDownloads:true});page.on('pageerror',e=>errors.push(e.message));await page.addInitScript(()=>sessionStorage.setItem('zzws_session_v3','a'.repeat(64)));
+  const page=await browser.newPage({viewport:{width:390,height:844},acceptDownloads:true});page.on('pageerror',e=>errors.push(e.stack||e.message));await page.addInitScript(()=>sessionStorage.setItem('zzws_session_v3','a'.repeat(64)));
   await page.route('https://www.zigzag.am/**',r=>r.fulfill({status:404,body:''}));
   await page.route('**/functions/v1/zzws-api/**',async route=>{
    const request=route.request(),url=new URL(request.url()),name=url.pathname.split('/zzws-api/')[1],post=()=>request.postDataJSON();let data={};
    if(name==='me')data=user;if(name==='catalog')data={products,version:'export-test',updated:'01/11/2026'};if(name==='catalog/version')data={version:'export-test'};
    if(name==='me/state')data=request.method()==='POST'?{version:1}:{data:{},versions:{}};
    if(name==='orders/receipt-state')data={enabled:false,blocked:false,outstanding:[],pendingCount:0};if(name==='orders/notifications')data={events:[]};
+   if(name==='me/bulletins')data={bulletins:[],items:[],cursor:''};
    if(name==='orders'){const before=Number(url.searchParams.get('before')||Infinity);data={orders:orders.filter(o=>o.number<before).slice(0,50)};}
    if(name==='orders/detail')data={order:orders.find(o=>o.id===post().id),events:[]};
    if(name==='orders/export'){
