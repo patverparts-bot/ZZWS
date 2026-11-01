@@ -54,18 +54,18 @@ internal object PartnerLibrary {
  item{LazyRow(contentPadding=PaddingValues(horizontal=14.dp,vertical=7.dp),horizontalArrangement=Arrangement.spacedBy(14.dp)){items(brands){brand->Column(horizontalAlignment=Alignment.CenterHorizontally,modifier=Modifier.width(69.dp).clickable{model.showBrand(brand)}){
  Box(Modifier.size(65.dp).border(1.5.dp,BrandBlue,CircleShape).padding(5.dp).background(Color.White,CircleShape),contentAlignment=Alignment.Center){BrandLogo(brand,Modifier.fillMaxSize().padding(5.dp),nameFallback=true)}
  Text(brand,Modifier.padding(top=6.dp),fontSize=9.sp,color=ShopMuted,maxLines=1)}}}}
- item{Surface(onClick={if(hasOffers)model.showPromotions()else model.showDepartments()},shape=RoundedCornerShape(16.dp),modifier=Modifier.padding(14.dp).fillMaxWidth()){
- Box(Modifier.background(Brush.horizontalGradient(listOf(Color(0xFF2563EB),Color(0xFF0F172A)))).height(170.dp)){
- Box(Modifier.size(190.dp).align(Alignment.CenterEnd).offset(x=55.dp).background(Color.White.copy(alpha=.07f),CircleShape))
- Row(Modifier.fillMaxSize().padding(20.dp),verticalAlignment=Alignment.CenterVertically){Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(8.dp)){
+ if(hasOffers)item{Surface(onClick={model.showPromotions()},shape=RoundedCornerShape(16.dp),modifier=Modifier.padding(14.dp).fillMaxWidth().testTag("home-collection-banner")){
+ Box(Modifier.background(Brush.horizontalGradient(listOf(Color(0xFF2563EB),Color(0xFF0F172A))))){
+ Box(Modifier.matchParentSize().background(Color.White.copy(alpha=.03f)))
+ Row(Modifier.fillMaxWidth().heightIn(min=170.dp).padding(18.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)){Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(8.dp)){
  Text("ZZWS COLLECTION",fontSize=10.sp,letterSpacing=2.sp,color=Color.White.copy(alpha=.85f),fontWeight=FontWeight.SemiBold)
  LocalizedText("Ձեր հաջորդ\nլավ ընտրությունը",fontSize=22.sp,lineHeight=26.sp,fontWeight=FontWeight.Bold,color=Color.White,maxLines=3)
- Surface(color=Color.White,shape=RoundedCornerShape(6.dp)){LocalizedText(if(hasOffers)"Տեսնել առաջարկները  →"else"Բացել կատալոգը",Modifier.padding(horizontal=10.dp,vertical=7.dp),fontSize=10.sp,fontWeight=FontWeight.Bold,color=Color(0xFF1D4ED8))}}
- val hero=featured.firstOrNull()?:model.products.firstOrNull()
- if(hero!=null)Box(Modifier.size(112.dp).background(Color.White,RoundedCornerShape(18.dp)),contentAlignment=Alignment.Center){ProductPhoto(hero.code,edge=103,onTechnical={onProduct(hero)})}
+ Surface(color=Color.White,shape=RoundedCornerShape(6.dp),modifier=Modifier.testTag("home-collection-action")){LocalizedText("Տեսնել առաջարկները  →",Modifier.padding(horizontal=10.dp,vertical=7.dp),fontSize=12.sp,lineHeight=16.sp,fontWeight=FontWeight.Bold,color=Color(0xFF1D4ED8))}}
+ val hero=featured.firstOrNull()
+ if(hero!=null)Box(Modifier.size(96.dp).background(Color.White,RoundedCornerShape(18.dp)).testTag("home-collection-photo"),contentAlignment=Alignment.Center){ProductPhoto(hero.code,edge=88,interactive=false)}
  }}}}
  item{Row(Modifier.fillMaxWidth().padding(horizontal=14.dp),horizontalArrangement=Arrangement.spacedBy(9.dp)){
- if(hasOffers)QuickTile("Առաջարկներ","offer",Modifier.weight(1f)){model.showPromotions()}
+ if(hasOffers)QuickTile("Առաջարկներ","offer",Modifier.weight(1f).testTag("home-offers-shortcut")){model.showPromotions()}
  QuickTile("Պատվերներ","orders",Modifier.weight(1f)){model.history()}
  QuickTile("Համեմատել","compare",Modifier.weight(1f),onCompare)}}
  item{SectionTitle("Բաժիններ","Բոլորը"){model.showDepartments()}}
@@ -73,7 +73,7 @@ internal object PartnerLibrary {
  Surface(shape=RoundedCornerShape(12.dp),color=Color.White,border=BorderStroke(1.dp,BrandBlue),modifier=Modifier.fillMaxWidth().height(72.dp)){Box(contentAlignment=Alignment.Center){CompositionLocalProvider(LocalContentColor provides BrandBlue){AppIcon(row.department.icon)}}}
  LocalizedText(row.department.title,Modifier.padding(top=7.dp),fontSize=11.sp,maxLines=2,overflow=TextOverflow.Ellipsis);Text("${row.count}",fontSize=10.sp,color=ShopMuted)}}}}
  if(hasOffers){
- item{SectionTitle("Հատուկ առաջարկներ","Բոլորը"){model.showPromotions()}}
+ item{Box(Modifier.testTag("home-offers-heading")){SectionTitle("Հատուկ առաջարկներ","Բոլորը"){model.showPromotions()}}}
  items(featured.chunked(2)){pair->Row(Modifier.padding(horizontal=14.dp,vertical=5.dp),horizontalArrangement=Arrangement.spacedBy(10.dp)){pair.forEach{p->Box(Modifier.weight(1f)){RetailProductCard(p,model,onProduct)}};if(pair.size==1)Spacer(Modifier.weight(1f))}}
  }
  }}
@@ -83,7 +83,7 @@ private fun categoryIcon(category:String):String{val x=category.lowercase();retu
  val sections=!favorites&&model.catalogSections&&model.control("category")
  val rows=if(favorites)model.products.filter{it.code in PartnerLibrary.favorites}else model.filtered
  val currentDepartment=catalogDepartments.find{it.id==model.department}
- val title=if(favorites)"Ընտրյալներ"else if(sections)"Բաժիններ"else currentDepartment?.title?:"Բոլոր ապրանքները"
+ val title=if(favorites)"Ընտրյալներ"else if(sections)"Բաժիններ"else if(model.onlyPromo)"Հատուկ առաջարկներ"else currentDepartment?.title?:"Բոլոր ապրանքները"
  val grid=rememberLazyGridState()
  LaunchedEffect(model.query,model.department,sections,favorites,model.brands.toList(),model.categories.toList(),model.onlyPromo,model.onlyAvailable,model.sort){grid.scrollToItem(0)}
  LazyVerticalGrid(columns=GridCells.Adaptive(if(sections)148.dp else 158.dp),state=grid,modifier=Modifier.fillMaxSize().testTag("catalog-products-grid"),contentPadding=PaddingValues(start=14.dp,end=14.dp,top=8.dp,bottom=14.dp),horizontalArrangement=Arrangement.spacedBy(10.dp),verticalArrangement=Arrangement.spacedBy(10.dp)){
@@ -123,7 +123,7 @@ private fun categoryIcon(category:String):String{val x=category.lowercase();retu
 }
 @Composable private fun RetailProductCard(p:Product,model:UnifiedModel,onProduct:(Product)->Unit){
  val favorite=p.code in PartnerLibrary.favorites;val compare=p.code in PartnerLibrary.comparison;val quantity=model.cart[p.code]?:0;val price=model.unit(p);val promotion=model.promotion(p)
- ElevatedCard(onClick={onProduct(p)},shape=RoundedCornerShape(11.dp),colors=CardDefaults.elevatedCardColors(containerColor=Color.White),elevation=CardDefaults.elevatedCardElevation(1.dp),modifier=Modifier.fillMaxWidth()){
+ ElevatedCard(onClick={onProduct(p)},shape=RoundedCornerShape(11.dp),colors=CardDefaults.elevatedCardColors(containerColor=Color.White),elevation=CardDefaults.elevatedCardElevation(1.dp),modifier=Modifier.fillMaxWidth().testTag("retail-product:${p.code}")){
  Column(Modifier.padding(11.dp)){
  Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){BrandLabel(p.brand,Modifier.weight(1f));if(promotion!=null)Surface(color=BrandAccent,shape=RoundedCornerShape(4.dp)){LocalizedText(promotion.label,Modifier.padding(horizontal=5.dp,vertical=3.dp),fontSize=8.sp,color=Color.White,fontWeight=FontWeight.Bold)}}
  Box(Modifier.fillMaxWidth().height(136.dp),contentAlignment=Alignment.Center){ProductPhoto(p.code,edge=124,onTechnical={onProduct(p)})}
@@ -156,7 +156,7 @@ private fun categoryIcon(category:String):String{val x=category.lowercase();retu
  }}
 @Composable private fun ProfileRow(title:String,icon:String,onClick:()->Unit){Surface(onClick=onClick,color=Color.White,shape=RoundedCornerShape(12.dp)){Row(Modifier.fillMaxWidth().padding(17.dp),verticalAlignment=Alignment.CenterVertically){CompositionLocalProvider(LocalContentColor provides BrandBlue){AppIcon(icon)};LocalizedText(title,Modifier.weight(1f).padding(start=16.dp),fontSize=15.sp);CompositionLocalProvider(LocalContentColor provides ShopMuted){AppIcon("chevron")}}}}
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable internal fun RetailProductDetails(p:Product,model:UnifiedModel,onDismiss:()->Unit){ModalBottomSheet(onDismissRequest=onDismiss,containerColor=Color.White){Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal=20.dp).padding(bottom=24.dp),verticalArrangement=Arrangement.spacedBy(9.dp)){
+@Composable internal fun RetailProductDetails(p:Product,model:UnifiedModel,onDismiss:()->Unit){ModalBottomSheet(onDismissRequest=onDismiss,containerColor=Color.White){Column(Modifier.fillMaxWidth().testTag("retail-product-details:${p.code}").verticalScroll(rememberScrollState()).padding(horizontal=20.dp).padding(bottom=24.dp),verticalArrangement=Arrangement.spacedBy(9.dp)){
  model.promotion(p)?.let{LocalizedText(it.label,fontSize=12.sp,fontWeight=FontWeight.SemiBold,color=BrandAccent)}
  Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){BrandLabel(p.brand,Modifier.weight(1f));IconButton(onClick={model.toggleFavorite(p.code)}){AppIcon(if(p.code in PartnerLibrary.favorites)"heart-filled"else"heart")};IconButton(onClick=onDismiss){AppIcon("close")}}
  Box(Modifier.fillMaxWidth().height(232.dp),contentAlignment=Alignment.Center){ProductPhoto(p.code,true,220)}

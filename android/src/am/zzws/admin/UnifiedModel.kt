@@ -22,7 +22,7 @@ internal data class Product(val data:JSONObject) {
  val stock=data.text("stockStatus");val available=if(data.has("stockAvailable"))data.optBoolean("stockAvailable") else stock.trim()=="Առկա է";val promo=data.optBoolean("isPromo")||data.optBoolean("isWholesalePromo")||data.optBoolean("kpIsPromo")
 }
 
-internal class UnifiedModel:ViewModel() {
+internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoBackend()):ViewModel() {
  var user by mutableStateOf(AppSession.user);private set
  var products by mutableStateOf<List<Product>>(emptyList());private set
  var orders by mutableStateOf<List<JSONObject>>(emptyList());private set
@@ -42,7 +42,6 @@ internal class UnifiedModel:ViewModel() {
  var orderSearch by mutableStateOf("");var orderFrom by mutableStateOf("");var orderTo by mutableStateOf("")
  private var appliedOrderFilter=Triple("","","")
  var demo by mutableStateOf(false);private set
- private val trialBackend=TrialDemoBackend()
  fun enterDemo(){if(busy)return;reset();AppSession.clear();demo=true;user=trialBackend.user;products=trialBackend.products.map(::Product);subscriptions=JSONObject().put("enabled",false);setDelivery(0);date=java.time.LocalDate.now(java.time.ZoneId.of("Asia/Yerevan")).toString();screen="home";cartSync="Դեմո · փոփոխությունները միայն այս սարքում են"}
  var catalogControls by mutableStateOf(JSONObject());private set
  var popularity by mutableStateOf(JSONObject());private set
@@ -93,7 +92,7 @@ internal class UnifiedModel:ViewModel() {
  val deliveryRows get()=target?.optJSONArray("rowsList").objects()
  fun promotion(p:Product)=promotionKind(p,user?.text("role")=="admin",priceMode,buyerView)
  val specialOffers by derivedStateOf{if(control("promo"))promotionProducts(products,user?.text("role")=="admin",priceMode,buyerView)else emptyList()}
- val filtered by derivedStateOf{visibleProducts(departmentProducts,if(control("search"))query else "",if(control("brand"))brands.toSet()else emptySet(),if(control("category"))categories.toSet()else emptySet(),control("stock")&&onlyAvailable,control("promo")&&onlyPromo,if(control("sorting"))sort else 0,::unit){promotion(it)!=null}}
+ val filtered by derivedStateOf{if(onlyPromo&&!control("promo"))emptyList()else visibleProducts(departmentProducts,if(control("search"))query else "",if(control("brand"))brands.toSet()else emptySet(),if(control("category"))categories.toSet()else emptySet(),control("stock")&&onlyAvailable,onlyPromo,if(control("sorting"))sort else 0,::unit){promotion(it)!=null}}
  val brandOptions get()=brandChoices(departmentProducts,categories.toSet(),brands.toSet())
  val categoryOptions get()=categoryChoices(departmentProducts,brands.toSet(),categories.toSet())
  fun unit(p:Product)=if(screen=="cart")quotedProducts[p.code]?.let{nativePrice(it,user?.text("role")=="admin",priceMode,buyer!=null)}?:if(buyer!=null)0.0 else nativePrice(p,user?.text("role")=="admin",priceMode,false) else nativePrice(p,user?.text("role")=="admin",priceMode,buyerView)

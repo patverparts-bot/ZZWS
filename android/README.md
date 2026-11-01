@@ -1,6 +1,6 @@
 # ZZWS — primary Android application
 
-Version 7.1.13 (70113), package `am.zzws.admin`, Android 8+. This is the canonical
+Version 7.1.14 (70114), package `am.zzws.admin`, Android 8+. This is the canonical
 application as of 31 October 2026. All Android development, builds, tests and
 releases belong here. The separate Partner prototype was retired and deleted on
 1 November 2026 at the owner's request; do not restore, build or maintain it.
@@ -11,6 +11,23 @@ registration, encrypted-session store and primary `zzws-apk` update channel.
 An APK can therefore update the existing original ZZWS installation.
 The previous 7.1.3 source is preserved in
 `outputs/ZZWS-7.1.3-source-before-promotion.zip`; its signed APK is retained too.
+
+## Special-offer navigation — 7.1.14
+
+The home banner, Offers shortcut and Special Offers preview share the same eligible
+offer set for the current account and price context. All three disappear when it
+is empty and reappear after catalogue refresh when eligible offers return. There
+is no fallback banner advertising an ordinary product or leading to the general
+catalogue. Tapping any part of the banner, including its image, opens the complete
+offer list; the shortcut and preview's All action open that same list. Individual
+offer cards open their own product details. The result heading says Special Offers,
+and an explicit All products action leaves the offer filter. Disabling promotions
+while that list is open leaves an empty offer list instead of showing ordinary goods.
+
+The banner grows to fit its translated action instead of clipping it at a fixed
+height. Compose regression checks exercise all entry points, exact product details,
+filter clearing, Armenian/Russian at 320dp, and offers appearing/disappearing after
+catalogue refresh. The existing price-context policy checks remain in place.
 
 ## Viber reminders — 7.1.13
 
@@ -78,7 +95,7 @@ between retail and wholesale prices is never itself a promotion. The home page
 previews up to six eligible products, with All opening the same full eligible
 set. The filter preview count and card/detail labels use the same policy. If
 there are no eligible offers, the section and offers shortcut disappear; the
-generic collection banner leads to the catalogue. There is no ordinary-product
+collection banner also disappears (updated in 7.1.14). There is no ordinary-product
 fallback under Special Offers. The normal catalogue refresh updates this block
 as campaigns appear/expire in the server response. Prices/API publication rules
 are unchanged; this is not a manually curated admin Offers feed. Six new policy
