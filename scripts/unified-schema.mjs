@@ -41,6 +41,7 @@ export const cleanSchemaFiles=[
   "supabase/migrations/20261031131222_editable_mail_security.sql",
   "supabase/migrations/20261031191639_customer_order_approval.sql",
   "supabase/migrations/20261031211228_client_accounts.sql",
-  "supabase/migrations/20261031231945_apk_download_tracking.sql"
+  "supabase/migrations/20261031231945_apk_download_tracking.sql",
+  "supabase/migrations/20261101055050_client_deletion.sql"
 ];
 export const schemaVersion="zzws-unified-4.1.0-optimized";

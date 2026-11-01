@@ -1,5 +1,34 @@
 # ZZWS file layout
 
+## Customer deletion with password confirmation
+
+The owner opens the main customer card and chooses Delete customer. A red critical
+warning names the customer and explains that access for the entire team and unused
+invitations will end while order, delivery and report history stays available.
+Every attempt requires the acting administrator's current password, checked against
+Auth on the server with rate limiting and the existing MFA session requirement.
+A recent general reauthentication cannot bypass this password check. Passwords are
+cleared from the dialog after submission/cancellation and are never stored or audited.
+
+`zzws_delete_customer` atomically locks the customer/team, verifies the owner session
+and profile revision, revokes all sessions/invitations and marks all accounts deleted
+and inactive. Removed customers disappear from the working list and assisted-order
+selection. A database guard blocks reactivation by stale cards, imports or team access
+endpoints. Historical account IDs, orders, report author snapshots and delivery data
+are retained, including in application backups. A removed customer code may be reused
+for a new customer; personal logins remain reserved by the historical account.
+
+Migration: `supabase/migrations/20261101055050_client_deletion.sql`.
+UI: `admin/client-deletion.js`; API: `admin/users/delete`.
+Validation: isolated SQL/API tests cover permissions, mandatory/incorrect passwords,
+revision conflicts, whole-team revocation, invitation invalidation, history/backup
+retention and customer-code reuse. Browser tests cover cancellation, failed passwords,
+persisted deletion, Armenian/Russian guides and the critical desktop/mobile layout.
+Actual Supabase Auth is checked on temporary staging accounts which are then removed.
+No real customer is deleted during publication checks; no production orders/mail are
+created. Android package 7.1.12 remains the current release; this change is in the
+web administration cabinet and API.
+
 ## Visible client catalogue access (published 1 November 2026)
 
 The client's all-brands/category checkbox is now a large blue control at the top

@@ -1,0 +1,63 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createRuntime} from './support/runtime.mjs';
+
+test('customer deletion requires a fresh admin password, revokes the entire team and preserves history',{timeout:120000},async()=>{
+ const r=await createRuntime({memory:true,debug:true});
+ const call=async(path,token,data)=>{const response=await r.handle(new Request('http://127.0.0.1:8080/functions/v1/zzws-api/'+path,{method:data===undefined?'GET':'POST',headers:{...(token?{authorization:'Bearer '+token}:{}),...(data===undefined?{}:{'content-type':'application/json'})},...(data===undefined?{}:{body:JSON.stringify(data)})}));return {status:response.status,data:await response.json()};};
+ const ok=async(...args)=>{const x=await call(...args);assert.equal(x.status,200,JSON.stringify(x));return x.data;};
+ const adminPassword='24681012',password='Person-2468';
+ const login=async name=>(await ok('login',null,{login:'zzws-test-'+name,password:adminPassword})).sessionToken;
+ try{
+  const owner=await login('owner');await ok('account/reauth',owner,{password:adminPassword});
+  const managerAdmin=await login('manager'),viewer=await login('viewer');
+  const created=await ok('admin/users',owner,{intent:'create',role:'client',client:'Delete test shop',customerCode:'009955',sheet:'Dealers',active:true,allBrands:true,rowsList:[{organization:'Historic shop',address:'Historic warehouse',contact:'Warehouse chief'}]});
+  const enroll=async(invite,name)=>{const open=await ok('invitation/open',null,{code:invite.invitation.code});return (await ok('account/password',open.sessionToken,{login:name,password,firstName:name,lastName:'Test',phone:'+37499123456',email:name+'@example.am'})).sessionToken;};
+  const manager=await enroll(created,'delete.manager');
+  const first=await ok('team/invite',manager,{label:'Employee'}),employee=await enroll(first,'delete.employee');
+  const pending=await ok('team/invite',manager,{label:'Pending'}),pendingSession=await ok('invitation/open',null,{code:pending.invitation.code});
+  let profile=(await ok('admin/users',owner)).users.find(u=>u.id===created.id);
+  const payload={id:created.id,expectedProfileRevision:profile.profileRevision,password:adminPassword};
+  for(const token of [managerAdmin,viewer,manager,employee])assert.equal((await call('admin/users/delete',token,payload)).status,403);
+  assert.equal((await call('admin/users/delete',owner,{...payload,password:undefined})).status,400,'recent general reauth does not replace the password');
+  assert.equal((await call('admin/users/delete',owner,{...payload,password:'Wrong-password'})).status,400);
+  assert.equal((await call('admin/users/delete',owner,{...payload,expectedProfileRevision:undefined})).status,400);
+  assert.equal((await call('admin/users/delete',owner,{...payload,expectedProfileRevision:profile.profileRevision+1})).status,409);
+  assert.equal((await call('me',employee)).status,200,'failed attempts leave the team active');
+  assert.equal((await call('admin/users/delete',owner,{...payload,id:first.id})).status,403,'employee cannot be deleted through a root-card operation');
+  const own=await ok('me',owner);assert.equal((await call('admin/users/delete',owner,{...payload,id:own.id,expectedProfileRevision:own.profileRevision})).status,403);
+  const me=await ok('me',employee),product=(await ok('catalog',employee)).products[0];
+  const order=await ok('orders',employee,{requestId:crypto.randomUUID(),profileRevision:me.profileRevision,deliveryVariantId:me.rowsList[0].id,delivery:{method:'Առաքում'},lines:[{articul:product.articul,qty:1,unitPrice:product.wholesale}]});
+  const before=(await r.db.query('select customer,delivery,lines from zzws_orders where id=$1',[order.id])).rows[0];
+  await ok('me/state',employee,{section:'cart',version:0,value:{[product.articul]:{articul:product.articul,qty:2}}});
+  // Even an expired general reauth works when the deletion itself supplies the correct password.
+  await r.db.query("update zzws_sessions set confirmed_until=now()-interval '1 minute' where user_id=$1",[own.id]);
+  const deleted=await ok('admin/users/delete',owner,payload);assert.equal(deleted.accounts,3);
+  const people=(await r.db.query('select id,active,deleted_at from zzws_users where id=$1 or customer_id=$1',[created.id])).rows;
+  assert.equal(people.length,3);assert.ok(people.every(u=>!u.active&&u.deleted_at));
+  assert.equal((await r.db.query('select count(*)::int n from zzws_sessions where user_id=any($1::uuid[])',[people.map(u=>u.id)])).rows[0].n,0);
+  assert.equal((await r.db.query('select count(*)::int n from zzws_invitations where user_id=any($1::uuid[])',[people.map(u=>u.id)])).rows[0].n,0);
+  for(const token of [manager,employee,pendingSession.sessionToken])assert.equal((await call('me',token)).status,401);
+  assert.equal((await call('login',null,{login:'delete.manager',password})).status,401);
+  assert.equal((await call('login',null,{login:'delete.employee',password})).status,401);
+  assert.equal((await call('invitation/open',null,{code:pending.invitation.code})).status,401);
+  assert.ok(!(await ok('admin/users',owner)).users.some(u=>people.some(p=>p.id===u.id)));
+  assert.equal((await ok('admin/orders/customers?search=009955',owner)).customers.length,0);
+  assert.deepEqual((await r.db.query('select customer,delivery,lines from zzws_orders where id=$1',[order.id])).rows[0],before);
+  assert.equal((await ok('admin/orders/detail',owner,{id:order.id})).customer.author.email,'delete.employee@example.am');
+  assert.equal((await ok('admin/orders/report-options',owner,{orderId:order.id})).recipient,'delete.employee@example.am');
+  assert.equal((await r.db.query('select count(*)::int n from zzws_user_memory where user_id=$1',[first.id])).rows[0].n,1);
+  assert.equal((await call('admin/users',owner,{...profile,intent:'update',active:true,expectedProfileRevision:profile.profileRevision})).status,409);
+  assert.equal((await call('admin/users/team/access',owner,{id:first.id,active:true})).status,409);
+  assert.equal((await call('admin/users/delete',owner,payload)).status,404);
+  assert.equal((await r.db.query("select count(*)::int n from zzws_audit where action='user_delete'")).rows[0].n,1);
+  const replacement=await ok('admin/users',owner,{intent:'create',role:'client',client:'Replacement',customerCode:'009955',sheet:'Dealers',active:false,allBrands:true,rowsList:[]});
+  assert.notEqual(replacement.id,created.id,'deleted customer codes may be reused');
+  const replacementProfile=(await ok('admin/users',owner)).users.find(u=>u.id===replacement.id);
+  assert.equal((await call('admin/users/delete',owner,{id:replacement.id,expectedProfileRevision:replacementProfile.profileRevision})).status,400,'every subsequent deletion needs the password again');
+  await ok('admin/users/delete',owner,{id:replacement.id,expectedProfileRevision:replacementProfile.profileRevision,password:adminPassword});
+  const snapshot=(await r.db.query('select zzws_application_snapshot() data')).rows[0].data;
+  assert.ok(snapshot.tables.users.some(u=>u.id===created.id&&u.deleted_at));
+  const privileges=(await r.db.query("select has_function_privilege('anon','public.zzws_delete_customer(uuid,text,uuid,bigint)','execute') a,has_function_privilege('authenticated','public.zzws_delete_customer(uuid,text,uuid,bigint)','execute') b")).rows[0];assert.ok(!privileges.a&&!privileges.b);
+ }finally{await r.close();}
+});

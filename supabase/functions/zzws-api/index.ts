@@ -69,6 +69,18 @@ async function uploadRows(req:Request){
 }
 const workbook=(rows:any[][],columns:any[]=[])=>{const book=XLSX.utils.book_new();const sheet=XLSX.utils.aoa_to_sheet(rows.map(r=>r.map(v=>typeof v==='string'&&/^[=+@-]/.test(v)?"'"+v:v)));sheet['!cols']=columns.length?columns:workbookColumns(rows);sheet['!merges']=catalogMetadataMerge(rows);XLSX.utils.book_append_sheet(book,sheet,'ZZWS');return XLSX.write(book,{type:'array',bookType:'xlsx'});};
 const cleanUser=accountDTO;
+async function confirmAdminPassword(req:Request,user:any,hash:string,password:unknown,mfaVerified:boolean){
+  if(typeof password!=='string'||!password||password.length>256)fail(400,'Մուտքագրեք ձեր ընթացիկ ադմինիստրատորի գաղտնաբառը');
+  const ip=await digest((req.headers.get('x-forwarded-for')||'unknown').split(',')[0].trim());
+  const attempt=await query(service.rpc('zzws_login_gate',{p_login:user.login,p_ip:ip}));if(!attempt)fail(429,'Չափազանց շատ փորձեր։ Կրկնեք 15 րոպեից');
+  const client=authClient(),r=await client.auth.signInWithPassword({email:email(user.login),password});if(r.error||r.data.user?.id!==user.id)fail(400,'Գաղտնաբառը սխալ է');
+  try{
+    const factors=await client.auth.mfa.listFactors();if(factors.error)fail(500,'Չհաջողվեց ստուգել երկրորդ գործոնը');
+    if(factors.data.totp.some((f:any)=>f.status==='verified')&&!mfaVerified)fail(403,'Կրկին մուտք գործեք երկրորդ գործոնով');
+  }finally{await client.auth.signOut({scope:'local'});}
+  await query(table('sessions').update({confirmed_until:new Date(Date.now()+5*60000).toISOString()}).eq('hash',hash));
+  await query(table('attempts').delete().eq('id',attempt));
+}
 
 async function identity(req:Request){
   const token=(req.headers.get('authorization')||'').replace(/^Bearer /,'');
@@ -103,6 +115,7 @@ async function saveUser(p:any,actor:string,sessionHash:string){
   const categoryState=await query(table('state').select('rules').eq('id',true).single());
   if(!effectiveRules(categoryState.rules)[profile.sheet])fail(400,'Հաճախորդի կատեգորիան չի գտնվել');
   const old=p.id?await query(table('users').select('*').eq('id',p.id).maybeSingle()):null;
+  if(old?.deleted_at)fail(409,'Հաճախորդը ջնջված է։ Թարմացրեք հաճախորդների ցանկը');
   if(old?.customer_id)fail(403,'Աշխատակցի գներն ու պայմանները փոխեք հաճախորդի քարտում');
   if(old&&!Object.hasOwn(p,'customerCode')&&Object.hasOwn(old.profile,'customerCode'))profile.customerCode=old.profile.customerCode;
   if(old?.profile.role==='admin'&&profile.role==='admin'&&!Object.hasOwn(p,'ordersRefreshSeconds'))profile.ordersRefreshSeconds=old.profile.ordersRefreshSeconds??5;
@@ -251,7 +264,7 @@ export async function handle(req:Request){
       const factors=await client.auth.mfa.listFactors();if(factors.error)fail(500,'Չհաջողվեց ստուգել երկրորդ գործոնը');const factor=factors.data.totp.find((f:any)=>f.status==='verified');await client.auth.signOut({scope:'local'});if(factor&&!mfaVerified)fail(403,'Կրկին մուտք գործեք երկրորդ գործոնով');
       await query(table('sessions').update({confirmed_until:new Date(Date.now()+5*60000).toISOString()}).eq('hash',hash));await query(table('attempts').delete().eq('id',attempt));return json({ok:true});
     }
-    if(req.method==='POST'&&['admin/users','admin/users/scope','admin/users/team/access','admin/users/reset-password','admin/users/delete','admin/storage/clear','admin/price/publish','admin/price/rollback','admin/rules','admin/users/import','admin/users/channels','admin/users/polling','admin/users/invitation-email/send','admin/email-settings','admin/receipt-control','admin/users/receipt-control'].includes(path)&&!(confirmedUntil&&Date.parse(confirmedUntil)>Date.now()))return json({error:'Հաստատեք ձեր ընթացիկ գաղտնաբառը',reauthRequired:true},428);
+    if(req.method==='POST'&&['admin/users','admin/users/scope','admin/users/team/access','admin/users/reset-password','admin/storage/clear','admin/price/publish','admin/price/rollback','admin/rules','admin/users/import','admin/users/channels','admin/users/polling','admin/users/invitation-email/send','admin/email-settings','admin/receipt-control','admin/users/receipt-control'].includes(path)&&!(confirmedUntil&&Date.parse(confirmedUntil)>Date.now()))return json({error:'Հաստատեք ձեր ընթացիկ գաղտնաբառը',reauthRequired:true},428);
 
     const apkDownloadResponse=await apkDownloadsRoute({path,req,user,service,query,json,fail});if(apkDownloadResponse)return apkDownloadResponse;
     const accountResponse=await accountRoutes({path,req,user,hash,setupOnly,invitationHash,table,query,body,json,fail,service,security,email,audit});if(accountResponse)return accountResponse;
@@ -385,7 +398,7 @@ export async function handle(req:Request){
       if(!target.needs_password_setup)fail(409,'Հաշիվն արդեն ակտիվացված է․ անհրաժեշտության դեպքում վերակայեք գաղտնաբառը');
       await query(table('sessions').delete().eq('user_id',target.id));return json({invitation:await security.invite(target.id,user.id)});
     }
-    if(req.method==='GET'&&path==='admin/users'){const rows=await query(table('users').select('*').order('login'));const scopes=await query(table('admin_scopes').select('*'));const channels=await query(table('user_channels').select('*'));const state=await query(table('state').select('rules').eq('id',true).single());return json({users:rows.map((r:any)=>({...cleanUser(r),mobileAdminEnabled:channels.find((x:any)=>x.user_id===r.id)?.mobile_admin_enabled===true,telegramEnabled:channels.find((x:any)=>x.user_id===r.id)?.telegram_enabled===true,telegramId:channels.find((x:any)=>x.user_id===r.id)?.telegram_id||'',telegramBotUsername:channels.find((x:any)=>x.user_id===r.id)?.telegram_bot_username||'',channelRevision:channels.find((x:any)=>x.user_id===r.id)?.revision??0,adminScope:scopes.find((x:any)=>x.user_id===r.id)?.scope||null,clientCategory:clientCategory(r.profile,state.rules)})),categoryLabels:Object.fromEntries(Object.entries(effectiveRules(state.rules)).map(([id,rule]:any)=>[id,rule.name||({Dealers:'Մշտական Գորրընկեր',KP:'Խոշոր Գործընկեր'} as any)[id]||id])),categoryByGroup:Object.fromEntries(['KP','Dealers'].map(sheet=>[sheet,clientCategory({role:'client',sheet},state.rules)]))});}
+    if(req.method==='GET'&&path==='admin/users'){const rows=await query(table('users').select('*').is('deleted_at',null).order('login'));const scopes=await query(table('admin_scopes').select('*'));const channels=await query(table('user_channels').select('*'));const state=await query(table('state').select('rules').eq('id',true).single());return json({users:rows.map((r:any)=>({...cleanUser(r),mobileAdminEnabled:channels.find((x:any)=>x.user_id===r.id)?.mobile_admin_enabled===true,telegramEnabled:channels.find((x:any)=>x.user_id===r.id)?.telegram_enabled===true,telegramId:channels.find((x:any)=>x.user_id===r.id)?.telegram_id||'',telegramBotUsername:channels.find((x:any)=>x.user_id===r.id)?.telegram_bot_username||'',channelRevision:channels.find((x:any)=>x.user_id===r.id)?.revision??0,adminScope:scopes.find((x:any)=>x.user_id===r.id)?.scope||null,clientCategory:clientCategory(r.profile,state.rules)})),categoryLabels:Object.fromEntries(Object.entries(effectiveRules(state.rules)).map(([id,rule]:any)=>[id,rule.name||({Dealers:'Մշտական Գորրընկեր',KP:'Խոշոր Գործընկեր'} as any)[id]||id])),categoryByGroup:Object.fromEntries(['KP','Dealers'].map(sheet=>[sheet,clientCategory({role:'client',sheet},state.rules)]))});}
     if(req.method==='POST'&&path==='admin/users/polling'){
       const p=await body(req);if(!Number.isInteger(p.seconds)||p.seconds<5||p.seconds>300||!Number.isSafeInteger(p.expectedProfileRevision))fail(400,'Միջակայքը պետք է լինի 5-ից 300 վայրկյան');
       return json(await query(service.rpc('zzws_save_admin_polling',{p_actor:user.id,p_user:p.id,p_seconds:p.seconds,p_expected:p.expectedProfileRevision})));
@@ -402,12 +415,12 @@ export async function handle(req:Request){
       await audit(user.id,'password_setup_reset',JSON.stringify({target:{id:target.id,login:target.login,client:target.profile.client}}));return json({ok:true,invitation:await security.invite(target.id,user.id)});
     }
     if(req.method==='POST'&&path==='admin/users/delete'){
-      const p=await body(req),target=await query(table('users').select('id,login,profile').eq('id',p.id).maybeSingle());
-      if(!target)fail(404,'Օգտատերը չի գտնվել');
-      if(target.id===user.id||target.profile.role==='admin')fail(403,'Ադմինիստրատորին կարող է միայն արգելափակել մեկ այլ ադմինիստրատոր');
-      await query(table('sessions').delete().eq('user_id',target.id));
-      const deleted=await service.auth.admin.deleteUser(target.id);if(deleted.error)fail(400,'Չհաջողվեց ջնջել օգտատիրոջը');
-      await audit(user.id,'user_delete',JSON.stringify({target:{id:target.id,login:target.login,client:target.profile.client}}));return json({ok:true});
+      const p=await body(req);
+      if(typeof p.id!=='string'||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(p.id)||!Number.isSafeInteger(p.expectedProfileRevision)||p.expectedProfileRevision<1)fail(400,'Վերաբացեք հաճախորդի քարտը՝ ջնջելու համար');
+      await confirmAdminPassword(req,user,hash,p.password,mfaVerified);
+      const result=await service.rpc('zzws_delete_customer',{p_actor:user.id,p_hash:hash,p_customer:p.id,p_expected:p.expectedProfileRevision});
+      if(result.error?.code==='PT404')fail(404,'Հաճախորդը չի գտնվել');
+      return json(await query(result));
     }
     if(req.method==='GET'&&path==='admin/audit'){
       const rows=await query(table('audit').select('*').neq('action','operations_check').order('id',{ascending:false}).limit(200));
@@ -442,7 +455,7 @@ export async function handle(req:Request){
     }
     if(req.method==='POST'&&path==='admin/users/preview'){
       const rows=await uploadRows(req);
-      const old=await query(table('users').select('id,login,profile,profile_revision,active,customer_id'));
+      const old=await query(table('users').select('id,login,profile,profile_revision,active,customer_id').is('deleted_at',null));
       const state=await query(table('state').select('rules').eq('id',true).single());
       const scopes=await query(table('admin_scopes').select('*')),channels=await query(table('user_channels').select('*')),receipts=await query(table('client_receipt_controls').select('*'));
       const full=parseUserSheet(rows,{rules:state.rules,existing:old,actor:user.id,scopes,channels,receipts});const users=full||parseUsers(rows,old);

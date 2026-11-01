@@ -26,6 +26,7 @@ function showLogin() {
   for(const key of ['orderRead','orderWrite','priceWrite'])document.documentElement.dataset[key]='false';
   finishSessionLoading();
   window.ZZWS_STORAGE?.reset();window.ZZWS_APK_DOWNLOADS?.reset();
+  window.ZZWS_CLIENT_DELETION?.reset();
   window.ZZWS_ADMIN_ORDERS?.reset();
   window.ZZWS_ADMIN_CHANNELS?.reset();
   el('workspace').hidden=true;el('login').hidden=false;el('logout').hidden=true;draft=null;userDraft=null;
@@ -142,6 +143,7 @@ function editUser(user = {}) {
   f.elements.sheet.value='Dealers';
   editingUserId=user.id||null;f.elements.id.value=editingUserId||'';
   editingProfile=structuredClone(user);
+  el('deleteClient').hidden=el('deleteClientNote').hidden=!user.id||user.role!=='client'||user.clientRole==='employee';
   el('userTitle').textContent=editingUserId?'Օգտատիրոջ խմբագրում՝ '+(user.role==='client'?user.client+(user.customerCode?' ('+user.customerCode+')':''):user.login):'Նոր օգտատեր';
   for (const key of ['customerCode','login','client','role','sheet']) if (user[key]) f.elements[key].value = user[key];
   for (const key of ['active','allowResale']) f.elements[key].checked = key === 'active' ? user.active !== false : !!user[key];
@@ -171,6 +173,14 @@ el('resetUserPassword').onclick=()=>run(async()=>{
 });
 el('issueInvitation').onclick=()=>run(async()=>{const target=users.find(u=>u.id===editingUserId);if(!target)return;const data=await api('admin/users/invitation',{method:'POST',body:JSON.stringify({id:target.id})});showInvitation(target.login,data.invitation,target.id);});
 el('newUser').onclick = () => editUser(); el('cancelUser').onclick = () => { el('userForm').hidden = true; };
+el('deleteClient').onclick=()=>{
+  const target=structuredClone(editingProfile);
+  if(!target?.id||target.role!=='client'||target.clientRole==='employee')return;
+  ZZWS_CLIENT_DELETION.open(target,async()=>{
+    if(editingUserId===target.id){el('userForm').hidden=true;editingUserId=null;editingProfile=null;}
+    await loadUsers();status('Հաճախորդը ջնջված է։ Թիմի մուտքը փակված է, պատվերների և հաշվետվությունների պատմությունը պահպանված է։');
+  });
+};
 el('usersImportForm').onsubmit = e => { e.preventDefault(); run(async () => {
   userDraft = null; el('usersPreview').hidden = true;
   const d = await api('admin/users/preview',{method:'POST',body:await ZZWS_I18N_WORKBOOKS.userImport(new FormData(e.target),categoryLabels)});
