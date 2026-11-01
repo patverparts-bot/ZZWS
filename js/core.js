@@ -364,12 +364,26 @@ onerror="this.style.display='none'; this.nextElementSibling.style.display='inlin
 `;
 }
 
+function productPhotoCandidates(articul) {
+  const art = String(articul).trim();
+  const folder = `${encodeURIComponent(art.charAt(0) || '0')}/${encodeURIComponent(art.charAt(1) || '0')}/`;
+  const file = encodeURIComponent(art);
+  const origin = 'https://www.zigzag.am';
+  const original = `${origin}/media/catalog/product/${folder}${file}`;
+  const cached = `${origin}${window.ZZWS_PRODUCT_PHOTO_FALLBACK_PREFIX || '/media/catalog/product/cache/811d9bdbaebf1cf745388b9849057259/'}${folder}${file}`;
+  const mapped = window.ZZWS_PRODUCT_PHOTO_PATHS?.[art];
+  const explicit = mapped ? ((mapped.startsWith('https://www.zigzag.am/') || mapped.startsWith('js/product-images/')) ? mapped : `${origin}${window.ZZWS_PRODUCT_PHOTO_PREFIX}${mapped}`) : '';
+  return [...new Set([explicit, `${original}.jpg`, `${cached}.jpg`, `${cached}.png`, `${cached}.jpeg`, `${cached}.webp`, `${original}.png`, `${original}.jpeg`, `${original}.webp`, `${origin}/pub/media/catalog/product/${folder}${file}.jpg`, `${origin}/media/catalog/product/${file}.jpg`].filter(Boolean))];
+}
+
 function markProductImageLoaded(imgElement) {
   if (!imgElement) return;
   const width = Number(imgElement.naturalWidth) || 0;
   const height = Number(imgElement.naturalHeight) || 0;
-  // Zigzag returns this same 2200x2200 PNG for a missing SKU and the checked sample SKU.
-  const missingPhotoPlaceholder = width === 2200 && height === 2200;
+  // Missing source files return a 2200x2200 PNG with HTTP 200, so onerror alone never advances.
+  const localPhoto = String(imgElement.getAttribute('src') || '').startsWith('js/product-images/');
+  const missingPhotoPlaceholder = width === 2200 && height === 2200 && !localPhoto;
+  if (missingPhotoPlaceholder) { handleImageError(imgElement); return; }
   const hasRealPhoto = width >= 160 && height >= 160 && !missingPhotoPlaceholder;
   imgElement.classList.toggle("image-loaded", hasRealPhoto);
 }
@@ -380,18 +394,12 @@ function handleImageError(imgElement) {
   const container = imgElement.parentElement;
   if (!container) return;
   
-  const step = Number(imgElement.dataset.step || 1);
+  const step = Number(imgElement.dataset.step || 0) + 1;
   const cleanArt = imgElement.dataset.articul || '';
-  
-  if (step === 0) {
-    imgElement.dataset.step = "1";
-    imgElement.src = imgElement.dataset.fallbackUrl || `https://www.zigzag.am/media/catalog/product/${cleanArt.charAt(0)}/${cleanArt.charAt(1)}/${cleanArt}.jpg`;
-  } else if (step === 1) {
-    imgElement.dataset.step = "2";
-    imgElement.src = `https://www.zigzag.am/pub/media/catalog/product/${cleanArt.charAt(0)}/${cleanArt.charAt(1)}/${cleanArt}.jpg`;
-  } else if (step === 2) {
-    imgElement.dataset.step = "3";
-    imgElement.src = `https://www.zigzag.am/media/catalog/product/${cleanArt}.jpg`;
+  const next = productPhotoCandidates(cleanArt)[step];
+  if (next) {
+    imgElement.dataset.step = String(step);
+    imgElement.src = next;
   } else {
     container.innerHTML = `
       <div class="w-full h-full bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg flex flex-col items-center justify-center text-center p-0.5" title="Նկարը բացակայում է">
@@ -403,17 +411,13 @@ function handleImageError(imgElement) {
 }
 function getProductImageHtml(articul, productName) {
   const cleanArt = String(articul).trim();
-  const a1 = cleanArt.charAt(0) || '0';
-  const a2 = cleanArt.charAt(1) || '0';
-  const initialUrl = `https://www.zigzag.am/media/catalog/product/${encodeURIComponent(a1)}/${encodeURIComponent(a2)}/${encodeURIComponent(cleanArt)}.jpg`;
-  const photoSuffix = window.ZZWS_PRODUCT_PHOTO_PATHS?.[cleanArt];
-  const photoUrl = photoSuffix ? ((photoSuffix.startsWith('https://www.zigzag.am/') || photoSuffix.startsWith('js/product-images/')) ? photoSuffix : `https://www.zigzag.am${window.ZZWS_PRODUCT_PHOTO_PREFIX}${photoSuffix}`) : '';
+  const initialUrl = productPhotoCandidates(cleanArt)[0];
 
   return `
     <button type="button" class="product-img-container product-technical-trigger" data-product-technical="${escapeHtml(cleanArt)}" data-product-name="${escapeHtml(productName)}" aria-label="Բացել տեխնիկական բնութագրերը՝ ${escapeHtml(productName)}" aria-haspopup="dialog">
-      <img src="${escapeHtml(photoUrl || initialUrl)}" 
+      <img src="${escapeHtml(initialUrl)}" 
            data-articul="${escapeHtml(cleanArt)}"
-           data-step="${photoUrl ? '0' : '1'}"
+           data-step="0"
            data-fallback-url="${escapeHtml(initialUrl)}"
            alt="${escapeHtml(productName)}" 
            class="product-img dark:border-gray-700 dark:bg-gray-800" 
@@ -424,5 +428,4 @@ function getProductImageHtml(articul, productName) {
     </button>
   `;
 }
-
 
