@@ -10,7 +10,8 @@ const knowledge=products=>({products:Object.fromEntries(products.filter(p=>p.ver
 const run=(source,products,options={})=>suggestStockReplacements(source,products,knowledge(products),{qty:2,priority,admin:true,...options});
 test('validates bounded typed input and manual requirements without trusting user facts',()=>{
  const valid={sourceArticul:'001',qty:999999,rows:[],manualRequirements:{width:60,drying:false}};assert.equal(validateStockReplacementInput(valid).qty,999999);
- for(const p of [{...valid,qty:0},{...valid,qty:1.5},{...valid,rows:Array(2001).fill({articul:'002',qty:1})},{...valid,manualRequirements:{verified:true}},{...valid,manualRequirements:{width:'60'}},{...valid,maxPrice:Infinity},{...valid,candidateArticul:' 2'}])assert.throws(()=>validateStockReplacementInput(p),{code:400});
+ assert.equal(validateStockReplacementInput({...valid,rows:Array(4000).fill({articul:'002',qty:1})}).rows.length,4000,'2000 imported logical rows may expand into replacement/remainder parts');
+ for(const p of [{...valid,qty:0},{...valid,qty:1.5},{...valid,rows:Array(4001).fill({articul:'002',qty:1})},{...valid,manualRequirements:{verified:true}},{...valid,manualRequirements:{width:'60'}},{...valid,maxPrice:Infinity},{...valid,candidateArticul:' 2'}])assert.throws(()=>validateStockReplacementInput(p),{code:400});
 });
 test('allocation matches actual list kernel across repeated demands, priority and reserve states',()=>{
  for(let seed=0;seed<250;seed++)for(const includeLast of [false,true]){
@@ -30,11 +31,11 @@ test('blacklists every other committed SKU, including fresh candidate validation
  const result=run(source,[source,a,b],{rows:[{articul:'002',qty:1}]});assert.deepEqual(result.candidates.map(p=>p.articul),['003']);
  assert.equal(run(source,[source,a,b],{rows:[{articul:'002',qty:1}],candidateArticul:'002'}).candidates.length,0);
 });
-test('candidate must cover whole quantity and apply reserve, budget, brand, category and fresh price mode',()=>{
+test('candidate offers full or partial quantity while applying reserve, budget, brand, category and fresh price mode',()=>{
  const source=product('001'),enough=product('002','050: 3'),short=product('003','003: 1'),expensive=product('004','003: 9',{wholesale:150,kpPrice:70}),brand=product('005','003: 9',{brand:'Other'}),wrong=product('006','003: 9',{category:'Microwave'});
- assert.deepEqual(run(source,[source,enough,short,expensive,brand,wrong],{sameBrand:true,maxPrice:110}).candidates.map(p=>p.articul),['002']);
+ assert.deepEqual(run(source,[source,enough,short,expensive,brand,wrong],{sameBrand:true,maxPrice:110}).candidates.map(p=>[p.articul,p.offeredQty,p.shortage]),[['002',2,0],['003',1,1]]);
  assert.deepEqual(run(source,[source,expensive],{priceMode:'KP',maxPrice:75}).candidates.map(p=>p.price),[70]);
- assert.equal(run(source,[source,product('007','050: 2')]).candidates.length,0);assert.equal(run(source,[source,product('007','050: 2')],{includeLast:true}).candidates.length,1);
+ assert.equal(run(source,[source,product('007','050: 2')]).candidates[0].offeredQty,1);assert.equal(run(source,[source,product('007','050: 2')],{includeLast:true}).candidates[0].offeredQty,2);
 });
 test('comparison distinguishes verified/differences/unknown without inventing provenance or manual facts',()=>{
  const source=product('001'),exact=product('002','003: 9'),different=product('003','003: 9',{specs:specs.map(s=>s[0]==='Width (cm)'?[s[0],'110']:s)}),unknown=product('004','003: 9',{verified:false});
@@ -47,7 +48,7 @@ test('known installation/subtype conflicts are excluded; unknown critical facts 
 });
 test('client output never exposes warehouse quantities/allocations and requires projected available flag',()=>{
  const source=product('001','',{stockAvailable:false}),visible=product('002','003: 9'),pending=product('003','003: 9',{stockAvailable:false});
- const result=run(source,[source,visible,pending],{admin:false});assert.deepEqual(result.candidates.map(p=>p.articul),['002']);for(const row of result.candidates)for(const field of ['availableQty','allocations','stockStatus','_stockStatus','kpPrice'])assert(!Object.hasOwn(row,field));
+ const result=run(source,[source,visible,pending],{admin:false});assert.deepEqual(result.candidates.map(p=>p.articul),['002']);for(const row of result.candidates)for(const field of ['requestedQty','availableQty','offeredQty','shortage','allocations','stockStatus','_stockStatus','kpPrice'])assert(!Object.hasOwn(row,field));
 });
 test('client binary availability cannot be probed with requested or other-row quantities',()=>{
  const source=product('001','003: 999',{stockAvailable:false}),a=product('002','003: 5'),b=product('003','');
@@ -87,4 +88,21 @@ test('nonstandard connection values remain unknown and front/top loading aliases
  assert.equal(result.candidates[0].matchGroup,'insufficient');assert(result.candidates[0].comparison.missing.includes('connection'));assert(result.candidates[0].comparison.missing.includes('manual.connection'));assert(!result.candidates[0].comparison.same.some(r=>r.key==='connection'));
  const washer=(articul,loading)=>product(articul,articul==='010'?'':'003: 9',{category:'Washing machine',specs:[...specs,['Capacity (kg)','8'],['Drying','No'],['Installation type','Freestanding'],['Loading type',loading]]}),front=washer('010','Front');
  assert.deepEqual(run(front,[front,washer('011','Фронтальная загрузка'),washer('012','Top loading')],{manualRequirements:{subtype:'front'}}).candidates.map(p=>p.articul),['011']);
+});
+test('admin partial offers report exact main/shop/mixed maximum and preserve shop reserve switch',()=>{
+ const source=product('001'),cases=[
+  {stocks:'003: 3',last:false,available:3,allocation:[{warehouse:'003',quantity:3}]},
+  {stocks:'050: 3',last:false,available:2,allocation:[{warehouse:'050',quantity:2}]},
+  {stocks:'050: 3',last:true,available:3,allocation:[{warehouse:'050',quantity:3}]},
+  {stocks:'003: 2, 050: 3, 088: 1',last:false,available:4,allocation:[{warehouse:'003',quantity:2},{warehouse:'050',quantity:2}]},
+  {stocks:'003: 2, 050: 3, 088: 1',last:true,available:6,allocation:[{warehouse:'003',quantity:2},{warehouse:'050',quantity:3},{warehouse:'088',quantity:1}]}
+ ];
+ for(const fixture of cases){const candidate=product('002',fixture.stocks),before=structuredClone(candidate),result=run(source,[source,candidate],{qty:10,includeLast:fixture.last}).candidates[0];assert.equal(result.requestedQty,10);assert.equal(result.availableQty,fixture.available);assert.equal(result.offeredQty,fixture.available);assert.equal(result.shortage,10-fixture.available);assert.deepEqual(result.allocations,fixture.allocation);assert.equal(result.allocations.reduce((sum,a)=>sum+a.quantity,0)+result.shortage,10);assert.deepEqual(candidate,before);}
+ const full=run(source,[source,product('002','003: 2, 050: 3')],{qty:3}).candidates[0];assert.equal(full.availableQty,4);assert.equal(full.offeredQty,3);assert.equal(full.shortage,0);assert.equal(full.allocations.reduce((sum,a)=>sum+a.quantity,0),3);
+ assert.equal(run(source,[source,product('002','050: 1')],{qty:10}).candidates.length,0);assert.equal(run(source,[source,product('002','050: 1')],{qty:10,includeLast:true}).candidates[0].offeredQty,1);
+});
+test('admin sorts full coverage before partial inside each fact group and preserves stock picker prices',()=>{
+ const source=product('001','',{stockPickerPrices:{Dealers:90,KP:70}}),partial=product('002','003: 1',{stockPickerPrices:{Dealers:90,KP:70}}),full=product('003','003: 20',{stockPickerPrices:{Dealers:140,KP:100}}),different=product('004','003: 20',{specs:specs.map(r=>r[0]==='Width (cm)'?[r[0],'110']:r)});
+ const result=run(source,[source,partial,full,different],{qty:5});assert.deepEqual(result.candidates.map(p=>p.articul),['003','002','004']);assert.equal(result.source.price,90);assert.equal(result.candidates.find(p=>p.articul==='003').price,140);assert.equal(run(source,[source,partial],{qty:5,priceMode:'KP'}).candidates[0].price,70);
+ assert.deepEqual(run(source,[source,partial,full],{qty:5,rows:[{articul:'002',qty:1}],candidateArticul:'002'}).candidates,[],'partial offers never bypass committed-row blacklist');
 });

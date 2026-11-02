@@ -39,7 +39,7 @@ export function stockReplacementRequirements(type){
 export function validateStockReplacementInput(p){
  const sku=v=>typeof v==='string'&&v.trim()===v&&v.length>0&&v.length<=100;
  const qty=v=>Number.isSafeInteger(v)&&v>0&&v<=999999;
- if(!p||typeof p!=='object'||Array.isArray(p)||!sku(p.sourceArticul)||!qty(p.qty)||!Array.isArray(p.rows)||p.rows.length>2000||p.rows.some(r=>!r||!sku(r.articul)||!qty(r.qty)))throw Object.assign(Error('Ստուգեք ապրանքն ու ցանկի քանակները։'),{code:400});
+ if(!p||typeof p!=='object'||Array.isArray(p)||!sku(p.sourceArticul)||!qty(p.qty)||!Array.isArray(p.rows)||p.rows.length>4000||p.rows.some(r=>!r||!sku(r.articul)||!qty(r.qty)))throw Object.assign(Error('Ստուգեք ապրանքն ու ցանկի քանակները։'),{code:400});
  if(p.includeLast!=null&&typeof p.includeLast!=='boolean'||p.sameBrand!=null&&typeof p.sameBrand!=='boolean'||p.priceMode!=null&&!['WS','KP'].includes(p.priceMode)||p.maxPrice!=null&&(!Number.isFinite(p.maxPrice)||p.maxPrice<=0||p.maxPrice>1e12)||p.candidateArticul!=null&&!sku(p.candidateArticul))throw Object.assign(Error('Ստուգեք փոխարինման պայմանները։'),{code:400});
  const manual=p.manualRequirements??{};
  if(!manual||typeof manual!=='object'||Array.isArray(manual)||Object.keys(manual).length>4||Object.entries(manual).some(([key,value])=>numeric.includes(key)?!Number.isFinite(value)||value<=0||value>100000:boolFields.has(key)?typeof value!=='boolean':stringFields.has(key)?typeof value!=='string'||!value.trim()||value.length>100:true))throw Object.assign(Error('Նշեք մինչև չորս հստակ պահանջ։'),{code:400});
@@ -139,11 +139,11 @@ export function suggestStockReplacements(source,products,knowledge,{qty,rows=[],
   const unit=price(product);if(unit==null||maxPrice!=null&&unit>maxPrice)continue;
   const target=facts(product,knowledge);if(target.values.type!==sourceFacts.values.type)continue;
   const comparison=compare(sourceFacts.values,target.values,requirements,manualRequirements,modes);if(!comparison)continue;
-  const pool=admin?stock.pool(product):null,allocation=admin?take(pool,qty,priority,includeLast):null;if(admin&&allocation.shortage)continue;
+  const pool=admin?stock.pool(product):null,allocation=admin?take(pool,qty,priority,includeLast):null;if(admin&&!allocation.allocated)continue;
   const matchGroup=sourceFacts.sourceType!=='verified_snapshot'||target.sourceType!=='verified_snapshot'||comparison.missing.length?'insufficient':comparison.differences.length?'differences':'verified';
-  candidates.push({articul:product.articul,name:product.name,brand:product.brand,price:unit,priceDifference:price(source)==null?null:unit-price(source),matchGroup,comparison,sourceType:target.sourceType,sourceUrl:target.sourceUrl,checkedAt:target.checkedAt,quantityConfirmed:admin,...(admin?{availableQty:qty+Object.entries(pool).reduce((sum,[code,count])=>sum+Math.max(0,count-(priority.includes(code)||includeLast?0:1)),0),allocations:allocation.allocations}:{}),manualRequirements,manualModes:modes,manualRequirementsSource:'user_request'});
+  candidates.push({articul:product.articul,name:product.name,brand:product.brand,price:unit,priceDifference:price(source)==null?null:unit-price(source),matchGroup,comparison,sourceType:target.sourceType,sourceUrl:target.sourceUrl,checkedAt:target.checkedAt,quantityConfirmed:admin,...(admin?{requestedQty:qty,availableQty:allocation.allocated+Object.entries(pool).reduce((sum,[code,count])=>sum+Math.max(0,count-(priority.includes(code)||includeLast?0:1)),0),offeredQty:allocation.allocated,shortage:allocation.shortage,allocations:allocation.allocations}:{}),manualRequirements,manualModes:modes,manualRequirementsSource:'user_request'});
  }
  const order={verified:0,differences:1,insufficient:2};
- candidates.sort((a,b)=>order[a.matchGroup]-order[b.matchGroup]||a.comparison.differences.length-b.comparison.differences.length||Math.abs(a.priceDifference??a.price)-Math.abs(b.priceDifference??b.price)||a.articul.localeCompare(b.articul));
+ candidates.sort((a,b)=>order[a.matchGroup]-order[b.matchGroup]||(admin?Number(a.shortage>0)-Number(b.shortage>0):0)||a.comparison.differences.length-b.comparison.differences.length||Math.abs(a.priceDifference??a.price)-Math.abs(b.priceDifference??b.price)||a.articul.localeCompare(b.articul));
  return {...base,reason:candidates.length?'ok':'no_candidates',candidates:candidates.slice(0,6)};
 }
