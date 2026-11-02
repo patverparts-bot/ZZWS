@@ -13,6 +13,12 @@
  const panels=titles.map((title,index)=>{const p=node('section',null,'checkout-stage');p.id='checkoutStage'+(index+1);p.setAttribute('aria-labelledby','checkoutStageTitle'+(index+1));const h=node('h4',title,'checkout-stage-title');h.id='checkoutStageTitle'+(index+1);h.tabIndex=-1;p.append(h);return p;});
  const saved=el('savedCartsPanel'),items=body.querySelector('.order-modal-items-column'),buyer=body.querySelector('.order-modal-details-column'),oldGrid=body.querySelector('.order-modal-body-grid');
  const addTools=node('div',null,'checkout-preparation-actions');addTools.append(button('Ավելացնել կատալոգից',()=>{closeOrderModal();el('searchInput').focus();}),button('Ավելացնել ցանկից',()=>openBulkAddModal()));
+ const clearCart=button('Մաքրել զամբյուղը',()=>{
+  if(busy||!Object.keys(cart).length)return;
+  const question=window.ZZWS_I18N?.language==='ru'?'Удалить все товары из корзины?':'Հեռացնե՞լ զամբյուղի բոլոր ապրանքները։';
+  if(!window.confirm(question))return;
+  cart={};excluded.clear();step=1;review=null;saveCartToStorage();updateOrderPanel();refreshAllActions();renderModalItems();window.ZZWS_MEMORY?.capture();
+ });clearCart.id='checkoutClearCart';addTools.append(clearCart);
  const selectionTools=node('div',null,'checkout-selection-tools'),all=node('input'),allLabel=node('label'),selectionCount=node('span');all.type='checkbox';all.id='checkoutSelectAll';allLabel.append(all,node('span','Ընտրել բոլորը'));selectionCount.id='checkoutSelectionCount';selectionTools.append(allLabel,selectionCount);
  all.onchange=()=>{if(busy)return;excluded=all.checked?new Set():new Set(Object.keys(cart));changed();renderModalItems();};
  panels[0].append(node('p','Ավելացրեք ապրանքներ, փոփոխեք քանակները և նշեք՝ որոնք ուղարկել այս պատվերով։ Չնշված ապրանքները կմնան զամբյուղում։','checkout-description'),addTools,saved,selectionTools,items);
@@ -64,7 +70,7 @@
  function render(){
   const keys=Object.keys(cart);for(const id of excluded)if(!keys.includes(id))excluded.delete(id);
   const selected=activeCart(),count=Object.keys(selected).length;selectionCount.textContent='Ընտրված է '+count+' / '+keys.length+' դիրք';
-  all.checked=keys.length>0&&count===keys.length;all.indeterminate=count>0&&count<keys.length;all.disabled=busy||!keys.length;
+  all.checked=keys.length>0&&count===keys.length;all.indeterminate=count>0&&count<keys.length;all.disabled=busy||!keys.length;clearCart.disabled=busy||!keys.length;
   for(const checkbox of el('modalItemsList').querySelectorAll('[data-checkout-art]'))checkbox.disabled=busy;
   el('modalTotalSum').textContent=money(Object.values(selected).reduce((sum,i)=>sum+getItemWholesalePrice(i)*i.qty,0));
   for(let i=0;i<3;i++){panels[i].hidden=step!==i+1;navButtons[i].disabled=busy||i+1>step;navButtons[i].setAttribute('aria-current',step===i+1?'step':'false');navButtons[i].classList.toggle('checkout-step-complete',i+1<step);}
