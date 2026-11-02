@@ -1,8 +1,14 @@
 // Authentication and permissions are issued by the server, never restored from localStorage.
 let serverIdentity = null; window.ZZWS_HELP_USER=null;
+function beginSessionLoading(){
+  const text=document.getElementById('sessionLoadingText');text.dataset.loadingKey='catalog';text.textContent=window.ZZWS_I18N.t(window.ZZWS_LOADING_SCENES.keys.catalog);
+  document.getElementById('sessionSpinner').hidden=false;document.getElementById('sessionRetryActions').hidden=true;
+  document.documentElement.setAttribute('data-session-pending','true');
+}
 function finishSessionLoading(){document.documentElement.removeAttribute('data-session-pending');}
 function sessionLoadFailed(message){
   document.documentElement.setAttribute('data-session-pending','true');
+  delete document.getElementById('sessionLoadingText').dataset.loadingKey;
   document.getElementById('sessionLoadingText').textContent=message||'Չհաջողվեց թարմացնել տվյալները։ Ստուգեք կապը։';
   document.getElementById('sessionSpinner').hidden=true;document.getElementById('sessionRetryActions').hidden=false;
 }
@@ -11,6 +17,7 @@ async function secureApi(path, options = {}) {
   catch(e) { if (e.status === 401) lockCatalog(); throw e; }
 }
 function lockCatalog() {
+  window.ZZWS_LOADING_SCENES?.cancelOrder();
   window.ZZWS_PAGE_STATE?.stop();
   window.ZZWS_STOREFRONT?.reset();
   window.ZZWS_PRODUCT_TECHNICAL?.reset();
@@ -41,6 +48,7 @@ function lockCatalog() {
 }
 async function acceptIdentity(user) {
   if(user.needsPasswordSetup||user.needsProfileSetup){user=await requirePasswordSetup(user);if(!user){finishSessionLoading();return;}}
+  beginSessionLoading();
   window.ZZWS_ASSISTED?.start(user);
   window.ZZWS_CATALOG_VIEW?.start(user);
   window.ZZWS_ENTRY?.navigation(user);
@@ -67,15 +75,17 @@ async function checkPassword() {
   if(loginInProgress)return;loginInProgress=true;
   const errorMsg = document.getElementById('errorMsg');
   errorMsg.classList.add('hidden');
+  beginSessionLoading();
   try {
     const user = await secureApi('login', {method:'POST',body:JSON.stringify({
       login:document.getElementById('loginInput').value.trim(),password:document.getElementById('passwordInput').value})});
     await completeSecureLogin(user);
     let identity=await secureApi('me');
+    finishSessionLoading();
     if(identity.needsPasswordSetup||identity.needsProfileSetup){identity=await requirePasswordSetup(identity);if(!identity)return;}
     document.getElementById('passwordInput').value='';
     await ZZWS_ENTRY.choose(identity,()=>acceptIdentity(identity));
-  } catch(e) { errorMsg.textContent = e.message; errorMsg.classList.remove('hidden'); } finally {loginInProgress=false;}
+  } catch(e) { if(serverIdentity&&sessionStorage.getItem('zzws_session_v3'))sessionLoadFailed(e.message);else finishSessionLoading();errorMsg.textContent = e.message; errorMsg.classList.remove('hidden'); } finally {loginInProgress=false;}
 }
 
 function clearUserCartAndFilters(client) {
@@ -180,6 +190,8 @@ function fingerprintRows(rows) {
 }
 
 async function reloadIfPriceChanged() {
+  beginSessionLoading();
+  try{
   const result = await fetchPriceRows();
   const fp = fingerprintRows(result.rows);
   if (fp === loadedPriceFingerprint) return false;
@@ -189,6 +201,7 @@ async function reloadIfPriceChanged() {
   try { localStorage.setItem('zigzag_seen_price_' + userStorageId(), cachedPriceDateText); } catch (e) {}
   showPriceUpdatePopupAndStart(true);
   return true;
+  }finally{finishSessionLoading();}
 }
 
 function startBackgroundPricePolling() {
@@ -412,11 +425,13 @@ function applyPriceDate(dateText) {
 }
 
 async function loadPriceData(initialCatalog = null) {
+  beginSessionLoading();
   const skeleton = document.getElementById('skeletonLoader');
   const errorBox = document.getElementById('dataErrorBox');
   const content = document.getElementById('catalogContent');
   errorBox.classList.add('hidden');
-  skeleton.classList.remove('hidden');
+  // The session overlay is the catalogue loader; keep the old skeleton hidden.
+  skeleton.classList.add('hidden');
   content.classList.add('opacity-40');
   try {
     const result = await fetchPriceRows(initialCatalog);
@@ -436,18 +451,18 @@ async function loadPriceData(initialCatalog = null) {
 }
 
 async function loadPriceDataSilent() {
+  beginSessionLoading();
   try {
     const result = await fetchPriceRows();
     applyPriceDate(result.dateText);
     parseExcelRows(result.rows, true);
-  } catch (e) {}
+  } catch (e) {}finally{finishSessionLoading();}
 }
 
 function finalizeDataLoad() {
   productIndex = new Map();
   allProducts.forEach(p => { if (!productIndex.has(p.articul)) productIndex.set(p.articul, p); });
   catalogLoaded = true;
-  finishSessionLoading();
   reconcileCart();
 
   initFilters();
@@ -464,6 +479,7 @@ function parseExcelRows(products, isSilent = false) {
   finalizeDataLoad();
   const dealerReady=window.ZZWS_DEALER?.refresh();
   window.ZZWS_STOREFRONT?.refresh();
+  finishSessionLoading();
   Promise.resolve(dealerReady).then(()=>window.ZZWS_PAGE_STATE?.loaded());
   if (isSilent && !document.getElementById('orderModal').classList.contains('hidden')) renderModalItems();
 }

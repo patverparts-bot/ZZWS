@@ -1,5 +1,26 @@
 # ZZWS file layout
 
+## Catalogue loading and post-submit scenes
+
+`js/loading-scenes.js` and `js/loading-scenes.css` provide two separate SVG scenes.
+The existing `sessionLoader` handles initial identity/session restoration, sign-in,
+catalogue fetches/retries, and version-triggered catalogue refreshes. Its warehouse
+products move into catalogue cards until the real data has been applied and rendered;
+the previous skeleton stays hidden. Existing session and catalogue error actions remain.
+
+Only successful server submissions in `server-orders.js` and `admin-assisted-order.js`
+open the short order scene before their existing confirmation. The refrigerator is
+nested inside the truck and holds its local position after loading. Animation completion
+or Continue advances to that confirmation; logout cancels it. Reduced motion bypasses
+the order animation and keeps the catalogue scene static. Excel/Viber exports do not
+trigger this scene. Armenian source keys and Russian translations use the existing
+localization; both scenes use root `logo.svg` / `logo-dark.svg` according to theme.
+
+`tests/ui/loading-scenes.cjs` verifies delayed data, errors/retries, duplicate-send
+prevention, server-success gating, attached cargo, natural animation completion,
+existing confirmation, logout, HY/RU, themes, mobile widths, reduced motion and CSP.
+
+
 ## Authenticated storefront
 
 The approved first concept is implemented in `js/storefront.js` and `js/storefront.css`.
