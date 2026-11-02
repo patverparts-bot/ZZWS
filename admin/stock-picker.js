@@ -13,7 +13,7 @@
  const pasteLabel=node('label','Մոդել և քանակ');pasteLabel.append(paste);
  const file=node('input');file.type='file';file.accept='.xlsx,.csv,.tsv,.txt';file.id='stockPickerFile';const fileLabel=node('label','Ցանկի ֆայլ');fileLabel.append(file);
  const last=node('input');last.type='checkbox';last.id='stockPickerLast';const lastLabel=node('label','Օգտագործել նաև խանութների վերջին օրինակը');lastLabel.prepend(last);
- const kp=node('input');kp.type='checkbox';kp.id='stockPickerKp';kp.setAttribute('role','switch');const priceLabel=node('label','KP գներ (անջատված՝ Dealer)');priceLabel.prepend(kp);
+ const kp=node('input');kp.type='checkbox';kp.id='stockPickerKp';kp.setAttribute('role','switch');const priceLabel=node('label','KP՝ Խոշոր Գործընկեր (անջատված՝ Մշտական Գորրընկեր)');priceLabel.prepend(kp);const priceRulesNote=node('p','Գները հաշվարկվում են «Հաճախորդների կատեգորիաներ» բաժնի «Գնի ընտրություն» ընթացիկ կանոններով։ Կանոնները փոխելուց հետո կրկին կազմեք ցանկը։');priceLabel.append(priceRulesNote);
  const build=node('button','Կազմել ցանկը'),download=node('button','Ներբեռնել Excel');build.type=download.type='button';download.disabled=true;
  const message=node('p'),output=node('div');message.setAttribute('role','status');message.setAttribute('aria-live','polite');output.style.overflowX='auto';
  root.append(pasteLabel,fileLabel,priceLabel,lastLabel,node('p','Սա հաշվարկ է ըստ ընթացիկ մնացորդների։ Ապրանքները չեն ամրագրվում։ Չգտնված մոդելները և պակասող քանակները մնում են ցանկում։'),build,download,message,output);

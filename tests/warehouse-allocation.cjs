@@ -15,7 +15,7 @@ const priceRows=parse([['00123','2']]);
 assert.equal(allocate(priceRows,priceProducts)[0].price,120000);
 assert.equal(allocate(priceRows,priceProducts,false,'KP')[0].price,99000);
 assert.deepEqual(allocate(priceRows,priceProducts)[0].allocations,allocate(priceRows,priceProducts,false,'KP')[0].allocations);
-assert.equal(allocate(priceRows,products,false,'KP')[0].price,null);
+assert.equal(allocate(priceRows,products,false,'KP')[0].price,120000);
 assert.equal(allocate(priceRows,[{...products[0],wholesale:0,kpPrice:99000}],false,'KP')[0].price,99000);
 const rows=parse([['Մոդել','Պատվ.'],['Լվացքի մեքենա Bosch WGB24410ME','13'],['Bosch KGN49LBE0T','1'],['Unknown','2']]);
 let result=allocate(rows,products);

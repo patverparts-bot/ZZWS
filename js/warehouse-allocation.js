@@ -82,7 +82,8 @@
      for(const code of shops){const qty=picked.get(code);if(qty){allocations.push({warehouse:code,quantity:qty});pool[code]-=qty;need-=qty;}}
     }
    }
-   const sourcePrice=priceGroup==='KP'?p.kpPrice:p.wholesale;
+   // Current category rules are evaluated by the server on every catalog request.
+   const sourcePrice=p.stockPickerPrices?p.stockPickerPrices[priceGroup]:priceGroup==='KP'&&Number.isFinite(Number(p.kpPrice))&&Number(p.kpPrice)>0?p.kpPrice:p.wholesale;
    const price=sourcePrice==null||sourcePrice===''?null:Number(sourcePrice);
    return {...row,articul:p.articul,matchedName:p.name,price:Number.isFinite(price)&&price>0?price:null,allocated:row.quantity-need,shortage:need,allocations};
   });

@@ -45,7 +45,7 @@ export function inspectPrice(rows){
 export function project(products,user,storedRules,{forOrder=false,mainWarehouses=DEFAULT_MAIN_WAREHOUSES,newDays=7,now=Date.now()}={}) {
   const result=[],admin=user.role==='admin',kp=user.sheet==='KP'&&!admin,domus=/ԴՈՄՈՒՍ|ДОМУՍ|DOMUS/i.test(user.client);
   const main=new Set(mainWarehouses);
-  const group=effectiveRules(storedRules)[user.sheet||'Dealers'];
+  const categoryRules=effectiveRules(storedRules),group=categoryRules[user.sheet||'Dealers'];
   if(!group)throw Error('Հաճախորդի կատեգորիան չի գտնվել');
   const allowed=(user.brands||[]).map(norm);
   for(const p of products){
@@ -68,7 +68,10 @@ export function project(products,user,storedRules,{forOrder=false,mainWarehouses
       isPromo:retail>0&&p.base>retail,isWholesalePromo:!admin&&selected.source==='kpPromo',hasWholesale:wholesale>0||(admin&&kpPrice>0),
       marginVal:margin(wholesale),stockAvailable:base>=group.stock.availableFrom,stockStatus:admin?entries.filter(([,q])=>q>0).map(([n,q])=>`${n}: ${q}`).join(', '):(base>=group.stock.availableFrom?'Առկա է':'Ճշտել'),hasMainStock:base>0};
     Object.assign(item,newProductFlags(p,newDays,now));
-    if(admin)Object.assign(item,{kpPrice,kpIsPromo:!!p.kpPromo,kpMarginVal:margin(kpPrice),targetWarehousesStock:base});
+    if(admin){
+      const stockPickerPrices=Object.fromEntries(['KP','Dealers'].map(id=>{const rule=categoryRules[id]?.pricing,price=rule?selectPrice(p,rule).price:0;return [id,price>0&&!(rule.hideAboveRetail&&retail>0&&price>retail)?price:null];}));
+      Object.assign(item,{kpPrice,kpIsPromo:!!p.kpPromo,kpMarginVal:margin(kpPrice),targetWarehousesStock:base,stockPickerPrices});
+    }
     if(admin||user.allowResale)item.resaleWholesale=p.ws;
     result.push(item);
   }

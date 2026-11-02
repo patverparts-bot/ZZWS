@@ -122,7 +122,7 @@ function compare(source,target,requirements,manual,modes){
  return {same,differences,missing:[...new Set(missing)]};
 }
 export function suggestStockReplacements(source,products,knowledge,{qty,rows=[],priority,includeLast=false,priceMode='WS',sameBrand=false,maxPrice,manualRequirements={},manualModes={},candidateArticul,admin=false}={}){
- const sourceFacts=facts(source,knowledge),requirements=stockReplacementRequirements(sourceFacts.values.type).map(r=>canonical('installation',sourceFacts.values.installation)==='built_in'&&r.key.startsWith('niche')?{...r,required:true}:r),price=p=>{const value=Number(p[priceMode==='KP'?'kpPrice':'wholesale']);return Number.isFinite(value)&&value>0?value:null;};
+ const sourceFacts=facts(source,knowledge),requirements=stockReplacementRequirements(sourceFacts.values.type).map(r=>canonical('installation',sourceFacts.values.installation)==='built_in'&&r.key.startsWith('niche')?{...r,required:true}:r),price=p=>{const value=Number(admin&&p.stockPickerPrices?p.stockPickerPrices[priceMode==='KP'?'KP':'Dealers']:p[priceMode==='KP'?'kpPrice':'wholesale']);return Number.isFinite(value)&&value>0?value:null;};
  const sourceDTO={articul:source.articul,name:source.name,price:price(source),sourceType:sourceFacts.sourceType,sourceUrl:sourceFacts.sourceUrl,checkedAt:sourceFacts.checkedAt};
  const modes=Object.fromEntries(Object.keys(manualRequirements).filter(key=>numeric.includes(key)).map(key=>[key,manualModes[key]||'exact']));
  const base={source:sourceDTO,requirements,manualRequirements,manualModes:modes,manualRequirementsSource:'user_request',quantityConfirmed:admin,candidates:[]};
