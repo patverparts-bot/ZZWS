@@ -1,7 +1,6 @@
 /* Read-only list matching and stock distribution. No order or reservation writes. */
 (function(root){
  'use strict';
- const priority=['003','023','031','026'];
  const norm=v=>String(v??'').normalize('NFKC').toUpperCase().trim();
  const tokens=v=>norm(v).match(/[A-Z0-9]+(?:[-/][A-Z0-9]+)*/g)||[];
  const modelTokens=v=>{
@@ -55,7 +54,8 @@
    const n=Number(m[2]);if(!Number.isSafeInteger(n))return {};out[m[1]]=n;
   }return out;
  }
- function allocate(rows,products,includeLast=false,priceGroup='Dealers'){
+ function allocate(rows,products,includeLast=false,priceGroup='Dealers',priority){
+  if(!Array.isArray(priority)||priority.some(code=>typeof code!=='string'||!/^\d{3}$/.test(code))||new Set(priority).size!==priority.length)throw new Error('Warehouse policy is missing or invalid');
   if(!['Dealers','KP'].includes(priceGroup))throw new Error('Invalid price group');
   const remaining=new Map();
   return rows.map(row=>{
@@ -95,5 +95,5 @@
    return {...row,articul:p.articul,matchedName:p.name,price:Number.isFinite(price)&&price>0?price:null,available,canAdd:Number.isFinite(price)&&price>0,error:available?null:'checkStock'};
   });
  }
- const api={parse,allocate,checkClient,match,stocks,priority};if(typeof module==='object'&&module.exports)module.exports=api;else root.ZZWS_WAREHOUSE_ALLOCATION=api;
+ const api={parse,allocate,checkClient,match,stocks};if(typeof module==='object'&&module.exports)module.exports=api;else root.ZZWS_WAREHOUSE_ALLOCATION=api;
 })(typeof window==='object'?window:globalThis);

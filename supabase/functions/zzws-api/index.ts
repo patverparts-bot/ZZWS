@@ -1,6 +1,6 @@
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {apkDownloadsRoute} from './apk-downloads.mjs';
-import {warehouseRoutes,mainWarehouses} from './warehouses.mjs';
+import {warehouseRoutes,mainWarehouses,warehousePriority} from './warehouses.mjs';
 import {dealerRoutes} from './dealer.mjs';
 import {replacementRoutes} from './replacements.mjs';
 import {adminTemplateRoutes} from './admin-templates.mjs';
@@ -116,7 +116,7 @@ async function current(){
   const state=await query(table('state').select('*').eq('id',true).single());
   if(!state?.version)fail(409,'Ադմինիստրատորը դեռ չի հրապարակել գնացուցակը');
   const version=await query(table('versions').select('*').eq('id',state.version).single());
-  return {...version,rules:effectiveRules(state.rules),storedRules:state.rules,rulesRevision:state.rules_revision,mainWarehouses:mainWarehouses(state.catalog_controls),warehouseRevision:state.catalog_controls_revision,catalogControls:state.catalog_controls};
+  return {...version,rules:effectiveRules(state.rules),storedRules:state.rules,rulesRevision:state.rules_revision,mainWarehouses:mainWarehouses(state.catalog_controls),warehousePriority:warehousePriority(state.catalog_controls),warehouseRevision:state.catalog_controls_revision,catalogControls:state.catalog_controls};
 }
 async function saveUser(p:any,actor:string,sessionHash:string){
   if(!['create','update'].includes(p.intent))fail(400,'Օգտատիրոջը պահպանելուց առաջ թարմացրեք կաբինետի էջը');
@@ -347,7 +347,7 @@ async function handleRequest(req:Request){
       if(path==='catalog'){
         const rules=popularityRules(settings.catalog_controls);
         const [rows,banners]=await Promise.all([controls.popular||controls.personalPopular?query(service.rpc('zzws_catalog_popularity',{p_user:user.id,p_days:rules.days})):Promise.resolve([]),storefrontRanking(service,query,products,settings.catalog_controls,user.id,rules.days)]);
-        return json({products,version,updated,controls,account:user,storefront:storefrontDTO(products,banners,settings.catalog_controls),specialOffer:controls.promo?offerDTO(offer,products,user.role==='admin'):null,popularityRules:rules,popularity:visiblePopularity(rows,products,controls,settings.catalog_controls,user.id)});
+        return json({products,version,updated,controls,account:user,...(user.role==='admin'?{warehousePolicy:{mainWarehouses:v.mainWarehouses,priority:v.warehousePriority,revision:v.warehouseRevision}}:{}),storefront:storefrontDTO(products,banners,settings.catalog_controls),specialOffer:controls.promo?offerDTO(offer,products,user.role==='admin'):null,popularityRules:rules,popularity:visiblePopularity(rows,products,controls,settings.catalog_controls,user.id)});
       }
       const rows=[['Ստացող',user.client,'Տարբերակ',priceVersionLabel(v.created)],['Արտիկուլ','Բրենդ','Կատեգորիա','Անվանում','Մանրածախ','Ձեր գինը','Առկայություն',...(user.role==='admin'?['KP']:[])],
         ...products.map((p:any)=>[p.articul,p.brand,p.category,p.name,p.retail,p.wholesale,p.stockStatus,...(user.role==='admin'?[p.kpPrice]:[])])];

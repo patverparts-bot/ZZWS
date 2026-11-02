@@ -1,5 +1,6 @@
 const assert=require('node:assert/strict');
-const {parse,allocate,checkClient}=require('../js/warehouse-allocation.js');
+const {parse,allocate:configuredAllocate,checkClient}=require('../js/warehouse-allocation.js');
+const allocate=(rows,products,last=false,group='Dealers',priority=['003','023','031','026'])=>configuredAllocate(rows,products,last,group,priority);
 const clientCatalog=[{articul:'client-visible',name:'Client model',wholesale:100,stockAvailable:true},{articul:'pending',name:'Pending model',wholesale:200,stockAvailable:false,stockStatus:'Ճշտել'}];
 const checked=checkClient(parse([['client-visible','3'],['pending','2'],['admin-only','1']]),clientCatalog);
 assert.equal(checked[0].available,true);assert.equal(checked[0].price,100);assert.equal(checked[0].allocations,undefined);assert.equal(checked[1].error,'checkStock');assert.equal(checked[2].error,'missing');
@@ -82,3 +83,14 @@ for(let seed=0;seed<200;seed++)for(const includeLast of [false,true]){
  }
 }
 console.log('Warehouse allocation checks passed, including 400 balancing scenarios');
+
+// The runtime must receive administrator configuration, with no baked-in warehouse list.
+assert.throws(()=>configuredAllocate([],[]),/policy/);
+const dynamic={articul:'dynamic',name:'Dynamic',wholesale:10,stockStatus:'050: 4, 088: 3, 003: 2'};
+const demand=parse([['dynamic','6']]);
+assert.deepEqual(configuredAllocate(demand,[dynamic],false,'Dealers',['088','050'])[0].allocations,[{warehouse:'088',quantity:3},{warehouse:'050',quantity:3}]);
+assert.deepEqual(configuredAllocate(demand,[dynamic],false,'Dealers',['050','088'])[0].allocations,[{warehouse:'050',quantity:4},{warehouse:'088',quantity:2}]);
+assert.equal(configuredAllocate(parse([['dynamic','9']]),[dynamic],false,'Dealers',[])[0].allocated,6);
+assert.equal(configuredAllocate(parse([['dynamic','9']]),[dynamic],true,'Dealers',[])[0].allocated,9);
+assert.deepEqual(configuredAllocate(parse([['dynamic','3']]),[dynamic],false,'Dealers',['050','088'])[0].allocations,[{warehouse:'050',quantity:3}]);
+console.log('PASS: configurable main warehouses/order, new codes, no-main policy, shop reserve and missing-policy rejection');

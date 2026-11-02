@@ -2,9 +2,12 @@
  'use strict';
  const node=(tag,text)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;return n;};
  const core=window.ZZWS_WAREHOUSE_ALLOCATION,root=node('fieldset');root.id='stockPicker';root.hidden=true;root.style.minWidth='0';
- root.append(node('legend','Ապրանքների ընտրություն ըստ պահեստների'),node('p','Տեղադրեք մոդելների և քանակների երկու սյունակ կամ ընտրեք XLSX, CSV, TSV, TXT ֆայլ։ Առաջնահերթություն՝ 003 → 023 → 031 → 026։ Մնացած պահեստներում պահպանվում է վերջին օրինակը։'));
+ root.append(node('legend','Ապրանքների ընտրություն ըստ պահեստների'),node('p','Տեղադրեք մոդելների և քանակների երկու սյունակ կամ ընտրեք XLSX, CSV, TSV, TXT ֆայլ։ Պահեստների կանոնները վերցվում են «Պահեստներ» բաժնից։ Խանութներում պահպանվում է վերջին օրինակը։'));
  root.append(node('p','Մյուս պահեստներից ընտրությունը սկսվում է ամենամեծ մնացորդից՝ հնարավորինս հավասարեցնելով մնացորդները։'));
  root.append(node('p','Եթե հիմնական պահեստներից մեկում ամբողջ պահանջված քանակը կա, ընտրությունը կատարվում է միայն այդ պահեստից։ Յուրաքանչյուր պահեստը ցուցադրվում է առանձին տողով։'));
+ const priorityText=node('span');priorityText.setAttribute('data-i18n-skip','');const priorityLine=node('p');priorityLine.append(node('span','Հիմնական պահեստների հերթականությունը՝ '),priorityText);root.append(priorityLine);
+ let policyStamp=null;
+ function policy(data){const p=data.warehousePolicy;if(!p||!Array.isArray(p.mainWarehouses)||!Array.isArray(p.priority)||p.priority.length!==p.mainWarehouses.length||new Set(p.priority).size!==p.priority.length||p.priority.some(code=>typeof code!=='string'||!/^\d{3}$/.test(code)||!p.mainWarehouses.includes(code)))throw Error('Պահեստների կարգավորումները հասանելի չեն։ Թարմացրեք էջը և կրկին փորձեք։');priorityText.textContent=p.priority.join(' → ')||'—';return p;}
  const adminIntro=[...root.querySelectorAll(':scope > p')],clientIntro=node('p','Ստուգեք ցանկը ձեր կատալոգում։ Հասանելի ապրանքները կարող եք տեղափոխել զամբյուղ։ Առկայության ճշտում պահանջող և չգտնված ապրանքները ցուցադրվում են առանձին։');clientIntro.hidden=true;root.append(clientIntro);
  const paste=node('textarea');paste.rows=7;paste.maxLength=500000;paste.id='stockPickerPaste';paste.style.width='100%';paste.style.boxSizing='border-box';
  const pasteLabel=node('label','Մոդել և քանակ');pasteLabel.append(paste);
@@ -54,7 +57,7 @@
    const inputRows=XLSX.utils.sheet_to_json(sheet,{header:1,raw:false,defval:''});
    const rows=core.parse(inputRows);if(!rows.length)throw new Error('Ցանկը դատարկ է');
    const data=await (typeof secureApi==='function'?secureApi('catalog'):api('catalog'));if(ticket!==epoch||!allowed)return;
-   result=clientMode?core.checkClient(rows,data.products):core.allocate(rows,data.products,last.checked,kp.checked?'KP':'Dealers');
+   const settings=clientMode?null:policy(data);policyStamp=settings?JSON.stringify(settings):null;result=clientMode?core.checkClient(rows,data.products):core.allocate(rows,data.products,last.checked,kp.checked?'KP':'Dealers',settings.priority);
    exportRows=clientMode?result.map(r=>[r.articul||r.sku||'',r.matchedName||r.name,Number.isFinite(r.quantity)?r.quantity:'',r.price??'',errors[r.error]||'']):result.flatMap(r=>{
     const lines=r.allocations.length?r.allocations:[{warehouse:'',quantity:0}];
     return lines.map((a,i)=>{const row=[r.articul||r.sku||'',r.matchedName||r.name,i===0&&Number.isFinite(r.quantity)?r.quantity:'',r.price??'',a.quantity,i===0?r.shortage??'':'',a.warehouse,i===0?errors[r.error]||'':''];if(i===0)row.candidates=r.candidates;return row;});
@@ -76,7 +79,7 @@
   if(!allowed||!result||cartButton.disabled)return;const ticket=epoch,snapshot=result;cartButton.disabled=true;
   try{
    const data=await secureApi('catalog');if(ticket!==epoch||!allowed)return;
-   const fresh=clientMode?core.checkClient(snapshot,data.products):core.allocate(snapshot,data.products,last.checked,kp.checked?'KP':'Dealers');let added=0,capped=false;const totals=new Map();
+   const settings=clientMode?null:policy(data);if(settings&&JSON.stringify(settings)!==policyStamp){invalidate();throw Error('Պահեստների կարգավորումները փոխվել են։ Կրկին կազմեք ցանկը։');}const fresh=clientMode?core.checkClient(snapshot,data.products):core.allocate(snapshot,data.products,last.checked,kp.checked?'KP':'Dealers',settings.priority);let added=0,capped=false;const totals=new Map();
    for(const [i,row] of fresh.entries()){const original=snapshot[i],qty=clientMode?(row.canAdd&&original.canAdd?row.quantity:0):Math.min(row.allocated||0,original.allocated||0);if(!(qty>0)||row.articul!==original.articul||!getProduct(row.articul))continue;totals.set(row.articul,(totals.get(row.articul)||0)+qty);}
    for(const [articul,qty] of totals){const old=cart[articul]?.qty||0,next=Math.min(MAX_QTY,old+qty);if(next<old+qty)capped=true;if(next>old){setDirectQty(articul,next);added+=next-old;}}
    message.textContent=added?'Ապրանքները տեղափոխվել են զամբյուղ։':'Հասանելի ապրանք չի գտնվել։ Կրկին ստուգեք ցանկը։';if(capped)message.textContent+=' Քանակը սահմանափակվել է զամբյուղի առավելագույնով։';
@@ -102,5 +105,5 @@
   for(let row=2;row<=rows.length+1;row++)for(const col of ['C','D','E']){const cell=sheet[col+row];if(cell?.t==='n')cell.z='0';}
   XLSX.utils.book_append_sheet(book,sheet,'Selection');XLSX.writeFile(book,'ZZWS-stock-selection.xlsx');
  };
- window.ZZWS_STOCK_PICKER={visualMatch:product=>allowed&&visualArticles!==null?visualArticles.has(String(product.articul)):null,start(user){this.reset();clientMode=!!dialog&&user.role==='client';allowed=clientMode||user.role==='admin'&&user.permissions?.includes('price:read');for(const p of adminIntro)p.hidden=clientMode;clientIntro.hidden=!clientMode;priceLabel.hidden=lastLabel.hidden=clientMode;root.querySelector('legend').textContent=clientMode?'Ստուգել ցանկը կատալոգում':'Ապրանքների ընտրություն ըստ պահեստների';root.hidden=!allowed;if(opener)opener.hidden=!allowed;build.disabled=!allowed;},reset(){allowed=false;clientMode=false;++epoch;dialog?.close();if(opener)opener.hidden=true;root.hidden=true;paste.value='';file.value='';last.checked=false;kp.checked=false;build.disabled=true;clear(false);}};
+ window.ZZWS_STOCK_PICKER={visualMatch:product=>allowed&&visualArticles!==null?visualArticles.has(String(product.articul)):null,start(user){this.reset();clientMode=!!dialog&&user.role==='client';allowed=clientMode||user.role==='admin'&&user.permissions?.includes('price:read');for(const p of adminIntro)p.hidden=clientMode;clientIntro.hidden=!clientMode;priceLabel.hidden=lastLabel.hidden=clientMode;root.querySelector('legend').textContent=clientMode?'Ստուգել ցանկը կատալոգում':'Ապրանքների ընտրություն ըստ պահեստների';root.hidden=!allowed;if(opener)opener.hidden=!allowed;build.disabled=!allowed;if(allowed&&!clientMode){const ticket=epoch;(typeof secureApi==='function'?secureApi('catalog'):api('catalog')).then(data=>{if(ticket===epoch&&allowed)policy(data);}).catch(()=>{if(ticket===epoch&&allowed)priorityText.textContent='—';});}},reset(){allowed=false;clientMode=false;++epoch;dialog?.close();if(opener)opener.hidden=true;root.hidden=true;paste.value='';file.value='';last.checked=false;kp.checked=false;build.disabled=true;clear(false);}};
 })();
