@@ -1,0 +1,65 @@
+/* Official-site catalogue composition: sidebar facets plus three product columns. */
+html[data-storefront-page=home] #catalogLayout{display:none}
+html:not([data-storefront-page=home]) .catalog-main{max-width:1360px!important;margin-inline:auto;padding:30px 28px 36px!important}
+.sf-catalog-layout{display:grid;grid-template-columns:270px minmax(0,1fr);align-items:start;gap:20px;min-width:0}
+.sf-catalog-sidebar,.sf-catalog-results{min-width:0}
+.sf-catalog-sidebar #stickySearchBar{padding:0!important;border:0!important;background:transparent!important;z-index:2}
+.sf-catalog-sidebar #catalogFiltersPanel{margin:0!important;border:1px solid var(--sf-line,#dce1e5);border-radius:0;box-shadow:none;max-width:none;background:var(--sf-surface,#fff)}
+.sf-catalog-sidebar #filtersContainer{padding:0!important;margin:0!important}
+.sf-catalog-layout[data-sidebar=true] #compactFiltersRow{display:none!important}
+.sf-catalog-sidebar #filtersContainer>.grid{display:block!important;margin:0}
+.sf-catalog-sidebar #filtersContainer>.grid>.relative{padding:22px 20px;border-top:1px solid var(--sf-line,#dce1e5)}
+.sf-catalog-sidebar #filtersContainer>.grid>.relative>label{font-size:12px;line-height:1.5;margin-bottom:14px;color:var(--sf-ink,#14283b);text-transform:none}
+.sf-catalog-layout[data-sidebar=true] #brandDropdown,.sf-catalog-layout[data-sidebar=true] #categoryDropdown{display:block!important;position:static;max-height:214px;overflow:auto;margin-top:12px;border:0;box-shadow:none;border-radius:0;background:transparent}
+.sf-catalog-sidebar #brandDropdown label,.sf-catalog-sidebar #categoryDropdown label{padding:5px 0;border:0;font-size:12px;line-height:1.45;gap:6px;font-weight:400;align-items:flex-start}
+.sf-catalog-sidebar #brandDropdown input,.sf-catalog-sidebar #categoryDropdown input{flex:0 0 15px;width:15px;height:15px;margin-top:1px;accent-color:#214f7e}
+.sf-catalog-sidebar #brandInput,.sf-catalog-sidebar #categoryInput{height:34px;font-size:11px;padding:7px 25px 7px 9px!important}
+.sf-facet-count{font-size:11px;color:var(--sf-muted,#81909c);white-space:nowrap}
+.sf-catalog-sidebar #filtersContainer>.flex{border-top:1px solid var(--sf-line,#dce1e5);padding:20px;margin-top:0;display:block}
+.sf-catalog-sidebar #filtersContainer>.flex>.flex{display:flex;flex-direction:column;align-items:flex-start;gap:13px}
+.sf-catalog-sidebar #filtersContainer>.flex>.flex:last-child{margin-top:20px;gap:10px}
+.sf-catalog-sidebar #dealerTechFilters{margin:0;padding:20px;border-top:1px solid var(--sf-line,#dce1e5)}
+.sf-catalog-sidebar .dealer-filter-fields{grid-template-columns:minmax(0,1fr)}
+.sf-price-filter{padding:22px 20px 20px;border:0;display:grid;gap:14px;margin:0!important}
+.sf-price-filter>strong{font-size:12px;color:var(--sf-ink,#14283b)}
+.sf-price-range{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+.sf-price-range input{min-width:0;width:100%;height:38px;font-size:12px;padding:9px;border:1px solid var(--sf-line,#dce1e5);background:var(--sf-surface,#fff);color:var(--sf-ink,#14283b)}
+.sf-price-filter>.sf-button{width:100%;background:#214f7e!important;border-color:#214f7e!important;border-radius:0!important;font-size:12px;min-height:35px;padding:8px}
+.sf-price-filter-status:empty{display:none}.sf-price-filter-status{font-size:11px;color:#b42318;line-height:1.4}
+.sf-catalog-results #dealerWorkspace{padding:0 0 15px;margin:0;min-height:40px}
+.sf-catalog-results .dealer-workspace-actions{width:100%;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap}
+.sf-catalog-sort{max-width:225px;min-width:180px;height:36px;padding:7px 28px 7px 10px;border:1px solid var(--sf-line,#dce1e5);background:var(--sf-surface,#fff);color:var(--sf-ink,#14283b);font-size:12px}
+#dealerCardsView,#dealerTableView{height:36px;min-width:36px;border:1px solid #214f7e!important;border-radius:0!important;padding:7px 10px;color:#214f7e;background:var(--sf-surface,#fff)}
+#dealerCardsView[aria-pressed=true],#dealerTableView[aria-pressed=true]{background:#214f7e!important;color:#fff!important}
+.sf-catalog-results #mobileColumnSort{display:none!important}
+html[data-dealer-view=cards] .sf-catalog-results #mobileCardsContainer{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:20px!important;align-items:stretch}
+html[data-dealer-view=cards] .sf-catalog-results #mobileCardsContainer>.sf-product{padding:16px!important;border-radius:0!important;border:1px solid var(--sf-line,#dce1e5);min-width:0;box-shadow:none;gap:7px}
+html[data-dealer-view=cards] .sf-catalog-results #mobileCardsContainer .product-img-container{height:230px!important;width:100%!important;padding:8px 4px;flex:none!important}
+.sf-catalog-results .sf-product-photo{padding:0;margin:-4px -4px 9px}
+.sf-catalog-results .sf-product h4{min-height:49px;font-size:14px;line-height:1.4}.sf-catalog-results .sf-product-title{color:#215880}
+.sf-catalog-results .sf-product-category{font-size:10px;line-height:1.4;min-height:14px;color:#8b949f}
+.sf-catalog-results .sf-prices .sf-price-wholesale dd{font-size:21px;font-weight:700;color:var(--sf-ink,#14283b)}
+.sf-catalog-results .sf-prices>div{font-size:11px}
+.sf-catalog-results .sf-product-actions{padding-top:8px;grid-template-columns:minmax(0,1fr) auto}
+.sf-catalog-results .sf-product-actions .sf-compare{padding-inline:6px!important}
+.sf-catalog-results .sf-favorite{top:auto!important;bottom:112px;right:12px!important;border-radius:0!important;background:transparent!important}
+.sf-catalog-layout[data-sidebar=false]{display:block}.sf-catalog-layout[data-sidebar=false] .sf-catalog-sidebar{margin-bottom:14px}
+.sf-catalog-layout[data-sidebar=false] #compactFiltersRow{max-width:none}.sf-catalog-layout[data-sidebar=false] #catalogFiltersPanel{margin-top:10px!important}
+@media(min-width:1440px){html[data-dealer-view=cards] .sf-catalog-results #mobileCardsContainer .product-img-container{height:265px!important}}
+@media(max-width:1100px) and (min-width:1024px){.sf-catalog-layout{grid-template-columns:230px minmax(0,1fr);gap:16px}html[data-dealer-view=cards] .sf-catalog-results #mobileCardsContainer{gap:12px!important}.sf-catalog-results .sf-product-actions{grid-template-columns:1fr}.sf-catalog-results .sf-product h4{font-size:12px}}
+@media(max-width:1023px){html:not([data-storefront-page=home]) .catalog-main{padding:20px 16px 28px!important}.sf-catalog-layout{display:block}.sf-catalog-sidebar{margin-bottom:14px}.sf-catalog-sidebar #compactFiltersRow{display:flex!important}.sf-catalog-results .dealer-workspace-actions{gap:7px}.sf-catalog-sort{margin-left:auto;min-width:170px}.sf-catalog-layout #catalogFiltersPanel.filter-body-closed{display:none!important}}
+@media(max-width:767px){html[data-dealer-view=cards] .sf-catalog-results #mobileCardsContainer{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}html[data-dealer-view=cards] .sf-catalog-results #mobileCardsContainer>.sf-product{padding:10px!important}html[data-dealer-view=cards] .sf-catalog-results #mobileCardsContainer .product-img-container{height:155px!important}.sf-catalog-results .sf-product h4{font-size:11px;min-height:47px}.sf-catalog-results .sf-prices .sf-price-wholesale dd{font-size:16px}.sf-catalog-results .sf-product-actions{grid-template-columns:1fr}.sf-catalog-sort{min-width:140px;max-width:170px;font-size:11px;flex:1}.sf-catalog-results #dealerCompare{font-size:11px;order:1;margin-left:auto}.sf-catalog-results .sf-favorite{bottom:140px}.sf-catalog-sidebar #filtersContainer>.grid{padding:0}.sf-catalog-results #dealerCardsView,.sf-catalog-results #dealerTableView{font-size:11px;padding:6px}}
+
+/* Keep the heading tools on one row so filters and product cards start together. */
+.sf-catalog-heading{display:flex;align-items:center;flex-wrap:wrap;column-gap:7px;row-gap:12px;margin-bottom:18px}
+.sf-catalog-heading #dealerWorkspace{margin:0 0 0 auto;padding:0;min-height:36px;max-width:100%}
+.sf-catalog-heading .dealer-workspace-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.sf-catalog-sidebar #stickySearchBar>.context-help{display:none!important}
+.sf-catalog-results .sf-product h4{padding-right:26px}
+.sf-catalog-results .sf-favorite{top:274px!important;bottom:auto}
+.dark .sf-catalog-sidebar #catalogFiltersPanel{background:var(--sf-surface,#1b2a3a)!important}
+.dark .sf-catalog-results .sf-product-title{color:#a7d8f1}
+.dark #dealerTableView,.dark #dealerCardsView{color:#bde5fa}
+.dark .sf-facet-count{color:#aebfcd}
+@media(min-width:1440px){.sf-catalog-results .sf-favorite{top:309px!important}}
+@media(max-width:767px){.sf-catalog-heading #dealerWorkspace{width:100%;margin-top:4px}.sf-catalog-heading .dealer-workspace-actions{gap:7px}.sf-catalog-results .sf-favorite{top:184px!important}.sf-catalog-results .sf-product h4{padding-right:19px}}

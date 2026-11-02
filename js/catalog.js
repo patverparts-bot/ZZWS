@@ -170,7 +170,7 @@ filteredProducts = allProducts.filter(p => {
   
   const matchWholesale = !wholesaleOnly || Number.isFinite(p.wholesale) && p.wholesale > 0 || Number.isFinite(p.kpPrice) && p.kpPrice > 0;
 
-  return matchBrand && matchCategory && matchSearch && matchFav && matchPromo && matchStock && matchWholesale && (window.ZZWS_DEALER?.matches(p) ?? true) && (window.ZZWS_STOREFRONT?.matches(p) ?? true);
+  return matchBrand && matchCategory && matchSearch && matchFav && matchPromo && matchStock && matchWholesale && (window.ZZWS_CATALOG_LAYOUT?.matchesPrice(p) ?? true) && (window.ZZWS_DEALER?.matches(p) ?? true) && (window.ZZWS_STOREFRONT?.matches(p) ?? true);
 });
 
 const priceField=document.getElementById('sortPrice').value||'wholesale';
@@ -189,6 +189,7 @@ filteredProducts.forEach(p => categoryCounts.set(p.category, (categoryCounts.get
 updateColumnSortIndicators();
 saveFiltersToStorage();
 document.getElementById('productCountInfo').innerText = `Գտնվել է ${filteredProducts.length} ապրանք`;
+window.ZZWS_CATALOG_LAYOUT?.refresh();
 }
 
 let groupByCategory = true;
@@ -210,7 +211,16 @@ function updateStickyOffsets() {
   const bar = document.getElementById('stickySearchBar');
   const thead = document.querySelector('#catalogTable thead');
   const root = document.documentElement.style;
-  root.setProperty('--stick-top', (bar ? bar.offsetHeight : 58) + 'px');
+  // Storefront controls scroll with the page. Reserve space only when a
+  // toolbar actually stays above the catalogue as a fixed/sticky element.
+  const barStyle = bar ? getComputedStyle(bar) : null;
+  const barRect = bar?.getBoundingClientRect();
+  const headRect = thead?.getBoundingClientRect();
+  const barInset = barStyle ? Math.max(0, parseFloat(barStyle.top) || 0) : 0;
+  const barSticks = barStyle && (barStyle.position === 'sticky' || barStyle.position === 'fixed');
+  const barCoversHeader = barRect && headRect && barRect.left < headRect.right && barRect.right > headRect.left;
+  const pinned = barSticks && barCoversHeader && barRect.top <= barInset + 1 && barRect.bottom > 0;
+  root.setProperty('--stick-top', (pinned ? Math.max(0, barRect.bottom) : 0) + 'px');
   root.setProperty('--thead-h', (thead && thead.offsetHeight ? thead.offsetHeight : 40) + 'px');
 
   const wrap = document.getElementById('tableScrollWrapper');

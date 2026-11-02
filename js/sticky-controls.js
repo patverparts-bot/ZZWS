@@ -28,11 +28,12 @@
   panel.classList.toggle('filter-body-closed',body.classList.contains('hidden'));
  }
  function onScroll(){scheduled=false;const app=document.getElementById('mainApp');if(app.classList.contains('hidden'))return;
+  if(window.ZZWS_CATALOG_LAYOUT?.sidebarActive()){manualExpanded=false;setCompact(false);body.classList.remove('hidden');bar.classList.remove('controls-stuck');refreshSummary();return;}
   const y=window.scrollY,atTop=y<=8||marker.getBoundingClientRect().top>12;
   if(atTop){manualExpanded=false;setCompact(false);}
   else if(manualExpanded){if(Math.abs(y-openedAt)>80&&!panel.contains(document.activeElement)){manualExpanded=false;setCompact(true);}}
   else setCompact(true);
-  bar.classList.toggle('controls-stuck',marker.getBoundingClientRect().top<=0);
+  bar.classList.toggle('controls-stuck',marker.getBoundingClientRect().top<=0);updateStickyOffsets();
  }
  function schedule(){if(!scheduled){scheduled=true;requestAnimationFrame(onScroll);}}
  function filtersToggled(open){if(open&&compact){manualExpanded=true;openedAt=window.scrollY;setCompact(false);}if(!open)manualExpanded=false;refreshSummary();requestAnimationFrame(updateStickyOffsets);}

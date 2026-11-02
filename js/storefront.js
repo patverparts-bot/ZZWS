@@ -56,6 +56,7 @@
  function navigate(next,clear=true,historyMode='push'){
   window.ZZWS_DISCLOSURE_MENUS?.close();
   if(!owner)return;const previousRoute=route;route=['home','catalog','promo','new'].includes(next)?next:'home';if(route==='promo'&&controls.promo===false)route='catalog';
+  if(route!=='home'&&(clear||previousRoute==='home'))ZZWS_DEALER.setView('cards');
   if(clear){resetCatalogFiltersOnOpen();ZZWS_DEALER.clearFilters();}
   else if(previousRoute==='promo'&&route!=='promo')el('promoOnlyFilter').checked=false;
   if(route==='promo')el('promoOnlyFilter').checked=true;

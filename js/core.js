@@ -267,6 +267,7 @@ function saveFiltersToStorage() {
 }
 
 function resetCatalogFiltersOnOpen() {
+  window.ZZWS_CATALOG_LAYOUT?.clearPrice();
   catalogFiltersForOpening=null;
   selectedBrands=[];selectedCategories=[];
   for(const id of ['searchInput','brandInput','categoryInput'])document.getElementById(id).value='';
@@ -328,6 +329,7 @@ function loadSavedFilters() {
 }
 
 function clearAllFilters() {
+  window.ZZWS_CATALOG_LAYOUT?.clearPrice();
   window.ZZWS_DEALER?.clearFilters();
   clearBrandSelection();
   clearCategorySelection();
