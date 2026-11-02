@@ -1,0 +1,44 @@
+{
+  "focusedChecks": 17,
+  "status": "signed and verified candidate",
+  "changes": [
+    "Visible progress for real server mutations, including modal windows",
+    "Order-only generation fences preserve personal cart and checkout draft",
+    "Deleted/forbidden assisted buyers are revalidated without deleting the personal encrypted draft",
+    "Workspace-stamped encrypted checkout journals reject pre-reset work"
+  ],
+  "debuggable": false,
+  "installedOnDevice": false,
+  "inheritedBuildConfiguration": 3,
+  "file": "ZZWS-7.1.30-production.apk",
+  "newPermissions": false,
+  "verifiedAt": "2026-11-02T04:34:45.2000222+00:00",
+  "package": "am.zzws.admin",
+  "nativeChecks": {
+    "tests": 299,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 1,
+    "suites": 65
+  },
+  "signerSha256": "85e2356e5269ac94f016858551b5c06ede293c31b649b8e1acedc05a407a0115",
+  "inheritedLegacyInputs": 95,
+  "signatureValid": true,
+  "size": 13399558,
+  "sourceFingerprint": "dbd4ece1773e13c505419419ca6545ae0f4a309e7fc93561d14d3510e914284b",
+  "publicSourceComplete": false,
+  "versionCode": 70130,
+  "sha256": "cefbd6e4614a54ed8614d6e2ff45030df319e0ad3de10141c83314fdc4141d18",
+  "version": "7.1.30",
+  "releaseUnitTests": {
+    "tests": 173,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 1,
+    "suites": 37
+  },
+  "updateChannelPublished": false,
+  "zipValid": true,
+  "deviceTested": false,
+  "reviewedNativePaths": 15
+}

@@ -1,3 +1,4 @@
+import {AsyncLocalStorage} from 'node:async_hooks';
 import {apkDownloadsRoute} from './apk-downloads.mjs';
 import {warehouseRoutes,mainWarehouses} from './warehouses.mjs';
 import {dealerRoutes} from './dealer.mjs';
@@ -31,6 +32,7 @@ import { parsePrice, inspectPrice, project, validateProfile, parseUsers } from '
 import { defaultRules, effectiveRules, validateRules, validPassword } from './rules.mjs';
 import { validateMemory } from './memory.mjs';
 import { securityTools } from './security.ts';
+import {systemDataRoutes} from './system-data-routes.mjs';
 import { orderRoutes, awaitingCustomerApproval } from './order-routes.mjs';
 import { reconcileDeliveryVariants } from './delivery-variants.mjs';
 import {accountDTO,accountRoutes,activateClient} from './client-accounts.mjs';
@@ -38,7 +40,15 @@ import {accountDTO,accountRoutes,activateClient} from './client-accounts.mjs';
 const PROJECT_URL = Deno.env.get('SUPABASE_URL')!;
 const envKey=(name:string,legacy:string)=>JSON.parse(Deno.env.get(name)||'{}').default||Deno.env.get(legacy)!;
 const publicKey=envKey('SUPABASE_PUBLISHABLE_KEYS','SUPABASE_ANON_KEY');
-const service=createClient(PROJECT_URL,envKey('SUPABASE_SECRET_KEYS','SUPABASE_SERVICE_ROLE_KEY'),{auth:{persistSession:false,autoRefreshToken:false}});
+const requestClients=new AsyncLocalStorage<any>();
+const makeService=(headers:any={})=>createClient(PROJECT_URL,envKey('SUPABASE_SECRET_KEYS','SUPABASE_SERVICE_ROLE_KEY'),{auth:{persistSession:false,autoRefreshToken:false},global:{headers}});
+const fallbackService=makeService();
+// Every asynchronous request keeps its own immutable epoch headers. Never mutate a shared SDK client.
+const service=new Proxy(fallbackService,{get(target,key){const store=requestClients.getStore(),client=store?.client||target,value=Reflect.get(client,key);
+ if(key==='auth'&&store?.actor&&store?.hash)return new Proxy(value,{get(auth,property){if(property!=='admin'){const ordinary=Reflect.get(auth,property);return typeof ordinary==='function'?ordinary.bind(auth):ordinary;}return new Proxy(auth.admin,{get(admin,method){const fn=Reflect.get(admin,method);if(!['createUser','updateUserById','deleteUser'].includes(String(method)))return typeof fn==='function'?fn.bind(admin):fn;return async(...args:any[])=>{await ensureAuthMutation(store.actor,store.hash);try{const result=await fn.apply(admin,args);if(result.error){if(!result.error.status||result.error.status>=500)store.authUncertain=true;}else if(method==='deleteUser')store.authTouched.delete(args[0]);else store.authTouched.add(method==='createUser'?result.data?.user?.id:args[0]);return result;}catch(error){store.authUncertain=true;throw error;}};}});}});
+ return typeof value==='function'?value.bind(client):value;}});
+async function ensureAuthMutation(actor:string,hash:string){const store=requestClients.getStore();if(store.authLease)return;const id=crypto.randomUUID();await query(service.rpc('zzws_maintenance_auth_claim',{p_actor:actor,p_hash:hash,p_id:id,p_orders_generation:store.ordersGeneration,p_workspace_generation:store.workspaceGeneration}));store.authLease=id;store.actor=actor;store.hash=hash;store.authTouched=new Set();store.authUncertain=false;}
+async function finishAuthMutation(response:any){const store=requestClients.getStore();if(!store?.authLease)return;const known=!!response&&(!store.authUncertain)&&((response.status>=200&&response.status<300)||store.authTouched.size===0);const result=await service.rpc('zzws_maintenance_auth_finish',{p_actor:store.actor,p_hash:store.hash,p_id:store.authLease,p_success:known});if(result.error)console.error('Credential operation requires reconciliation',result.error.code);}
 const originValues=(Deno.env.get('ZZWS_ALLOWED_ORIGINS')||'https://patverparts-bot.github.io,http://127.0.0.1:8080').split(',').map(v=>v.trim()).filter(Boolean);
 const allowed=new Set(originValues.map(value=>{const url=new URL(value);if(url.origin!==value||!(url.protocol==='https:'||(url.protocol==='http:'&&['127.0.0.1','localhost'].includes(url.hostname))))throw Error('Invalid allowed origin');return value;}));
 const digest=async(s:string)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)))).map(b=>b.toString(16).padStart(2,'0')).join('');
@@ -48,7 +58,7 @@ const email=(login:string)=>login+'@users.zzws.invalid';
 const goodPassword=validPassword;
 const randomPassword=()=>Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b=>String(b%10)).join('');
 function fail(code:number,message:string):never{throw {code,message};}
-async function query(q:any){const {data,error}=await q;if(error){if(error.code==='23505')fail(409,'Հաճախորդի կոդը կամ մուտքանունն արդեն օգտագործվում է');if(error.code==='PT409')fail(409,'Տվյալներն արդեն փոխվել են։ Թարմացրեք քարտը կամ կրկին բեռնեք ներմուծման ֆայլը');if(error.code==='PT403')fail(403,'Հասանելիությունն արգելված է');if(error.code==='PT400')fail(400,'Ստուգեք առաքման տարբերակները');console.error('Database operation failed',error.code);fail(500,'Գործողությունը չի կատարվել։ Փորձեք ավելի ուշ');}return data;}
+async function query(q:any){const {data,error}=await q;if(error){if(error.code==='23505')fail(409,'Հաճախորդի կոդը կամ մուտքանունն արդեն օգտագործվում է');if(error.code==='PT409'&&error.hint==='zzws_stale_epoch')fail(503,'Տվյալներն արդեն փոխվել են։ Թարմացրեք քարտը կամ կրկին բեռնեք ներմուծման ֆայլը');if(error.code==='PT409')fail(409,'Տվյալներն արդեն փոխվել են։ Թարմացրեք քարտը կամ կրկին բեռնեք ներմուծման ֆայլը');if(error.code==='PT403')fail(403,'Հասանելիությունն արգելված է');if(error.code==='PT400')fail(400,'Ստուգեք առաքման տարբերակները');console.error('Database operation failed',error.code);fail(500,'Գործողությունը չի կատարվել։ Փորձեք ավելի ուշ');}return data;}
 const table=(name:string)=>service.from('zzws_'+name);
 async function audit(actor:string|null,action:string,detail=''){await query(table('audit').insert({actor,action,detail}));}
 
@@ -138,6 +148,7 @@ async function saveUser(p:any,actor:string,sessionHash:string){
   if(p.password&&!goodPassword(p.password))fail(400,'Գաղտնաբառը պետք է պարունակի 6-ից 256 թվանշան․ տառերը, բացատներն ու այլ նշաններն արգելված են');
   const duplicate=await query(table('users').select('id').eq('login',login).maybeSingle());
   if(duplicate&&duplicate.id!==old?.id)fail(400,'Մուտքանունն արդեն օգտագործվում է');
+  await ensureAuthMutation(actor,sessionHash);
   let uid=old?.id,newAuth=false;
   if(old){
     // Contact/profile-only edits stay in the checked SQL transaction; no external Auth mutation.
@@ -158,10 +169,11 @@ async function saveUser(p:any,actor:string,sessionHash:string){
   return {id:uid,sessionRetained,sessionRevoked:old?.id===actor&&!sessionRetained,...(!old?{invitation:await (await securityTools({service,table,query,digest,random,fail,authClient,cleanUser,audit})).invite(uid,actor)}:{})};
 }
 
-export async function handle(req:Request){
+export async function handle(req:Request){return requestClients.run({},async()=>{let response;try{response=await handleRequest(req);return response;}finally{await finishAuthMutation(response);}});}
+async function handleRequest(req:Request){
   const origin=req.headers.get('origin')||'';
   const headers:any={'Content-Type':'application/json','Cache-Control':'no-store','Vary':'Origin','X-Content-Type-Options':'nosniff'};
-  if(allowed.has(origin))Object.assign(headers,{'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Headers':'authorization,apikey,content-type,x-zzws-request','Access-Control-Allow-Methods':'GET,POST,OPTIONS','Access-Control-Expose-Headers':'Content-Disposition'});
+  if(allowed.has(origin))Object.assign(headers,{'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Headers':'authorization,apikey,content-type,x-zzws-request,x-zzws-maintenance-unlock','Access-Control-Allow-Methods':'GET,POST,OPTIONS','Access-Control-Expose-Headers':'Content-Disposition,X-ZZWS-Orders-Generation,X-ZZWS-Workspace-Generation,X-ZZWS-Archive-SHA256,X-ZZWS-Archive-Bytes'});
   const json=(data:any,status=200)=>new Response(JSON.stringify(data),{status,headers});
   const file=(rows:any[][],name:string,columns:any[]=[],sheets:any[]=[])=>new Response(workbook(rows,columns,sheets),{headers:{...headers,'Content-Type':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','Content-Disposition':`attachment; filename="${name}"`}});
   try{
@@ -169,6 +181,14 @@ export async function handle(req:Request){
     if(req.method==='OPTIONS')return new Response(null,{status:204,headers});
     if(!['GET','POST'].includes(req.method))fail(405,'Մեթոդը չի աջակցվում');
     const path=new URL(req.url).pathname.split('/zzws-api/')[1]||'';
+    let maintenanceMetadata:any=null;
+    if(req.headers.get('authorization')||path==='login'||path==='login/mfa'){
+      const metadata=await service.rpc('zzws_maintenance_generation');
+      if((metadata.error||!metadata.data)&&req.method==='POST')return json({error:'Տվյալների վիճակը չի ստուգվել։ Կրկնեք հարցումը։',maintenanceActive:true},503);
+      if(!metadata.error&&metadata.data){maintenanceMetadata=metadata.data;headers['X-ZZWS-Orders-Generation']=String(metadata.data.ordersGeneration);headers['X-ZZWS-Workspace-Generation']=String(metadata.data.workspaceGeneration);
+       requestClients.getStore().client=makeService({'x-zzws-expected-orders-generation':String(metadata.data.ordersGeneration),'x-zzws-expected-workspace-generation':String(metadata.data.workspaceGeneration)});requestClients.getStore().ordersGeneration=metadata.data.ordersGeneration;requestClients.getStore().workspaceGeneration=metadata.data.workspaceGeneration;
+       if(metadata.data.frozen&&req.method==='POST'&&!path.startsWith('admin/system-data/')&&!['login','login/mfa','logout'].includes(path))return json({error:'Տվյալների սպասարկումն ընթացքի մեջ է։ Կրկնեք ավարտից հետո։',maintenanceActive:true},503);}
+    }
     if(path==='telegram/webhook'){
       const enabled=Deno.env.get('ZZWS_TELEGRAM_ENABLE_COMMANDS')==='true',offline=Deno.env.get('ZZWS_OFFLINE_MODE')==='true';
       const botUsername=Deno.env.get('ZZWS_TELEGRAM_BOT_USERNAME')||'zzws_orders_notify_bot';
@@ -211,6 +231,7 @@ export async function handle(req:Request){
     if(req.method==='POST'&&path==='login/mfa'){const p=await body(req);return json(await security.verify(p.challengeToken,p.code));}
     if(req.method==='POST'&&path==='login'){
       const p=await body(req),login=String(p.login||'').trim().toLowerCase(),password=String(p.password||'');
+      if(maintenanceMetadata?.frozen){const protectedUser=await query(table('users').select('login').eq('id',maintenanceMetadata.protectedOwner).maybeSingle());if(protectedUser?.login!==login)return json({error:'Տվյալների սպասարկումն ընթացքի մեջ է։ Կրկնեք ավարտից հետո։',maintenanceActive:true},503);}
       if(!/^[a-z0-9][a-z0-9._-]{0,79}$/.test(login)||password.length>256)fail(401,'Սխալ մուտքանուն կամ գաղտնաբառ');
       const ip=await digest((req.headers.get('x-forwarded-for')||'unknown').split(',')[0].trim());
       const attempt=await query(service.rpc('zzws_login_gate',{p_login:login,p_ip:ip}));if(!attempt)fail(429,'Չափազանց շատ փորձեր։ Կրկնեք 15 րոպեից');
@@ -233,15 +254,15 @@ export async function handle(req:Request){
       await query(table('attempts').delete().eq('id',attempt));await audit(row.id,'login');
       return json(result);
     }
-    const {user,hash,setupOnly,invitationHash,mfaVerified,confirmedUntil}=await identity(req);
+    const {user,hash,setupOnly,invitationHash,mfaVerified,confirmedUntil}=await identity(req);requestClients.getStore().actor=user.id;requestClients.getStore().hash=hash;
     if(user.role==='admin'){const scope=await query(table('admin_scopes').select('scope').eq('user_id',user.id).maybeSingle());user.adminScope=scope?.scope||null;user.permissions=scopePermissions[user.adminScope]||[];}
-    Object.assign(user,await channelFlags(table,query,user));user.capabilities={mobileAdmin:user.mobileAdminEnabled,telegram:user.telegramEnabled};
+    Object.assign(user,await channelFlags(table,query,user));user.capabilities={mobileAdmin:user.mobileAdminEnabled,telegram:user.telegramEnabled,systemDataMaintenance:user.adminScope==='owner'&&!!maintenanceMetadata&&(maintenanceMetadata.protectedOwner?maintenanceMetadata.protectedOwner===user.id:Number(maintenanceMetadata.ownerCount)===1)};
     if(req.method==='GET'&&path==='me')return json({...user,mfaVerified});
     if(req.method==='POST'&&path==='logout'){await query(table('sessions').delete().eq('hash',hash));await audit(user.id,'logout');return json({ok:true});}
     if(req.method==='POST'&&path==='account/password'){
       if(!user.needsPasswordSetup||!setupOnly)fail(403,'Գաղտնաբառի կարգավորումը հասանելի չէ։ Կրկին մուտք գործեք');
       const validInvite=await query(table('invitations').select('hash').eq('user_id',user.id).eq('hash',invitationHash||'').gt('expires',new Date().toISOString()).maybeSingle());if(!validInvite)fail(403,'Հրավերի ժամկետը լրացել է։ Դիմեք ադմինիստրատորին');
-      const p=await body(req);if(user.role==='client')return json(await activateClient({user,hash,invitationHash,table,query,fail,service,email,security},p));
+      const p=await body(req);await ensureAuthMutation(user.id,hash);if(user.role==='client')return json(await activateClient({user,hash,invitationHash,table,query,fail,service,email,security},p));
       if(!goodPassword(p.password))fail(400,'Գաղտնաբառը պետք է պարունակի առնվազն 6 թվանշան և միայն թվեր');
       const claimed=await query(table('users').update({password_setup_claim:hash}).eq('id',user.id).eq('needs_password_setup',true).is('password_setup_claim',null).select('id'));
       if(!claimed.length)fail(409,'Գաղտնաբառն արդեն սահմանվում է այլ պատուհանում։ Կրկին մուտք գործեք');
@@ -273,6 +294,7 @@ export async function handle(req:Request){
     const accountResponse=await accountRoutes({path,req,user,hash,setupOnly,invitationHash,table,query,body,json,fail,service,security,email,audit,confirmPassword:(password:unknown)=>confirmAccountPassword(req,user,hash,password,mfaVerified)});if(accountResponse)return accountResponse;
     if(['me/resources','me/resources/apk','admin/resources','admin/users/channels','admin/devices/register','admin/devices/revoke'].includes(path)){const response=await channelRoutes({path,req,user,service,table,query,body,json,fail});if(response)return response;}
     const bulletinResponse=await bulletinRoutes({path,req,user,service,table,query,body,json,current,project,fail});if(bulletinResponse)return bulletinResponse;
+    const maintenanceResponse=await systemDataRoutes({path,req,user,hash,mfaVerified,service,body,json,fail,digest,random,confirmAccountPassword});if(maintenanceResponse)return maintenanceResponse;
     const mobileResponse=await mobileRoutes({path,req,user,service,table,query,body,json,fail});if(mobileResponse)return mobileResponse;
     if(['admin/catalog-controls','admin/warehouses'].includes(path)&&req.method==='POST'&&!(confirmedUntil&&Date.parse(confirmedUntil)>Date.now()))return json({error:'Հաստատեք ձեր ընթացիկ գաղտնաբառը',reauthRequired:true},428);
     const warehouseResponse=await warehouseRoutes({path,req,user,table,query,body,json,fail,audit});if(warehouseResponse)return warehouseResponse;
@@ -288,7 +310,7 @@ export async function handle(req:Request){
     const orderResponse=await orderRoutes({path,req,user,service,table,query,body,json,file,current,project,rowsFromBuffer,draft,fail});
     if(orderResponse)return orderResponse;
     if(req.method==='GET'&&path==='me/state'){
-      const row=await query(table('user_memory').select('data,versions').eq('user_id',user.id).maybeSingle());return json(row||{data:{},versions:{}});
+      const row=await query(table('user_memory').select('data,versions,cleared').eq('user_id',user.id).maybeSingle());return json(row||{data:{},versions:{}});
     }
     if(req.method==='POST'&&path==='me/state'){
       const p=await body(req);
@@ -415,6 +437,7 @@ export async function handle(req:Request){
       if(target.deleted_at)fail(409,'Հաճախորդը ջնջված է։ Թարմացրեք հաճախորդների ցանկը');
       if(target.archived_at)fail(409,'Հաճախորդն արխիվում է։ Օգտագործեք արխիվից վերականգնելու գործողությունը');
       if(target.id===user.id)fail(400,'Այս ձևից չեք կարող վերակայել ձեր սեփական գաղտնաբառը');
+      await ensureAuthMutation(user.id,hash);
       await query(table('sessions').delete().eq('user_id',target.id));
       const result=await service.auth.admin.updateUserById(target.id,{password:randomPassword()});
       if(result.error)fail(400,'Չհաջողվեց վերակայել գաղտնաբառը');
@@ -492,6 +515,7 @@ export async function handle(req:Request){
         const existing=await query(table('users').select('id,login,profile,profile_revision'));
         // Validate the complete batch before any external Auth account is created.
         for(const u of d.payload){const record=existing.find((r:any)=>r.login===u.login);if((record?.id||null)!==u.expectedUserId||(record?.profile_revision||null)!==u.expectedProfileRevision)fail(409,'Հաճախորդի տվյալներն արդեն փոխվել են։ Կրկին բեռնեք ֆայլը');reconcileDeliveryVariants(record?.profile.rowsList||[],u.profile.rowsList,{mode:'import',preserveExtra:u.preserveExtraContacts});}
+        await ensureAuthMutation(user.id,hash);
         const prepared=[];
         for(const u of d.payload){const record=existing.find((r:any)=>r.login===u.login);if(u.format!==2&&record?.profile.role==='admin')fail(400,'Ներմուծումը չի կարող փոփոխել ադմինիստրատորին');
           if(record){prepared.push({...u,id:record.id});continue;}

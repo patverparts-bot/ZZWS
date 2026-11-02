@@ -298,3 +298,4 @@
  setView('cards');renderFilters();updateSelection();if(catalogLoaded)refresh();
 })();
 
+

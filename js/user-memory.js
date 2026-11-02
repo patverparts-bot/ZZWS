@@ -43,7 +43,7 @@
     for(const section of sections){
       if(JSON.stringify(values[section])===JSON.stringify(baseline[section]))continue;
       const version=pending[section]?.version??versions[section]??0;
-      pending[section]={value:copy(values[section]),version};baseline[section]=copy(values[section]);
+      pending[section]={value:copy(values[section]),version,workspaceGeneration:ZZWS.generations?.().workspace||1};baseline[section]=copy(values[section]);
     }persist();
   }
   function acknowledge(section,item,version){
@@ -59,7 +59,7 @@
         if(!pending[section])continue;
         const item=copy(pending[section]);
         try{
-          const result=await ZZWS.json('me/state',{method:'POST',body:JSON.stringify({section,...item})});
+          const result=await ZZWS.json('me/state',{method:'POST',body:JSON.stringify({section,value:item.value,version:item.version})});
           if(owner!==activeOwner)return;
           acknowledge(section,item,result.version);
         }catch(e){
@@ -92,6 +92,9 @@
     stop();owner=user.id;
     const state=await ZZWS.json('me/state');versions=state.versions||{};
     try{pending=JSON.parse(localStorage.getItem(key())||'{}');}catch{pending={};}
+    // A reset/restore tombstone supersedes only older local section journals.
+    for(const section of sections)if(pending[section]&&(Number(state.cleared?.[section]||0)>Number(pending[section].version||0)||Number(ZZWS.generations?.().workspace||1)>Number(pending[section].workspaceGeneration||1)))delete pending[section];
+    try{const generation=Number(ZZWS.generations?.().workspace||1),ownRequest='zzws_order_request_'+owner,prefix='zzws_assisted_request_'+owner+'_';for(const name of Object.keys(sessionStorage))if(name===ownRequest||name.startsWith(prefix)){const item=JSON.parse(sessionStorage.getItem(name)||'null');if(item&&generation>Number(item.workspaceGeneration||1))sessionStorage.removeItem(name);}}catch{}
     delete pending.filters;resetCatalogFiltersOnOpen();
     for(const id of fields){const el=document.getElementById(id);if(el)el.value='';}
     populateOrderModalFields();modalFieldsInitialized=true;
@@ -101,6 +104,13 @@
       apply(section,value,false);
     }
     baseline=read();ready=true;pollAt=Date.now();timer=setInterval(flush,1200);persist();
+  }
+  async function invalidateHistory(){
+    const who=owner;if(!who||!ready)return;const state=await ZZWS.json('me/state');if(owner!==who||!ready)return;
+    const cleared=Number(state.cleared?.history||0);if(pending.history&&Number(pending.history.version||0)>=cleared)return;
+    delete pending.history;versions.history=state.versions?.history||0;suspended=true;
+    try{apply('history',state.data?.history||[],true);baseline.history=read().history;}finally{suspended=false;}
+    persist();
   }
   function stop(){ready=false;if(timer)clearInterval(timer);timer=null;owner=null;pending={};versions={};baseline={};}
   async function savedList(){
@@ -128,7 +138,7 @@
       input.value='';await savedList();alert(result.replaced?'Զամբյուղը պահպանվել է։ Ամենահին զամբյուղը փոխարինվել է։':'Զամբյուղը պահպանվել է սերվերում։');
     }catch(e){alert(e.data?.limit?'Զամբյուղների ցանկը փոխվել է այլ սարքում։ Թարմացրեք ցանկը և կրկնեք պահպանումը։':e.message);}
   }
-  window.ZZWS_MEMORY={start,stop,capture,flush,savedList,saveNamed,restoreDraft:()=>{if(ready)apply('draft',baseline.draft,false);}};
+  window.ZZWS_MEMORY={start,stop,capture,flush,invalidateHistory,savedList,saveNamed,restoreDraft:()=>{if(ready)apply('draft',baseline.draft,false);}};
   document.addEventListener('visibilitychange',()=>{if(document.hidden){capture();flush();}});
   window.addEventListener('pageshow',event=>{if(event.persisted&&ready&&owner===serverIdentity?.id)resetCatalogFiltersOnOpen();});
   window.addEventListener('focus',()=>{pollAt=0;flush();});

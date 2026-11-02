@@ -8,6 +8,11 @@ import java.nio.charset.StandardCharsets;
 /** The only transport: shared ZZWS API. Persistence is handled by SecureSessionStore. */
 final class ApiClient {
  private String base="",key="";private volatile String token="";
+ private final ServerDataGenerations dataGenerations=new ServerDataGenerations();
+ long ordersRevision(){return dataGenerations.ordersRevision();}
+ long workspaceRevision(){return dataGenerations.workspaceRevision();}
+ String workspaceGeneration(){return dataGenerations.workspaceGeneration();}
+ private void acceptGenerations(HttpURLConnection connection)throws ApiError{if(!dataGenerations.observe(connection.getHeaderField("X-ZZWS-Orders-Generation"),connection.getHeaderField("X-ZZWS-Workspace-Generation")))throw new ApiError(409,"Տվյալները փոխվել են։ Կրկին փորձեք։");}
  static final String PROD="xufxevjdfukglplsknrp.supabase.co";
  static void validate(String value,String key) throws Exception {validate(value,key,EndpointConfiguration.RELEASE?EndpointConfiguration.API:"");}
  static void validate(String value,String key,String pinnedApi) throws Exception {
@@ -18,9 +23,9 @@ final class ApiClient {
   if(key==null||key.length()<6||key.length()>4096||key.matches("(?s).*[\\x00-\\x20\\x7f].*")||key.startsWith("sb_secret_")||release&&!publicKey||!release&&key.startsWith("eyJ"))throw new Exception("Օգտագործեք միայն հրապարակային բանալին։ Ծառայողական գաղտնի բանալին չի թույլատրվում։");
  }
  void configure(String value,String publicKey) throws Exception {validate(value,publicKey);clear();base=value;key=publicKey;}
- synchronized void clear(){token="";}
+ synchronized void clear(){token="";dataGenerations.clear();}
  String sessionToken(){return token;}
- synchronized void restoreToken(String value) throws Exception {if(value==null||!value.matches("[a-f0-9]{64}"))throw new Exception("Սխալ աշխատաշրջան");token=value;}
+ synchronized void restoreToken(String value) throws Exception {if(value==null||!value.matches("[a-f0-9]{64}"))throw new Exception("Սխալ աշխատաշրջան");if(!value.equals(token))dataGenerations.clear();token=value;}
  JSONObject call(String method,String path,JSONObject body) throws Exception {
   return request(method,new URL(base+path),body,true);
  }
@@ -33,9 +38,11 @@ final class ApiClient {
  byte[] orderExport(JSONObject body) throws Exception {
   final String sentToken=token;if(sentToken.isEmpty())throw new ApiError(401,"Մուտք գործեք հաշիվ");
   HttpURLConnection c=(HttpURLConnection)new URL(base+"orders/export").openConnection();c.setInstanceFollowRedirects(false);c.setRequestMethod("POST");c.setConnectTimeout(10000);c.setReadTimeout(60000);c.setUseCaches(false);c.setRequestProperty("apikey",key);c.setRequestProperty("Authorization","Bearer "+sentToken);c.setRequestProperty("Accept","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");c.setRequestProperty("Content-Type","application/json");c.setRequestProperty("X-ZZWS-Client","android");
+  long progressTicket=ServerMutationProgress.begin();
   try{
    c.setDoOutput(true);try(OutputStream out=c.getOutputStream()){out.write(body.toString().getBytes(StandardCharsets.UTF_8));}
    int status=c.getResponseCode();
+   synchronized(this){if(!token.equals(sentToken))throw new ApiError(409,"Աշխատաշրջանը փոխվել է։ Կրկին փորձեք։");acceptGenerations(c);}
    if(status!=200){String message="Չհաջողվեց պատրաստել ֆայլը։ Կրկին փորձեք։";InputStream error=c.getErrorStream();if(error!=null)try(InputStream in=error;ByteArrayOutputStream bytes=new ByteArrayOutputStream()){byte[] buffer=new byte[1024];int n;while((n=in.read(buffer))!=-1&&bytes.size()+n<=16000)bytes.write(buffer,0,n);try{message=new JSONObject(bytes.toString("UTF-8")).optString("error",message);}catch(JSONException ignored){}}
     synchronized(this){if(!token.equals(sentToken))throw new ApiError(409,"Աշխատաշրջանը փոխվել է։ Կրկին փորձեք։");if(status==401)clear();}throw new ApiError(status,message);
    }
@@ -43,12 +50,13 @@ final class ApiClient {
    byte[] result;try(InputStream in=c.getInputStream();ByteArrayOutputStream out=new ByteArrayOutputStream()){byte[] buffer=new byte[8192];int n;while((n=in.read(buffer))!=-1){if(out.size()+n>24_000_000)throw new IOException("File too large");out.write(buffer,0,n);}result=out.toByteArray();}
    synchronized(this){if(!token.equals(sentToken))throw new ApiError(409,"Աշխատաշրջանը փոխվել է։ Կրկին փորձեք։");}
    if(result.length<4||result[0]!='P'||result[1]!='K'||result[2]!=3||result[3]!=4)throw new IOException("Invalid workbook");return result;
-  }catch(SocketTimeoutException e){throw new IOException("Ֆայլի պատրաստումը երկար է տևում։ Ընտրեք ավելի կարճ ժամանակահատված և կրկին փորձեք։");}finally{c.disconnect();}
+  }catch(SocketTimeoutException e){throw new IOException("Ֆայլի պատրաստումը երկար է տևում։ Ընտրեք ավելի կարճ ժամանակահատված և կրկին փորձեք։");}finally{try{c.disconnect();}finally{ServerMutationProgress.finish(progressTicket);}}
  }
  private JSONObject request(String method,URL url,JSONObject body,boolean sessionResponse) throws Exception {
   final String sentToken=token;
   HttpURLConnection c=(HttpURLConnection)url.openConnection();c.setInstanceFollowRedirects(false);c.setRequestMethod(method);c.setConnectTimeout(10000);c.setReadTimeout(15000);c.setUseCaches(false);c.setRequestProperty("apikey",key);c.setRequestProperty("Accept","application/json");c.setRequestProperty("X-ZZWS-Client","android");if(EndpointConfiguration.RELEASE){c.setRequestProperty("X-ZZWS-App-Version",BuildConfig.VERSION_NAME);c.setRequestProperty("X-ZZWS-App-Code",String.valueOf(BuildConfig.VERSION_CODE));}
   if(!sentToken.isEmpty())c.setRequestProperty("Authorization","Bearer "+sentToken);
+  long progressTicket=("GET".equalsIgnoreCase(method)||"HEAD".equalsIgnoreCase(method)||"OPTIONS".equalsIgnoreCase(method))?0:ServerMutationProgress.begin();
   try {
    if(body!=null){c.setDoOutput(true);c.setRequestProperty("Content-Type","application/json");try(OutputStream out=c.getOutputStream()){out.write(body.toString().getBytes(StandardCharsets.UTF_8));}}
    int status=c.getResponseCode();InputStream stream=status>=200&&status<300?c.getInputStream():c.getErrorStream();
@@ -56,11 +64,12 @@ final class ApiClient {
    JSONObject data;try{data=new JSONObject(text);}catch(JSONException e){throw new Exception("Սերվերը վերադարձրել է սխալ պատասխան։ Տվյալներն ինքնաշխատ չեն փոփոխվել։");}
    synchronized(this){
     if(!token.equals(sentToken))throw new ApiError(409,"Աշխատաշրջանը փոխվել է։ Կրկին փորձեք։");
+    acceptGenerations(c);
     if(status==401)clear();if(status<200||status>=300)throw new ApiError(status,data.optString("error",data.optBoolean("conflict")?"Զամբյուղը փոխվել է այլ սարքում։ Տեղական տարբերակը պահպանված է։":"Հարցումը մերժվել է սերվերի կողմից"));
     if(data.has("sessionToken")){if(!sessionResponse)throw new Exception("Սխալ APK պատասխան");restoreToken(data.getString("sessionToken"));data.remove("sessionToken");}
    }return data;
   }catch(SocketTimeoutException e){throw new Exception("Սպասման ժամանակն ավարտվել է։ Կրկնելուց առաջ թարմացրեք պատվերը․ սերվերը կարող էր ընդունել հարցումը։");}
-  catch(IOException e){throw new Exception("ZZWS սերվերի հետ կապ չկա կամ պատասխանը չափազանց մեծ է։ Ստուգեք կապը և կրկին փորձեք։");}finally{c.disconnect();}
+  catch(IOException e){throw new Exception("ZZWS սերվերի հետ կապ չկա կամ պատասխանը չափազանց մեծ է։ Ստուգեք կապը և կրկին փորձեք։");}finally{try{c.disconnect();}finally{ServerMutationProgress.finish(progressTicket);}}
  }
  static class ApiError extends Exception {final int status;ApiError(int status,String msg){super(msg);this.status=status;}}
 }

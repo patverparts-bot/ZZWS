@@ -114,8 +114,69 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
  init { if(user==null) restoreSession() else run{try{completeLogin()}finally{restoringSession=false}} }
  private fun restoreSession()=run{try{val restored=restoreSavedSession();if(restored)completeLogin()}finally{restoringSession=false}}
  private fun run(work:suspend ()->Unit){if(busy)return;busy=true;notice="";errorDialog="";viewModelScope.launch{try{work()}catch(e:Exception){if(e is CancellationException)throw e;if(e is ApiClient.ApiError&&e.status==401){reset();AppSession.clear()};notice=e.message?:"Գործողությունը չի կատարվել";errorDialog=notice}finally{busy=false}}}
- private suspend fun call(path:String,body:JSONObject?=null):JSONObject=withContext(Dispatchers.IO){gate.withLock{if(demo)trialBackend.call(path,body)else AppSession.api.call(if(body==null)"GET" else "POST",path,body)}}
- private fun reset(){++draftEpoch;draftReady=false;draftDirty=false;draftVersion=0;draftConflict=false;draftSync="";deliveryIndex=0;method="Առաքում";approvalRequests.clear();approvalDefers.clear();approvalReminder=null;approvalLastShown=null;approvalPolling=false;catalogVersion="";catalogLoadedAt=0;department="";catalogSections=true;offerCollection=false;publishedOffer=null;demo=false;orderSearch="";orderFrom="";orderTo="";appliedOrderFilter=Triple("","","");cartSelection.clear();checkoutStep=1;checkoutProof="";webHandoff=false;PartnerLibrary.clear();catalogControls=JSONObject();popularity=JSONObject();++cartEpoch;cartDirty=false;cartVersion=0;cartConflict=false;cartSync="";PushHooks.detach(AppContext.value,AppSession.api);NotificationBridge.clear(AppContext.value);user=null;products=emptyList();orders=emptyList();order=null;buyer=null;catalogBuyer=null;quotedProducts=emptyMap();customers=emptyList();cart.clear();brands.clear();categories.clear();query="";onlyAvailable=false;onlyPromo=false;onlyWholesale=false;sort=0;challenge="";screen="home";frozenRequest=null;requestId=null;checkoutReady=false;address="";contact="";date="";comment="";priceMode="WS";subscriptions=null;management=null;successOrder=null;receiptConfirmation=null;errorDialog=""}
+ private var generationSession=""
+ private var observedOrdersRevision=0L
+ private var observedWorkspaceRevision=0L
+ private var buyerValidationNeeded=false
+ private var buyerValidationRunning=false
+ private var buyerValidationTicket=0L
+ private var draftWorkspaceGeneration=""
+ private fun assistedCustomerIds()=listOfNotNull(buyer?.text("id"),catalogBuyer?.text("id"),frozenRequest?.text("customerId")).filter{it.isNotBlank()}.distinct()
+ private fun clearAssistedProjection(){buyer=null;catalogBuyer=null;customers=emptyList();products=emptyList();publishedOffer=null;catalogControls=JSONObject();popularity=JSONObject();catalogVersion="";catalogLoadedAt=0L;department="";catalogSections=true;clearCatalogFilters();quotedProducts=emptyMap();webHandoff=false}
+ internal fun reconcileServerGenerations(orderRevision:Long,workspaceRevision:Long){
+  val workspaceChanged=workspaceRevision!=observedWorkspaceRevision
+  if(orderRevision!=observedOrdersRevision){observedOrdersRevision=orderRevision;orders=emptyList();order=null;receiptConfirmation=null;approvalReminder=null;approvalLastShown=null;approvalRequests.clear();approvalDefers.clear();successOrder=null;management=null;if(screen=="order"||screen=="orders")screen=if(user?.text("role")=="client")"orders"else"management";if(!workspaceChanged&&assistedCustomerIds().isNotEmpty())buyerValidationNeeded=true}
+  if(workspaceChanged){
+   observedWorkspaceRevision=workspaceRevision;buyerValidationNeeded=false;buyerValidationRunning=false;++buyerValidationTicket;++draftEpoch;++cartEpoch;cart.clear();cartSelection.clear();cartDirty=false;cartConflict=false;draftDirty=false;draftConflict=false;draftReady=false;PartnerLibrary.clear();clearAssistedProjection();applyCheckoutDraft(null);checkoutStep=1;checkoutReady=false;checkoutProof="";requestId=null;frozenRequest=null;if(screen=="cart")screen="home"
+   val who=user?.text("id");val token=AppSession.api.sessionToken()
+   if(!demo&&who!=null){SecureCheckoutDraft.clear(AppContext.value,who);SecurePendingOrder.clear(AppContext.value,who);viewModelScope.launch{try{memoryGate.withLock{if(user?.text("id")!=who||AppSession.api.sessionToken()!=token)return@withLock;loadCatalog();if(user?.text("id")==who&&AppSession.api.sessionToken()==token)loadServerCart(true)}}catch(e:Exception){if(e is CancellationException)throw e;if(user?.text("id")==who&&AppSession.api.sessionToken()==token)draftSync=e.message?:""}}}
+  }
+ }
+ private fun validateAssistedAfterOrderReset(){
+  if(demo||!buyerValidationNeeded||buyerValidationRunning)return
+  val who=user?.text("id")?:return;val token=AppSession.api.sessionToken();val expected=assistedCustomerIds()
+  if(expected.isEmpty()){buyerValidationNeeded=false;return}
+  buyerValidationRunning=true;val ticket=++buyerValidationTicket
+  viewModelScope.launch{try{
+   var invalid=false
+   for(id in expected){try{call(catalogPath(id))}catch(e:ApiClient.ApiError){if(e.status==403||e.status==404){invalid=true;break}else throw e}}
+   if(ticket!=buyerValidationTicket||user?.text("id")!=who||AppSession.api.sessionToken()!=token||assistedCustomerIds()!=expected)return@launch
+   buyerValidationNeeded=false
+   if(invalid){
+    val hadProjection=buyer!=null||catalogBuyer!=null
+    val assistedPending=frozenRequest?.text("customerId")?.let{it.isNotBlank()&&it in expected}==true
+    customers=emptyList()
+    if(assistedPending){SecurePendingOrder.clear(AppContext.value,who);frozenRequest=null;requestId=null;checkoutReady=false}
+    if(hadProjection){
+     ++cartEpoch;++draftEpoch;cart.clear();cartSelection.clear();cartDirty=false;cartConflict=false;draftDirty=false;draftConflict=false;draftReady=false;clearAssistedProjection();applyCheckoutDraft(null);checkoutStep=1;checkoutReady=false;checkoutProof="";if(frozenRequest==null)requestId=null
+     // The personal encrypted draft is deliberately preserved. Only the
+     // confirmed missing/forbidden assisted customer context is discarded.
+    }
+    memoryGate.withLock{if(ticket!=buyerValidationTicket||user?.text("id")!=who||AppSession.api.sessionToken()!=token)return@withLock;loadCatalog();if(ticket==buyerValidationTicket&&user?.text("id")==who&&AppSession.api.sessionToken()==token)loadServerCart(true)}
+   }
+  }catch(e:Exception){
+   if(e is CancellationException)throw e
+   if(e is ApiClient.ApiError&&e.status==401&&user?.text("id")==who&&AppSession.api.sessionToken().isEmpty()){reset();AppSession.clear()}
+   // An interrupted/unknown probe never discards local work. The next server
+   // response or foreground resume retries the read-only validation.
+  }finally{if(ticket==buyerValidationTicket)buyerValidationRunning=false}}
+ }
+ private suspend fun synchronizeServerGenerations(){if(demo)return;withContext(Dispatchers.Main.immediate){val session=AppSession.api.sessionToken();if(generationSession!=session){generationSession=session;observedOrdersRevision=AppSession.api.ordersRevision();observedWorkspaceRevision=AppSession.api.workspaceRevision();buyerValidationNeeded=false;buyerValidationRunning=false;++buyerValidationTicket}else reconcileServerGenerations(AppSession.api.ordersRevision(),AppSession.api.workspaceRevision());validateAssistedAfterOrderReset()}}
+ private suspend fun call(path:String,body:JSONObject?=null):JSONObject{try{return withContext(Dispatchers.IO){gate.withLock{if(demo)trialBackend.call(path,body)else AppSession.api.call(if(body==null)"GET" else "POST",path,body)}}}finally{synchronizeServerGenerations()}}
+ private fun pendingOrderForState(who:String,state:JSONObject):JSONObject?{
+  val token=AppSession.api.sessionToken()
+  fun sameSession()=token.isNotEmpty()&&AppSession.api.sessionToken()==token&&user?.text("id")==who&&AppSession.user?.text("id")==who
+  if(!sameSession())throw ApiClient.ApiError(409,"Աշխատաշրջանը փոխվել է։ Կրկին փորձեք։")
+  val pending=SecurePendingOrder.read(AppContext.value,who)?:return null;val stamp=pending.text("_zzwsWorkspaceGeneration");val current=AppSession.api.workspaceGeneration();pending.remove("_zzwsWorkspaceGeneration")
+  if(!sameSession())throw ApiClient.ApiError(409,"Աշխատաշրջանը փոխվել է։ Կրկին փորձեք։")
+  if(!ServerDataGenerations.pendingOrderMatchesWorkspace(stamp,current,state.optJSONObject("cleared")?.optLong("cart")?:0L)){SecurePendingOrder.clear(AppContext.value,who);return null}
+  val customer=pending.text("customerId")
+  if(customer.isNotBlank())try{AppSession.api.call("GET",catalogPath(customer),null)}catch(e:ApiClient.ApiError){if(e.status==403||e.status==404){if(!sameSession())throw ApiClient.ApiError(409,"Աշխատաշրջանը փոխվել է։ Կրկին փորձեք։");SecurePendingOrder.clear(AppContext.value,who);return null};if(e.status==401)throw e}catch(_:Exception){/* Unknown connectivity preserves the explicit-retry journal. */}
+  if(!sameSession())throw ApiClient.ApiError(409,"Աշխատաշրջանը փոխվել է։ Կրկին փորձեք։")
+  if(!ServerDataGenerations.pendingOrderMatchesWorkspace(stamp,AppSession.api.workspaceGeneration(),state.optJSONObject("cleared")?.optLong("cart")?:0L)){SecurePendingOrder.clear(AppContext.value,who);return null}
+  return pending
+ }
+ private fun reset(){draftWorkspaceGeneration="";buyerValidationNeeded=false;buyerValidationRunning=false;++buyerValidationTicket;++draftEpoch;draftReady=false;draftDirty=false;draftVersion=0;draftConflict=false;draftSync="";deliveryIndex=0;method="Առաքում";approvalRequests.clear();approvalDefers.clear();approvalReminder=null;approvalLastShown=null;approvalPolling=false;catalogVersion="";catalogLoadedAt=0;department="";catalogSections=true;offerCollection=false;publishedOffer=null;demo=false;orderSearch="";orderFrom="";orderTo="";appliedOrderFilter=Triple("","","");cartSelection.clear();checkoutStep=1;checkoutProof="";webHandoff=false;PartnerLibrary.clear();catalogControls=JSONObject();popularity=JSONObject();++cartEpoch;cartDirty=false;cartVersion=0;cartConflict=false;cartSync="";PushHooks.detach(AppContext.value,AppSession.api);NotificationBridge.clear(AppContext.value);user=null;products=emptyList();orders=emptyList();order=null;buyer=null;catalogBuyer=null;quotedProducts=emptyMap();customers=emptyList();cart.clear();brands.clear();categories.clear();query="";onlyAvailable=false;onlyPromo=false;onlyWholesale=false;sort=0;challenge="";screen="home";frozenRequest=null;requestId=null;checkoutReady=false;address="";contact="";date="";comment="";priceMode="WS";subscriptions=null;management=null;successOrder=null;receiptConfirmation=null;errorDialog=""}
  fun login(login:String,password:String)=run{
   reset();AppSession.clear()
   withContext(Dispatchers.IO){AppSession.api.configure(EndpointConfiguration.API,EndpointConfiguration.PUBLIC_KEY)}
@@ -133,16 +194,23 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
    if(demo)trialBackend.call(path,null)else AppSession.api.call("GET",path,null)
   }}}
   if(user?.text("id")!=account||AppSession.api.sessionToken()!=token||catalogBuyer?.text("id")!=customer)throw ApiClient.ApiError(409,"Աշխատաշրջանը փոխվել է։ Կրկին փորձեք։")
-  acceptCatalog(startup.catalog);setDelivery(0,false);applyServerCart(startup.state,true);frozenRequest=withContext(Dispatchers.IO){SecurePendingOrder.read(AppContext.value,me.text("id"))};if(frozenRequest!=null){screen="cart";notice="Նախորդ ուղարկումը պետք է ստուգել։ Նույն ուղարկումը կրկնօրինակ չի ստեղծի։"};subscriptions=startup.preferences}
+  synchronizeServerGenerations();acceptCatalog(startup.catalog);setDelivery(0,false);applyServerCart(startup.state,true);frozenRequest=withContext(Dispatchers.IO){pendingOrderForState(me.text("id"),startup.state)};synchronizeServerGenerations();if(frozenRequest!=null){screen="cart";notice="Նախորդ ուղարկումը պետք է ստուգել։ Նույն ուղարկումը կրկնօրինակ չի ստեղծի։"};subscriptions=startup.preferences}
  private suspend fun loadServerCart(includeDraft:Boolean=false){applyServerCart(call("me/state"),includeDraft)}
  private suspend fun applyServerCart(state:JSONObject,includeDraft:Boolean=false){cartVersion=state.optJSONObject("versions")?.optInt("cart")?:0;cart.clear();cart.putAll(memoryQuantities(state.optJSONObject("data")?.optJSONObject("cart")));cartDirty=false;cartConflict=false;PartnerLibrary.load(user?.text("id").orEmpty());PartnerLibrary.accept(favoriteList(state.optJSONObject("data")?.optJSONArray("favorites")));cartSync="Զամբյուղը համաժամացված է սերվերի հետ";if(includeDraft)loadCheckoutDraft(state)}
  private fun checkoutDraft()=CheckoutDraft(deliveryRows.getOrNull(deliveryIndex)?.text("id").orEmpty(),method,address,contact,date,comment)
  private fun applyCheckoutDraft(value:JSONObject?){val restored=restoreCheckoutDraft(value,deliveryRows);deliveryIndex=restored.index;method=restored.value.method;address=restored.value.address;contact=restored.value.contact;date=restored.value.date;comment=restored.value.comment;checkoutReady=false;checkoutProof=""}
  private suspend fun loadCheckoutDraft(state:JSONObject){
-  val who=user?.text("id")?:return;val remote=state.optJSONObject("data")?.optJSONObject("draft");val remoteVersion=state.optJSONObject("versions")?.optInt("draft")?:0
+  val who=user?.text("id")?:return;val token=AppSession.api.sessionToken();val workspace=AppSession.api.workspaceGeneration()
+  fun sameAccount()=user?.text("id")==who&&(demo||AppSession.api.sessionToken()==token&&AppSession.user?.text("id")==who)
+  fun sameContext():Boolean{val current=AppSession.api.workspaceGeneration();return sameAccount()&&(workspace.isEmpty()||current.isEmpty()||workspace==current)}
+  if(!sameContext())return
+  val remote=state.optJSONObject("data")?.optJSONObject("draft");val remoteVersion=state.optJSONObject("versions")?.optInt("draft")?:0
   var localError:String?=null
-  val local=try{if(demo)null else withContext(Dispatchers.IO){SecureCheckoutDraft.read(AppContext.value,who)}}catch(e:Exception){if(e is CancellationException)throw e;localError=e.message;null}
-  if(user?.text("id")!=who)return
+  var local=try{if(demo)null else withContext(Dispatchers.IO){SecureCheckoutDraft.read(AppContext.value,who)}}catch(e:Exception){if(e is CancellationException)throw e;localError=e.message;null}
+  if(!sameContext())return
+  if(local!=null&&!ServerDataGenerations.checkoutDraftMatchesWorkspace(local.text("_zzwsWorkspaceGeneration"),workspace,local.optLong("version"),state.optJSONObject("cleared")?.optLong("draft")?:0L)){if(!demo)SecureCheckoutDraft.clear(AppContext.value,who);local=null}
+  if(!sameContext())return
+  draftWorkspaceGeneration=workspace
   if(localError!=null){draftVersion=remoteVersion;draftDirty=true;draftConflict=true;applyCheckoutDraft(remote);draftReady=true;draftSync=localError;return}
   draftVersion=local?.optInt("version")?:remoteVersion;val pending=local?.optJSONObject("value")
   draftDirty=pending!=null&&!sameCheckoutDraft(pending,remote);draftConflict=draftDirty&&draftVersion!=remoteVersion
@@ -151,7 +219,7 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
   draftSync=if(draftConflict)"Պատվերի տվյալները փոխվել են այլ սարքում։ Տեղական տարբերակը պահպանված է։"else if(draftDirty)"Պատվերի տվյալները սպասում են համաժամացման։"else"Պատվերի տվյալները պահպանված են սերվերում։"
   if(draftDirty&&!draftConflict)viewModelScope.launch{try{persistDraft()}catch(e:Exception){if(e is CancellationException)throw e;draftSync=e.message?:"Պատվերի տվյալները սպասում են համաժամացման։"}}
  }
- private fun journalDraft(){if(!demo&&draftReady&&user!=null&&buyer==null&&catalogBuyer==null)SecureCheckoutDraft.save(AppContext.value,user!!.text("id"),JSONObject().put("version",draftVersion).put("value",checkoutDraft().json()))}
+ private fun journalDraft(){if(!demo&&draftReady&&user!=null&&buyer==null&&catalogBuyer==null)SecureCheckoutDraft.save(AppContext.value,user!!.text("id"),JSONObject().put("_zzwsWorkspaceGeneration",draftWorkspaceGeneration).put("version",draftVersion).put("value",checkoutDraft().json()))}
  private fun draftChanged(){
   checkoutReady=false;checkoutProof=""
   if(!draftReady||user==null||buyer!=null||catalogBuyer!=null)return
@@ -172,6 +240,7 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
    if(e.status!=409||user?.text("id")!=who)throw e
    val state=call("me/state");val remote=state.optJSONObject("data")?.optJSONObject("draft")
    if(user?.text("id")!=who)return@withLock
+   if((state.optJSONObject("cleared")?.optLong("draft")?:0L)>draftVersion){if(!demo)SecureCheckoutDraft.clear(AppContext.value,who);loadCheckoutDraft(state);return@withLock}
    if(sameCheckoutDraft(remote,snapshot)){draftVersion=state.optJSONObject("versions")?.optInt("draft")?:0;draftDirty=checkoutDraft().json().toString()!=fingerprint;if(draftDirty)journalDraft()else if(!demo)SecureCheckoutDraft.clear(AppContext.value,who);draftSync=if(draftDirty)"Պատվերի տվյալները սպասում են համաժամացման։"else"Պատվերի տվյալները պահպանված են սերվերում։"}
    else{draftConflict=true;draftSync="Պատվերի տվյալները փոխվել են այլ սարքում։ Տեղական տարբերակը պահպանված է։"}
   }
@@ -186,21 +255,21 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
   if(!cartDirty||cartConflict||buyer!=null||catalogBuyer!=null||user==null)return@withLock
   val who=user!!.text("id");val snapshot=cart.toMap();val payload=cartMemory(snapshot,products,priceMode)
   try{val saved=call("me/state",JSONObject().put("section","cart").put("version",cartVersion).put("value",payload));if(user?.text("id")!=who)return@withLock;cartVersion=saved.getInt("version");cartDirty=cart.toMap()!=snapshot;cartSync=if(cartDirty)"Զամբյուղը պահպանվում է…"else"Զամբյուղը համաժամացված է սերվերի հետ"}
-  catch(e:ApiClient.ApiError){if(e.status==409&&user?.text("id")==who){val state=call("me/state");val remote=memoryQuantities(state.optJSONObject("data")?.optJSONObject("cart"));if(remote==snapshot){cartVersion=state.optJSONObject("versions")?.optInt("cart")?:0;cartDirty=cart.toMap()!=snapshot}else{cartConflict=true;cartSync="Զամբյուղը փոխվել է այլ սարքում։ Տեղական տարբերակը չի վերագրվել։"}}else throw e}
+  catch(e:ApiClient.ApiError){if(e.status==409&&user?.text("id")==who){val state=call("me/state");if((state.optJSONObject("cleared")?.optLong("cart")?:0L)>cartVersion){applyServerCart(state,true);return@withLock};val remote=memoryQuantities(state.optJSONObject("data")?.optJSONObject("cart"));if(remote==snapshot){cartVersion=state.optJSONObject("versions")?.optInt("cart")?:0;cartDirty=cart.toMap()!=snapshot}else{cartConflict=true;cartSync="Զամբյուղը փոխվել է այլ սարքում։ Տեղական տարբերակը չի վերագրվել։"}}else throw e}
  }}
  fun saveServerCart()=run{persistCart()}
  private fun catalogPath(customerId:String?)=if(customerId==null)"catalog"else"admin/orders/customer-catalog?customerId="+URLEncoder.encode(customerId,"UTF-8")
  private fun acceptCatalog(response:JSONObject){response.optJSONObject("account")?.let{user=it;AppSession.user=it};products=response.getJSONArray("products").objects().map(::Product);publishedOffer=response.optJSONObject("specialOffer");catalogControls=response.optJSONObject("controls")?:JSONObject();popularity=response.optJSONObject("popularity")?:JSONObject();response.optJSONObject("customer")?.let{catalogBuyer=it;if(buyer?.text("id")==it.text("id"))buyer=it};catalogVersion=response.text("version");catalogLoadedAt=android.os.SystemClock.elapsedRealtime();checkoutReady=false;quotedProducts=emptyMap()}
  suspend fun loadCatalog(){acceptCatalog(call(catalogPath(catalogBuyer?.text("id"))))}
- /** Version polling is silent and does not block catalogue interaction or touch the basket. */
+ /** Silent generation probes include pending checkout; catalogue replacement still respects canReloadCatalog. */
  fun pollCatalog(){
-  if(user==null||demo||busy||catalogPollRunning||!canReloadCatalog(screen,pendingSubmission))return
+  if(user==null||demo||busy||catalogPollRunning)return
   val account=user!!.text("id");val customer=catalogBuyer?.text("id")
   fun stillCurrent()=user?.text("id")==account&&catalogBuyer?.text("id")==customer&&!busy&&canReloadCatalog(screen,pendingSubmission)
   catalogPollRunning=true
   viewModelScope.launch{try{
    val version=call("catalog/version").text("version")
-   if(stillCurrent()&&catalogNeedsRefresh(catalogVersion,version,catalogLoadedAt,android.os.SystemClock.elapsedRealtime())){
+   if(stillCurrent()&&canReloadCatalog(screen,pendingSubmission)&&catalogNeedsRefresh(catalogVersion,version,catalogLoadedAt,android.os.SystemClock.elapsedRealtime())){
     val response=call(catalogPath(customer))
     if(stillCurrent()){acceptCatalog(response);catalogVersion=version}
    }
@@ -260,8 +329,8 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
    requestId=requestId?:UUID.randomUUID().toString()
    JSONObject().put("requestId",requestId).put("deliveryVariantId",row.text("id")).put("profileRevision",target!!.optInt("profileRevision")).put("priceMode",priceMode).put("lines",lines).put("delivery",JSONObject().put("method",method).put("address",address).put("contact",contact).put("date",date).put("comment",comment)).also{buyer?.let{b->it.put("customerId",b.text("id"))};frozenRequest=it}
   }
-  withContext(Dispatchers.IO){SecurePendingOrder.save(AppContext.value,user!!.text("id"),payload)}
-  val result=try{call(if(payload.has("customerId"))"admin/orders/create" else "orders",payload)}catch(e:ApiClient.ApiError){if(e.status in listOf(400,403,409)){SecurePendingOrder.clear(AppContext.value,user!!.text("id"));frozenRequest=null;requestId=null;checkoutReady=false};throw e}
+  withContext(Dispatchers.IO){SecurePendingOrder.save(AppContext.value,user!!.text("id"),JSONObject(payload.toString()).put("_zzwsWorkspaceGeneration",AppSession.api.workspaceGeneration()))}
+  val result=try{call(if(payload.has("customerId"))"admin/orders/create" else "orders",payload)}catch(e:ApiClient.ApiError){if(e.status in listOf(400,403,409)||e.status==404&&payload.has("customerId")){SecurePendingOrder.clear(AppContext.value,user!!.text("id"));frozenRequest=null;requestId=null;checkoutReady=false;if(payload.has("customerId")&&e.status in listOf(403,404)){buyerValidationNeeded=true;validateAssistedAfterOrderReset()}};throw e}
   check(result.text("id").matches(Regex("[a-fA-F0-9-]{36}"))&&result.optLong("number")>0){"Սերվերի հաստատումը չի ստացվել։ Ստուգեք պատվերի պատմությունը և կրկնեք նույն ուղարկումը։"}
   SecurePendingOrder.clear(AppContext.value,user!!.text("id"));if(!payload.has("customerId")||buyer!=null)payload.optJSONArray("lines").objects().forEach{line->if(cart[line.text("articul")]==line.optInt("qty"))cart.remove(line.text("articul"))};frozenRequest=null;requestId=null;checkoutReady=false;order=result;screen="order";successOrder=result.optLong("number");notice="Պատվերն ուղարկված է։ №"+result.optLong("number");if(!payload.has("customerId")){cartChanged()}
  }
@@ -282,7 +351,7 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
   check(!demo&&user?.text("role")=="client"&&user?.text("id")==owner){"Հասանելիությունն արգելված է"}
   notice="Պատրաստվում է Excel ֆայլը…"
   val token=AppSession.api.sessionToken()
-  val bytes=withContext(Dispatchers.IO){AppSession.api.orderExport(payload)}
+  val bytes=try{withContext(Dispatchers.IO){AppSession.api.orderExport(payload)}}finally{synchronizeServerGenerations()}
   check(user?.text("id")==owner&&AppSession.api.sessionToken()==token){"Աշխատաշրջանը փոխվել է։ Կրկին փորձեք։"}
   withContext(Dispatchers.IO){check(AppSession.api.sessionToken()==token){"Աշխատաշրջանը փոխվել է։ Կրկին փորձեք։"};AppContext.value.contentResolver.openOutputStream(uri,"wt")?.use{it.write(bytes)}?:throw java.io.IOException("Չհաջողվեց պահպանել ֆայլը։ Կրկին փորձեք։")}
   notice="Ֆայլը պահպանված է"

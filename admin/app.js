@@ -14,6 +14,7 @@ async function api(path, options = {}) {
   catch(e) { if(e.status === 401) showLogin(); throw e; }
 }
 function showLogin() {
+  window.ZZWS_SYSTEM_DATA_RESET?.reset();
   window.ZZWS_ADMIN_VIEW_STATE?.stop();
   window.ZZWS_ADMIN_STOREFRONT?.reset();
   window.ZZWS_OFFERS?.reset();
@@ -46,7 +47,7 @@ function table(headers, rows) {
 }
 function button(label, callback) { const b = document.createElement('button'); b.type='button'; b.textContent = label; b.onclick = () => run(callback); return b; }
 async function run(fn) { try { await fn(); } catch(e) { if(!e.staleSession)status(ZZWS.message(e), true); } }
-const adminTabs=['dashboard','manager','orders','templates','price','users','rules','audit','storage','email','offers','catalogControls','warehouses','operations','apkDownloads'];
+const adminTabs=['dashboard','manager','orders','templates','price','users','rules','audit','storage','email','offers','catalogControls','warehouses','operations','apkDownloads','systemDataReset'];
 let adminNavigationActive=false,adminHistoryPosition=0,activeAdminTab=null;
 const adminBackButton=document.createElement('button');adminBackButton.id='adminBackSection';adminBackButton.type='button';adminBackButton.textContent='← Նախորդ բաժին';
 const adminSectionTrail=document.createElement('div');adminSectionTrail.className='admin-section-trail';el('adminActiveSection').before(adminSectionTrail);adminSectionTrail.append(adminBackButton,el('adminActiveSection'));
@@ -99,6 +100,7 @@ async function selectAdminTab(name,options={}){
   if(name==='storage')await ZZWS_STORAGE.load();
   if(name==='orders')await ZZWS_ADMIN_ORDERS.load();if(name==='manager')await ZZWS_ADMIN_WORKBENCH.load();if(name==='templates')await ZZWS_ADMIN_TEMPLATES.load();if(name==='catalogControls')await ZZWS_ADMIN_CATALOG_CONTROLS.load();if(name==='operations')await ZZWS_ADMIN_OPERATIONS.load();
   if(name==='apkDownloads')await ZZWS_APK_DOWNLOADS.load();
+  if(name==='systemDataReset')await ZZWS_SYSTEM_DATA_RESET.load();
   if(name==='warehouses')await ZZWS_ADMIN_WAREHOUSES.load();
   if(name==='offers')await ZZWS_OFFERS.load();
   if(name==='email')await ZZWS_REPORT_EMAIL.loadSettings();
@@ -111,6 +113,7 @@ async function enter() {
   if(!user.adminScope||!Array.isArray(user.permissions)||!user.permissions.length){showLogin();const e=new Error('Այս հաշվի ադմինիստրատորի իրավունքները դեռ նշանակված չեն։ Դիմեք սեփականատիրոջը։');e.status=403;throw e;}
   window.ZZWS_ADMIN_VIEW_STATE?.start(user);
   window.ZZWS_ENTRY?.navigation(user);window.ZZWS_HELP_USER=user;ZZWS_ADMIN_HOME.setUser(user);for(const group of document.querySelectorAll('.admin-nav-group'))group.hidden=![...group.querySelectorAll('[data-tab]')].some(button=>!button.hidden);
+  window.ZZWS_SYSTEM_DATA_RESET?.start(user);
   ZZWS_ADMIN_CHANNELS.start(user);
   window.ZZWS_REOPEN_ALERTS?.start(user);
   window.ZZWS_ADMIN_APPROVAL_REMINDERS?.start(user);

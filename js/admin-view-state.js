@@ -25,5 +25,5 @@
  function stop(){clearTimeout(timer);owner=null;current=null;entries={};ready=false;restoring=false;try{sessionStorage.removeItem(storageKey);}catch{}}
  for(const event of ['input','change','click','toggle'])document.addEventListener(event,()=>{clearTimeout(timer);timer=setTimeout(save,80);},true);
  document.addEventListener('scroll',()=>{clearTimeout(timer);timer=setTimeout(save,80);},{capture:true,passive:true});window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)save();});
- window.ZZWS_ADMIN_VIEW_STATE={get ready(){return ready&&!restoring;},get current(){return current;},start,prepare,loaded,save,stop};
+ window.ZZWS_ADMIN_VIEW_STATE={get ready(){return ready&&!restoring;},get current(){return current;},start,prepare,loaded,save,stop,invalidateOrders(){delete entries.orders;delete entries.manager;persist();}};
 })();

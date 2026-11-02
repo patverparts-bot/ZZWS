@@ -1,12 +1,66 @@
 """Reconstruct application rows in isolated, in-memory SQLite; never restore live data.
 
 Reads a decrypted snapshot from stdin. Outputs only a non-sensitive summary.
-Supabase Auth passwords/MFA and PostgreSQL deployment are outside this rehearsal.
+Live Supabase Auth is outside this rehearsal. Credential material already held
+inside owner recovery archives is verified as part of those private archives.
+Canonical payload_text must be parsed directly by PostgreSQL on recovery, rather
+than round-tripped through a JSON number serializer.
 """
+import hashlib
 import json
 import sqlite3
 import sys
 from decimal import Decimal
+
+
+def verify_maintenance(tables):
+    names = {'maintenance_state', 'maintenance_jobs', 'maintenance_archives',
+             'maintenance_unlocks', 'maintenance_auth_mutations', 'maintenance_order_tombstones'}
+    if not names.intersection(tables):
+        return 0
+    if not names.issubset(tables):
+        raise ValueError('maintenance_tables_missing')
+    users = {r['id'] for r in tables['users']}
+    owners = {r['user_id'] for r in tables.get('admin_scopes', []) if r.get('scope') == 'owner'}
+    state = tables['maintenance_state']
+    protected = state[0].get('protected_owner') if len(state) == 1 else None
+    # Clean installs may create the control singleton before their first owner.
+    # The normal owner gate initializes this pointer on first use; a unique
+    # existing owner is sufficient to preserve that safe initialization state.
+    owner_valid = protected in users.intersection(owners) or (protected is None and len(users.intersection(owners)) == 1)
+    if len(state) != 1 or state[0].get('freeze_job') is not None or not owner_valid:
+        raise ValueError('maintenance_owner_or_freeze_invalid')
+    if tables['maintenance_unlocks']:
+        raise ValueError('maintenance_grants_revived')
+    jobs = {r['id']: r for r in tables['maintenance_jobs']}
+    archives = {r['id']: r for r in tables['maintenance_archives']}
+    if len(jobs) != len(tables['maintenance_jobs']) or len(archives) != len(tables['maintenance_archives']):
+        raise ValueError('maintenance_duplicate_identity')
+    for job in jobs.values():
+        if job.get('state') not in {'completed', 'failed', 'cancelled'} or job.get('actor_id') not in users:
+            raise ValueError('maintenance_job_revived')
+        if job.get('archive_id') and job['archive_id'] not in archives:
+            raise ValueError('maintenance_archive_missing')
+        if job.get('source_archive_id') and job['source_archive_id'] not in archives:
+            raise ValueError('maintenance_archive_missing')
+    for lease in tables['maintenance_auth_mutations']:
+        if lease.get('state') != 'uncertain':
+            raise ValueError('maintenance_lease_revived')
+    for row in archives.values():
+        raw = row.get('payload_text')
+        if not isinstance(raw, str):
+            raise ValueError('maintenance_archive_text_missing')
+        data = raw.encode('utf-8')
+        if hashlib.sha256(data).hexdigest() != row.get('sha256') or len(data) != row.get('download_bytes'):
+            raise ValueError('maintenance_archive_checksum')
+        payload = json.loads(raw)
+        if not isinstance(payload, dict) or payload.get('format') != 'zzws-maintenance-archive-v1' or payload.get('schemaVersion') != 1:
+            raise ValueError('maintenance_archive_format')
+        if row.get('job_id') not in jobs or row.get('actor_id') not in users:
+            raise ValueError('maintenance_archive_job_missing')
+        if jobs[row['job_id']].get('archive_id') != row['id']:
+            raise ValueError('maintenance_archive_job_missing')
+    return len(archives)
 
 
 def verify(snapshot):
@@ -17,6 +71,7 @@ def verify(snapshot):
         raise ValueError('missing_tables')
     if any(not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows) for rows in tables.values()):
         raise ValueError('invalid_rows')
+    maintenance_verified = verify_maintenance(tables)
     users = {r['id'] for r in tables['users']}
     versions = {r['id'] for r in tables['versions']}
     orders = {r['id'] for r in tables['orders']}
@@ -65,14 +120,14 @@ def verify(snapshot):
                 raise ValueError('restore_roundtrip_mismatch')
         if db.execute('pragma integrity_check').fetchone()[0] != 'ok':
             raise ValueError('restore_integrity_failed')
-    return {'ok': True, 'scope': 'application-data-only', 'created': snapshot.get('created'), 'tables': len(tables), 'rows': sum(map(len, tables.values())), 'orderTotalsVerified': checked}
+    return {'ok': True, 'scope': 'application-data-only', 'created': snapshot.get('created'), 'tables': len(tables), 'rows': sum(map(len, tables.values())), 'orderTotalsVerified': checked, 'maintenanceArchivesVerified': maintenance_verified}
 
 
 if __name__ == '__main__':
     try:
         result = verify(json.load(sys.stdin))
     except Exception as error:
-        safe_codes = {'invalid_manifest', 'missing_tables', 'invalid_rows', 'duplicate_identity', 'missing_price_version', 'missing_order_user', 'invalid_order_lines', 'invalid_order_amount', 'order_total_mismatch', 'missing_owner', 'missing_event_order', 'restore_roundtrip_mismatch', 'restore_integrity_failed'}
+        safe_codes = {'invalid_manifest', 'missing_tables', 'invalid_rows', 'duplicate_identity', 'missing_price_version', 'missing_order_user', 'invalid_order_lines', 'invalid_order_amount', 'order_total_mismatch', 'missing_owner', 'missing_event_order', 'restore_roundtrip_mismatch', 'restore_integrity_failed', 'maintenance_tables_missing', 'maintenance_owner_or_freeze_invalid', 'maintenance_grants_revived', 'maintenance_duplicate_identity', 'maintenance_job_revived', 'maintenance_archive_missing', 'maintenance_lease_revived', 'maintenance_archive_text_missing', 'maintenance_archive_checksum', 'maintenance_archive_format', 'maintenance_archive_job_missing'}
         code = str(error) if isinstance(error, ValueError) and str(error) in safe_codes else 'snapshot_rehearsal_failed'
         print(json.dumps({'ok': False, 'error': code, 'errorType': type(error).__name__}))
         sys.exit(1)

@@ -85,7 +85,6 @@ class UnifiedActivity:ComponentActivity(){
 
   if(model.user==null){Login(model);return@Column}
   if(model.user?.optBoolean("needsProfileSetup")==true){AccountDetails(model);return@Column}
-  if(model.busy&&!catalogue)LinearProgressIndicator(Modifier.fillMaxWidth())
   if(!catalogue)model.catalogBuyer?.let{customer->Surface(onClick={buyerDialog=true},enabled=!model.busy&&!model.pendingSubmission,color=Color(0xFFEFF6FF),modifier=Modifier.fillMaxWidth()){
    Row(Modifier.padding(horizontal=16.dp,vertical=6.dp),verticalAlignment=Alignment.CenterVertically){LocalizedText("Պատվիրատու՝ "+customer.text("client"),fontSize=12.sp,color=BrandAccent,modifier=Modifier.weight(1f),maxLines=1,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis);LocalizedText("Փոխել",fontSize=12.sp,color=BrandAccent)}
   }}
@@ -132,7 +131,7 @@ class UnifiedActivity:ComponentActivity(){
    }}
   }
  }
- if(model.busy&&catalogue)LinearProgressIndicator(Modifier.fillMaxWidth().height(2.dp).align(Alignment.TopCenter))
+ ServerOperationProgress(model.busy,Modifier.align(Alignment.TopCenter))
  }}
  if(catalogSearch)CatalogSearchSheet(model.query,onSearch={query->model.showAllProducts();model.searchCatalog(query);catalogSearch=false},onDismiss={catalogSearch=false})
  if(!appMenu&&!confirmLogout&&!filters&&!catalogSearch&&product==null&&!buyerDialog&&!confirmSend&&!confirmReloadCart&&!compareDialog&&model.successOrder==null&&model.errorDialog.isBlank()&&model.receiptConfirmation==null&&model.screen!="cart"&&!(model.screen=="order"&&model.order?.optJSONObject("approval")?.text("state")=="pending"))model.approvalReminder?.let{ApprovalReminderDialog(model,it)}
@@ -170,7 +169,7 @@ class UnifiedActivity:ComponentActivity(){
  if(confirmLogout)AlertDialog(onDismissRequest={confirmLogout=false},title={LocalizedText("Դուրս գա՞լ ZZWS-ից")},text={LocalizedText("Ձեր զամբյուղը կհամաժամացվի սերվերի հետ։ Այլ հաճախորդի անունից չուղարկված զամբյուղը կմնա միայն այս ընթացիկ աշխատաշրջանում։")},confirmButton={Button(onClick={confirmLogout=false;model.logout()}){LocalizedText("Դուրս գալ")}},dismissButton={TextButton(onClick={confirmLogout=false}){LocalizedText("Մնալ")}})
  model.receiptConfirmation?.let{target->
   var acknowledged by rememberSaveable(target.userId,target.orderId,target.revision){mutableStateOf(false)}
-  AlertDialog(onDismissRequest={model.cancelReceipt()},title={LocalizedText("Հաստատել ստացումը · №${target.number}")},
+  AlertDialog(onDismissRequest={model.cancelReceipt()},title={Column{LocalizedText("Հաստատել ստացումը · №${target.number}");ServerOperationProgress(model.busy)}},
    text={Column(Modifier.heightIn(max=360.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(12.dp)){
     if(target.actingForAuthor)LocalizedText(COMPANY_ORDER_ACTION_CAPTION)
     LocalizedText("Վստա՞հ եք, որ այս պատվերի բոլոր ապրանքները ստացել եք ամբողջությամբ և առանց վնասվածքների։")

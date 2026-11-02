@@ -51,6 +51,11 @@ export const cleanSchemaFiles=[
   "supabase/migrations/20261101124958_independent_report_recipients.sql",
   "supabase/migrations/20261101133339_flatten_current_application_snapshot.sql",
   "supabase/migrations/20261101142222_company_primary_order_responses.sql",
-  "supabase/migrations/20261101211600_recover_historical_product_arrivals.sql"
+  "supabase/migrations/20261101211600_recover_historical_product_arrivals.sql",
+  "supabase/migrations/20261101224141_application_backup_timeout.sql",
+  "supabase/migrations/20261101224815_maintenance_auth_recovery.sql",
+  "supabase/migrations/20261101224900_system_data_maintenance.sql",
+  "supabase/migrations/20261101225513_maintenance_payload_restore.sql",
+  "supabase/migrations/20261102033640_application_backup_maintenance_archives.sql"
 ];
 export const schemaVersion="zzws-unified-4.1.0-optimized";

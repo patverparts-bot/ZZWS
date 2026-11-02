@@ -1,0 +1,81 @@
+ZZWS — OWNER DATA MAINTENANCE / RECOVERY NOTES
+
+This feature is owner-only. It does not grant managers additional rights.
+Main-owner identity is the persisted unique owner UUID, not the oldest account.
+Never change that protected identity to force a reset or recover an archive.
+
+Normal clear/restore flow
+1. Fresh current password unlocks the chooser.
+2. Select categories and read the server dependency/count warning.
+3. A second fresh password starts backup only.
+4. The durable archive is persisted and hash-verified. Download exact bytes,
+   verify SHA-256/size and deliberately confirm the file was saved.
+5. Read the final warning. A third fresh password authorizes the atomic step.
+The normal five-minute reauth window does not exempt any password check.
+Waiting for the final decision does not freeze ordinary business operations.
+Cancellation keeps the backup. A new owner session may resume/cancel a job.
+
+Restore consequences
+The selected current scope is backed up before replacement. Missing FK parents
+and their Auth credentials can be recreated from the source archive; existing
+unselected parents are preserved. Preview includes selected rows, current rows,
+missing/existing references, Auth missing/restore counts and blockers. Changed
+restore impact or identity conflicts require a fresh preview, not silent consent.
+The protected owner's current credentials/MFA are preserved. Other restored
+users must log in normally: old sessions and one-time tokens are not revived.
+Outbound queues are cancelled/quarantined. An in-flight SMTP recipient becomes
+uncertain and loses its lease. Already accepted copies are never resent. An
+untouched sibling can be claimed only through an explicit later send action.
+Vault restores use the official encryption helper and remap only the selected
+mailbox pointer; unrelated Vault/environment/backup keys are never overwritten.
+Downloaded archives can contain Auth recovery material and SMTP credentials.
+Keep them private. The ordinary server backup encrypts its external container;
+its canonical payload_text must not be JSON reserialized before verification.
+
+Category boundaries
+Orders include events, approvals/replies/defer/receipt/history/notices/queues,
+read state and the legacy export history section. Other personal memory remains.
+Customers delete their own dependent workspace. Retained administrators' carts
+and drafts remain; customers-only increments the order generation, not the
+global workspace generation. Explicit workspace/full reset fence all six memory
+sections. Full retains the main owner, backups and operational infrastructure.
+Neither web nor native automatically resubmits a pending order on reload/login.
+An uncommitted pending UUID can be retried only by explicit user action; a
+previously committed cleared UUID is tombstoned and cannot recreate the order.
+
+Interrupted or uncertain Auth operations — FAIL CLOSED
+A durable credential-mutation lease begins BEFORE session revocation or an
+external Auth admin request and ends only after the matching application writes.
+A live or uncertain lease blocks maintenance before the freeze is committed.
+There is intentionally no time-based automatic expiry or force-clear button.
+A timeout, lost response or old timestamp is NOT evidence that Auth cannot still
+finish later. Blindly deleting a lease can split Auth email/password from the
+public login and lock out the protected owner.
+
+Manual verified reconciliation is an operator recovery procedure, not a normal
+reset step:
+- Keep reset blocked. Preserve a verified database/Auth recovery point and the
+  relevant private control records before investigating.
+- Correlate the exact lease/actor/time with authorized Edge/Auth audit logs and
+  establish that ALL related external Auth work has reached a terminal outcome.
+  Do not infer this solely from a local request timeout or current idle SQL.
+- Check the intended public identity against its Auth UUID/email. For credential
+  changes, verify the intended current password and MFA through ordinary login.
+  Email equality alone does not prove an unknown password update completed.
+- Repair any mismatch through the existing authorized credential-management
+  path. Keep the protected owner UUID and ordinary authentication requirements;
+  never forge an application session or replace an owner identity.
+- Only after the exact operation is known terminal and consistent may an
+  authorized service operator use the original lease's completion helper.
+  Do not publish the service key/session hash or run a blanket table DELETE.
+- If the operation or targets cannot be proven, leave the lease uncertain and
+  keep maintenance blocked. Escalate to the established recovery operator.
+Then start a NEW three-password preview/backup/confirmation cycle.
+
+System backup coverage
+The flat application snapshot includes 45 tables, including all six maintenance
+control tables. It exports live jobs as cancelled, unlock grants as empty,
+Auth leases as uncertain and freeze_job as null; tombstones remain. This changes
+only the exported snapshot, not live job records. Archive payload_text preserves
+canonical PostgreSQL numeric/string bytes and is verified before rehearsal.
+No cleanup, production restore or network mail is required to test these rules.

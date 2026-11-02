@@ -113,7 +113,7 @@
   const snapshot=JSON.stringify(cart),lines=Object.values(window.ZZWS_CHECKOUT?.activeCart()||cart).map(item=>({articul:item.articul,qty:item.qty,unitPrice:getItemWholesalePrice(item)})).sort((a,b)=>a.articul.localeCompare(b.articul));
   const delivery={organization:getSelectedOrganizationName(),address:getDeliveryAddressValue(),contact:el('contactPersonInput').value,method:getSelectedDeliveryMethod(),date:el('deliveryDateInput').value,comment:el('orderCommentInput').value};
   const payload={lines,delivery,...(Number.isSafeInteger(serverIdentity.profileRevision)?{profileRevision:serverIdentity.profileRevision,deliveryVariantId:el('organizationSelect').value}:{}),priceMode:adminOrderPriceMode},fingerprint=JSON.stringify(payload),key='zzws_order_request_'+serverIdentity.id;let pending;try{pending=JSON.parse(sessionStorage.getItem(key)||'null');}catch{}
-  if(!pending)pending={fingerprint,payload,snapshot,requestId:crypto.randomUUID()};
+  if(pending&&Number(ZZWS.generations?.().workspace||1)>Number(pending.workspaceGeneration||1))pending=null;if(!pending)pending={fingerprint,payload,snapshot,requestId:crypto.randomUUID(),workspaceGeneration:ZZWS.generations?.().workspace||1};
   if(pending.fingerprint!==fingerprint&&!confirm('Նախորդ ուղարկման փորձը դեռ չի հաստատվել։ Կրկնե՞լ այն սկզբնական կազմով։ Զամբյուղի նոր փոփոխությունները կպահպանվեն։'))return;
   sessionStorage.setItem(key,JSON.stringify(pending));
   busy=true;ZZWS_RECEIPTS.setSubmitting(true);
