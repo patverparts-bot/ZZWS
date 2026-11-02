@@ -22,7 +22,8 @@
   "changes": [
     "Home New shortcut opens the same account-scoped, in-stock and unexpired server novelty flags as the website",
     "Live expiry removes expired new arrivals without falling back to ordinary goods",
-    "Armenian and Russian labels; preserves published Android 7.1.30 behavior"
+    "Armenian and Russian labels; preserves published Android 7.1.30 behavior",
+    "Preserves 7.1.30 server-operation progress and generation safeguards that keep personal carts and checkout drafts during order-history cleanup"
   ],
   "file": "ZZWS-7.1.31-production.apk",
   "versionCode": 70131,
@@ -45,5 +46,18 @@
   "inheritedPublishedVersion": "7.1.30",
   "inheritedPublishedSourceCommit": "d8ea851ca597d03c1c70c16ebe2c863db3a27c46",
   "sourceFingerprint": "5037b38335d3b264632a77ce16fe977840c49d7dbfa32558c9698911cba86e57",
-  "publicSourceComplete": false
+  "publicSourceComplete": false,
+  "coordinationReview": {
+    "reviewedAt": "2026-11-02T05:22:35Z",
+    "previousVersion": "7.1.30",
+    "previousVersionCode": 70130,
+    "previousApkSha256": "cefbd6e4614a54ed8614d6e2ff45030df319e0ad3de10141c83314fdc4141d18",
+    "previousSourceCommit": "d8ea851ca597d03c1c70c16ebe2c863db3a27c46",
+    "currentVersionCode": 70131,
+    "inheritedNativeInputsVerified": 223,
+    "inheritedFocusedTestsPassed": 17,
+    "existingApkUnchanged": true,
+    "noteRu": "Версия 7.1.31 основана на опубликованной 7.1.30 и сохраняет её исправления: индикаторы хода операций сервера, сохранение личной корзины и черновика при очистке истории заказов, защиту от восстановления старых запросов и проверку выбранного покупателя. Управление резервными копиями и очисткой остаётся доступно только владельцу на обновлённом сервере. Код новой версии — 70131, выше 70130; APK 7.1.30 не заменяется другой сборкой под прежним номером. Новинки 7.1.31 добавлены поверх этих изменений.",
+    "evidence": "work/order-history-reset/native131-inclusion-handoff.json"
+  }
 }
