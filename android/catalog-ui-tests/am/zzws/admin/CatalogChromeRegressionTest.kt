@@ -97,8 +97,8 @@ class CatalogChromeRegressionTest {
  @Test fun offersShortcutClearsUnrelatedFiltersAndAllProductsExplicitlyLeavesOffers(){
   show(catalog=false)
   ui.runOnIdle{model.query="unrelated search";model.brands.add("missing brand");model.categories.add("missing category");model.onlyAvailable=true}
-  ui.onNodeWithTag("retail-home-feed").performScrollToNode(hasTestTag("home-offers-shortcut"))
-  ui.onNodeWithTag("home-offers-shortcut").performClick();assertOffersOnly()
+  ui.onNodeWithTag("retail-home-feed").performScrollToNode(hasTestTag("home-collection-banner"))
+  ui.onNodeWithTag("home-collection-banner").performClick();assertOffersOnly()
   ui.onNodeWithText("Բոլոր ապրանքները").performClick()
   ui.runOnIdle{assertFalse(model.offerCollection);assertFalse(model.onlyPromo);assertEquals(model.products.size,model.filtered.size)}
  }
@@ -144,8 +144,8 @@ class CatalogChromeRegressionTest {
   ui.runOnUiThread{model.refresh()}
   ui.waitUntil(10000){shadowOf(Looper.getMainLooper()).idle();!model.busy}
   ui.onNodeWithTag("home-collection-banner").assertExists()
-  ui.onNodeWithTag("home-offers-shortcut").assertExists()
-  ui.onNodeWithTag("home-offers-shortcut").performClick()
+  ui.onNodeWithTag("home-novelties-shortcut").assertExists()
+  ui.onNodeWithTag("home-collection-banner").performClick()
   ui.runOnIdle{assertEquals(listOf("offer"),model.filtered.map{it.code});model.screen="home"}
   sample.removeAt(1)
   ui.runOnUiThread{model.refresh()}

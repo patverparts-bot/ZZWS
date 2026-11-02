@@ -55,16 +55,21 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
  var department by mutableStateOf("");private set
  var catalogSections by mutableStateOf(true);private set
  var offerCollection by mutableStateOf(false);private set
+ var noveltyCollection by mutableStateOf(false);private set
+ private var noveltyNow by mutableLongStateOf(System.currentTimeMillis())
+ fun refreshNoveltyClock(now:Long=System.currentTimeMillis()){noveltyNow=now}
+ val novelties by derivedStateOf{noveltyProducts(products,noveltyNow)}
  var publishedOffer by mutableStateOf<JSONObject?>(null);private set
  val departments by derivedStateOf{catalogDepartmentCounts(products)}
  val departmentProducts by derivedStateOf{if(department.isEmpty()||!control("category"))products else products.filter{it.department==department}}
- private fun clearCatalogFilters(){brands.clear();categories.clear();query="";onlyAvailable=false;onlyPromo=false;sort=0;offerCollection=false}
+ private fun clearCatalogFilters(){brands.clear();categories.clear();query="";onlyAvailable=false;onlyPromo=false;sort=0;offerCollection=false;noveltyCollection=false}
  fun showDepartments(){clearCatalogFilters();department="";catalogSections=control("category");screen="catalog"}
  fun showAllProducts(){clearCatalogFilters();department="";catalogSections=false;screen="catalog"}
  fun showDepartment(id:String){showAllProducts();department=id}
  fun showBrand(brand:String){showAllProducts();brands.add(brand)}
  fun showHomeCategory(id:String){val group=majorHomeGroups(products).find{it.category.id==id}?:return;if(group.categories.isEmpty())return;showAllProducts();categories.addAll(group.categories)}
  fun showPromotions(){showAllProducts();offerCollection=true}
+ fun showNovelties(){showAllProducts();refreshNoveltyClock();noveltyCollection=true}
  fun searchCatalog(text:String){if(screen!="catalog"||query.isBlank()&&text.isNotBlank())showAllProducts();query=text;catalogSections=false;screen="catalog"}
  fun applyCatalogFilters(){catalogSections=false;screen="catalog"}
  var onlyAvailable by mutableStateOf(false);var onlyPromo by mutableStateOf(false);var sort by mutableStateOf(0)
@@ -105,7 +110,7 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
  val deliveryRows get()=target?.optJSONArray("rowsList").objects()
  fun promotion(p:Product)=promotionKind(p,user?.text("role")=="admin",priceMode,buyerView)
  val specialOffers by derivedStateOf{if(control("promo"))publishedOfferProducts(products,publishedOffer,user?.text("role")=="admin",priceMode,buyerView)else emptyList()}
- val catalogProducts get()=if(offerCollection)specialOffers else departmentProducts
+ val catalogProducts get()=when{noveltyCollection->novelties;offerCollection->specialOffers;else->departmentProducts}
  val filtered by derivedStateOf{if(onlyPromo&&!control("promo"))emptyList()else visibleProducts(wholesalePricedProducts(catalogProducts,onlyWholesale&&control("wholesale"),user?.text("role")=="admin"),if(control("search"))query else "",if(control("brand"))brands.toSet()else emptySet(),if(control("category"))categories.toSet()else emptySet(),control("stock")&&onlyAvailable,onlyPromo,if(control("sorting"))sort else 0,::unit){promotion(it)!=null}}
  val brandOptions get()=brandChoices(departmentProducts,categories.toSet(),brands.toSet())
  val categoryOptions get()=categoryChoices(departmentProducts,brands.toSet(),categories.toSet())
@@ -176,7 +181,7 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
   if(!ServerDataGenerations.pendingOrderMatchesWorkspace(stamp,AppSession.api.workspaceGeneration(),state.optJSONObject("cleared")?.optLong("cart")?:0L)){SecurePendingOrder.clear(AppContext.value,who);return null}
   return pending
  }
- private fun reset(){draftWorkspaceGeneration="";buyerValidationNeeded=false;buyerValidationRunning=false;++buyerValidationTicket;++draftEpoch;draftReady=false;draftDirty=false;draftVersion=0;draftConflict=false;draftSync="";deliveryIndex=0;method="Առաքում";approvalRequests.clear();approvalDefers.clear();approvalReminder=null;approvalLastShown=null;approvalPolling=false;catalogVersion="";catalogLoadedAt=0;department="";catalogSections=true;offerCollection=false;publishedOffer=null;demo=false;orderSearch="";orderFrom="";orderTo="";appliedOrderFilter=Triple("","","");cartSelection.clear();checkoutStep=1;checkoutProof="";webHandoff=false;PartnerLibrary.clear();catalogControls=JSONObject();popularity=JSONObject();++cartEpoch;cartDirty=false;cartVersion=0;cartConflict=false;cartSync="";PushHooks.detach(AppContext.value,AppSession.api);NotificationBridge.clear(AppContext.value);user=null;products=emptyList();orders=emptyList();order=null;buyer=null;catalogBuyer=null;quotedProducts=emptyMap();customers=emptyList();cart.clear();brands.clear();categories.clear();query="";onlyAvailable=false;onlyPromo=false;onlyWholesale=false;sort=0;challenge="";screen="home";frozenRequest=null;requestId=null;checkoutReady=false;address="";contact="";date="";comment="";priceMode="WS";subscriptions=null;management=null;successOrder=null;receiptConfirmation=null;errorDialog=""}
+ private fun reset(){draftWorkspaceGeneration="";buyerValidationNeeded=false;buyerValidationRunning=false;++buyerValidationTicket;++draftEpoch;draftReady=false;draftDirty=false;draftVersion=0;draftConflict=false;draftSync="";deliveryIndex=0;method="Առաքում";approvalRequests.clear();approvalDefers.clear();approvalReminder=null;approvalLastShown=null;approvalPolling=false;catalogVersion="";catalogLoadedAt=0;department="";catalogSections=true;offerCollection=false;noveltyCollection=false;publishedOffer=null;demo=false;orderSearch="";orderFrom="";orderTo="";appliedOrderFilter=Triple("","","");cartSelection.clear();checkoutStep=1;checkoutProof="";webHandoff=false;PartnerLibrary.clear();catalogControls=JSONObject();popularity=JSONObject();++cartEpoch;cartDirty=false;cartVersion=0;cartConflict=false;cartSync="";PushHooks.detach(AppContext.value,AppSession.api);NotificationBridge.clear(AppContext.value);user=null;products=emptyList();orders=emptyList();order=null;buyer=null;catalogBuyer=null;quotedProducts=emptyMap();customers=emptyList();cart.clear();brands.clear();categories.clear();query="";onlyAvailable=false;onlyPromo=false;onlyWholesale=false;sort=0;challenge="";screen="home";frozenRequest=null;requestId=null;checkoutReady=false;address="";contact="";date="";comment="";priceMode="WS";subscriptions=null;management=null;successOrder=null;receiptConfirmation=null;errorDialog=""}
  fun login(login:String,password:String)=run{
   reset();AppSession.clear()
   withContext(Dispatchers.IO){AppSession.api.configure(EndpointConfiguration.API,EndpointConfiguration.PUBLIC_KEY)}

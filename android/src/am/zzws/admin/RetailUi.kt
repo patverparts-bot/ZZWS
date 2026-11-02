@@ -1,5 +1,6 @@
 package am.zzws.admin
 import android.content.Context
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -59,7 +60,7 @@ internal object PartnerLibrary {
  OfferProductCarousel(model.specialOffers)
  }}}}
  item{Row(Modifier.fillMaxWidth().padding(horizontal=14.dp),horizontalArrangement=Arrangement.spacedBy(9.dp)){
- if(hasOffers)QuickTile("Առաջարկներ","offer",Modifier.weight(1f).testTag("home-offers-shortcut")){model.showPromotions()}
+ QuickTile("Նորույթներ","offer",Modifier.weight(1f).testTag("home-novelties-shortcut")){model.showNovelties()}
  if(ordersDestination(model.user)!=OrdersDestination.NONE)QuickTile("Պատվերներ","orders",Modifier.weight(1f).testTag("home-orders-shortcut")){model.openOrders(context)}
  QuickTile("Համեմատել","compare",Modifier.weight(1f),onCompare)}}
  item{SectionTitle("Բաժիններ","Բոլորը"){model.showDepartments()}}
@@ -75,18 +76,29 @@ internal object PartnerLibrary {
 private fun categoryIcon(category:String):String{val x=category.lowercase();return when{x.contains("հեռուստ")||x.contains("телев")->"tv";x.contains("սմարթ")||x.contains("телефон")->"phone";x.contains("համակարգ")||x.contains("компьют")->"laptop";x.contains("խոհան")||x.contains("кухон")->"kitchen";x.contains("աուդ")||x.contains("ауди")->"audio";else->"appliance"}}
 @Composable internal fun RetailCatalog(model:UnifiedModel,onProduct:(Product)->Unit,onBuyer:()->Unit,favorites:Boolean=false){
  val sections=!favorites&&model.catalogSections&&model.control("category")
+ val noveltyLifecycle=androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
+ LaunchedEffect(model.noveltyCollection,favorites,model.products,noveltyLifecycle){
+  if(model.noveltyCollection&&!favorites)noveltyLifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.RESUMED){
+   while(true){
+    val now=System.currentTimeMillis();model.refreshNoveltyClock(now)
+    val next=nextNoveltyExpiry(model.products,now)
+    if(next==null)kotlinx.coroutines.awaitCancellation()
+    kotlinx.coroutines.delay((next-now+50).coerceIn(50,86400000))
+   }
+  }
+ }
  val rows=if(favorites)model.products.filter{it.code in PartnerLibrary.favorites}else model.filtered
  val currentDepartment=catalogDepartments.find{it.id==model.department}
- val title=if(favorites)"Ընտրյալներ"else if(sections)"Բաժիններ"else if(model.offerCollection)"Հատուկ առաջարկներ"else majorHomeSelectionTitle(model.categories.toList())?:currentDepartment?.title?:"Բոլոր ապրանքները"
+ val title=if(favorites)"Ընտրյալներ"else if(sections)"Բաժիններ"else if(model.noveltyCollection)"Նորույթներ"else if(model.offerCollection)"Հատուկ առաջարկներ"else majorHomeSelectionTitle(model.categories.toList())?:currentDepartment?.title?:"Բոլոր ապրանքները"
  val grid=rememberLazyGridState()
- LaunchedEffect(model.query,model.department,sections,favorites,model.brands.toList(),model.categories.toList(),model.onlyPromo,model.onlyAvailable,model.onlyWholesale,model.sort,model.offerCollection){grid.scrollToItem(0)}
+ LaunchedEffect(model.query,model.department,sections,favorites,model.brands.toList(),model.categories.toList(),model.onlyPromo,model.onlyAvailable,model.onlyWholesale,model.sort,model.offerCollection,model.noveltyCollection){grid.scrollToItem(0)}
  LazyVerticalGrid(columns=GridCells.Adaptive(if(sections)148.dp else 158.dp),state=grid,modifier=Modifier.fillMaxSize().testTag("catalog-products-grid"),contentPadding=PaddingValues(start=14.dp,end=14.dp,top=8.dp,bottom=14.dp),horizontalArrangement=Arrangement.spacedBy(10.dp),verticalArrangement=Arrangement.spacedBy(10.dp)){
   // Context is part of the scrolling grid, never a pinned toolbar above products.
   item(key="catalog-context",span={GridItemSpan(maxLineSpan)}){
    Column(Modifier.fillMaxWidth().testTag("catalog-scroll-header"),verticalArrangement=Arrangement.spacedBy(4.dp)){
     Row(verticalAlignment=Alignment.CenterVertically){
      LocalizedText(title,fontWeight=FontWeight.Bold,fontSize=20.sp,maxLines=2,modifier=Modifier.weight(1f))
-     if(!favorites&&!sections&&(model.offerCollection||model.brands.isNotEmpty()||model.categories.isNotEmpty()||model.onlyPromo||model.onlyAvailable||model.query.isNotBlank()))TextButton(onClick={model.showAllProducts()}){LocalizedText("Բոլոր ապրանքները",fontSize=10.sp)}
+     if(!favorites&&!sections&&(model.noveltyCollection||model.offerCollection||model.brands.isNotEmpty()||model.categories.isNotEmpty()||model.onlyPromo||model.onlyAvailable||model.query.isNotBlank()))TextButton(onClick={model.showAllProducts()}){LocalizedText("Բոլոր ապրանքները",fontSize=10.sp)}
     }
     LocalizedText(if(sections)"${model.products.size} ապրանք"else if(favorites)"${rows.size} ապրանք"else"Ցուցադրված՝ ${rows.size} / ${model.products.size}",fontSize=11.sp,color=ShopMuted)
     if(!sections&&model.offerCollection&&model.publishedOffer?.text("title").orEmpty().let{it.isNotBlank()&&it!="Հատուկ առաջարկներ"})LocalizedText(model.publishedOffer?.text("title").orEmpty(),fontSize=13.sp,color=BrandAccent)
@@ -102,7 +114,7 @@ private fun categoryIcon(category:String):String{val x=category.lowercase();retu
   }else if(rows.isEmpty())item(key="empty-products",span={GridItemSpan(maxLineSpan)}){
    Column(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=50.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(14.dp)){
     CompositionLocalProvider(LocalContentColor provides BrandBlue){AppIcon(if(favorites)"heart"else"search")}
-    LocalizedText(if(favorites)"Սիրելի ապրանքները կհայտնվեն այստեղ"else"Համապատասխան ապրանքներ չկան։ Փոխեք որոնումը կամ զտիչները։",fontSize=15.sp,color=ShopMuted)
+    LocalizedText(if(favorites)"Սիրելի ապրանքները կհայտնվեն այստեղ"else if(model.noveltyCollection)"Նորույթները կհայտնվեն այստեղ"else"Համապատասխան ապրանքներ չկան։ Փոխեք որոնումը կամ զտիչները։",fontSize=15.sp,color=ShopMuted)
    }
   }else items(rows,key={"product:"+it.code}){product->RetailProductCard(product,model,onProduct)}
  }

@@ -1,0 +1,49 @@
+{
+  "package": "am.zzws.admin",
+  "signerSha256": "85e2356e5269ac94f016858551b5c06ede293c31b649b8e1acedc05a407a0115",
+  "releaseUnitTests": {
+    "tests": 177,
+    "failures": 0,
+    "skipped": 1,
+    "errors": 0
+  },
+  "updateChannelPublished": true,
+  "size": 13399602,
+  "deviceTested": false,
+  "sha256": "3d32f4ad0fed8c175130bdb5b0511add57e74c5c62edcf29fc1e2e848a557dbc",
+  "status": "published and verified through the customer update channel",
+  "nativeChecks": {
+    "tests": 307,
+    "failures": 0,
+    "skipped": 1,
+    "errors": 0
+  },
+  "newPermissions": false,
+  "changes": [
+    "Home New shortcut opens the same account-scoped, in-stock and unexpired server novelty flags as the website",
+    "Live expiry removes expired new arrivals without falling back to ordinary goods",
+    "Armenian and Russian labels; preserves published Android 7.1.30 behavior"
+  ],
+  "file": "ZZWS-7.1.31-production.apk",
+  "versionCode": 70131,
+  "version": "7.1.31",
+  "zipValid": true,
+  "signatureValid": true,
+  "noveltyChecks": 8,
+  "systemVerification": {
+    "verifiedAt": "2026-11-02T05:19:33.411Z",
+    "version": "7.1.31",
+    "versionCode": 70131,
+    "bytes": 13399602,
+    "sha256": "3d32f4ad0fed8c175130bdb5b0511add57e74c5c62edcf29fc1e2e848a557dbc",
+    "normalClientCurrent": true,
+    "normalClientDownload": true,
+    "androidSignedLinkVerified": true,
+    "downloadReceiptAccepted": true,
+    "installedOnDevice": false
+  },
+  "inheritedPublishedVersion": "7.1.30",
+  "inheritedPublishedSourceCommit": "d8ea851ca597d03c1c70c16ebe2c863db3a27c46",
+  "sourceFingerprint": "5037b38335d3b264632a77ce16fe977840c49d7dbfa32558c9698911cba86e57",
+  "publicSourceComplete": false
+}
