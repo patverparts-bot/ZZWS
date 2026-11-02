@@ -1,6 +1,12 @@
 /* Official-site catalogue composition: sidebar facets plus three product columns. */
 html[data-storefront-page=home] #catalogLayout{display:none}
 html:not([data-storefront-page=home]) .catalog-main{max-width:1360px!important;margin-inline:auto;padding:30px 28px 36px!important}
+html[data-dealer-view=table]:not([data-storefront-page=home]) .catalog-main{max-width:none!important;padding-inline:clamp(12px,1.25vw,28px)!important}
+#tableScrollWrapper[data-wide=true]{overflow:auto;max-height:75dvh;--stick-top:0px;scrollbar-gutter:stable;overscroll-behavior-x:contain}
+#tableScrollWrapper[data-wide=true] thead{top:0}
+#tableScrollWrapper[data-wide=true]:focus-visible{outline:3px solid #38bdf8;outline-offset:-3px}
+#catalogTable #tableHeaderRow>th{padding-inline:12px!important}
+#catalogTable td{padding-inline:12px}
 .sf-catalog-layout{display:grid;grid-template-columns:270px minmax(0,1fr);align-items:start;gap:20px;min-width:0}
 .sf-catalog-sidebar,.sf-catalog-results{min-width:0}
 .sf-catalog-sidebar #stickySearchBar{padding:0!important;border:0!important;background:transparent!important;z-index:2}

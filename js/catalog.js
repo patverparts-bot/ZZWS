@@ -225,7 +225,7 @@ function updateStickyOffsets() {
   root.setProperty('--thead-h', (thead && thead.offsetHeight ? thead.offsetHeight : 40) + 'px');
 
   const wrap = document.getElementById('tableScrollWrapper');
-  if (wrap) wrap.style.overflowX = 'clip';
+  if (wrap) wrap.style.overflowX = wrap.dataset.wide==='true'?'auto':'clip';
 }
 window.addEventListener('resize', updateStickyOffsets);
 
