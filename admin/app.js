@@ -229,6 +229,7 @@ function userPayload(){
   return p;
 }
 function updateClientCategory(){
+  window.ZZWS_ROLE_HELP?.render();
   ZZWS_REPORT_EMAIL.role(el('userForm').elements.role.value);
   window.ZZWS_PHONE_CARD?.role(el('userForm').elements.role.value);
   const f=el('userForm'),pricing=pricingByGroup[f.elements.sheet.value],labels={ws:'Մեծածախ',kpPromo:'Խոշոր գործընկերոջ ակցիոն',kp:'Խոշոր գործընկերոջ',retail:'Զեղչված մանրածախ',base:'Հիմնական մանրածախ'};

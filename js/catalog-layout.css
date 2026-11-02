@@ -69,3 +69,13 @@ html[data-dealer-view=cards] .sf-catalog-results #mobileCardsContainer .product-
 .dark .sf-facet-count{color:#aebfcd}
 @media(min-width:1440px){.sf-catalog-results .sf-favorite{top:309px!important}}
 @media(max-width:767px){.sf-catalog-heading #dealerWorkspace{width:100%;margin-top:4px}.sf-catalog-heading .dealer-workspace-actions{gap:7px}.sf-catalog-results .sf-favorite{top:184px!important}.sf-catalog-results .sf-product h4{padding-right:19px}}
+
+/* Internal warehouse balances stay prominent at desktop and mobile card sizes. */
+.sf-product .sf-admin-stock{padding:12px;margin:4px 0;border:2px solid #2563eb;border-radius:10px;background:#eff6ff;color:#172554;font-size:14px;font-weight:700;line-height:1.5;overflow-wrap:anywhere}
+.sf-admin-stock-heading{margin:0 0 8px;font-size:12px;font-weight:700;color:#1e40af}
+.sf-admin-stock-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(68px,1fr));gap:7px;margin:0}
+.sf-admin-stock-list>div{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;background:#fff;border:1px solid #bfdbfe;border-radius:6px;min-width:0}
+.sf-admin-stock-list dt{font:600 12px/1.4 ui-monospace,monospace;color:#334155}
+.sf-admin-stock-list dd{margin:0;font-size:17px;font-weight:800;color:#1d4ed8;font-variant-numeric:tabular-nums}
+.dark .sf-product .sf-admin-stock{background:#172554;border-color:#60a5fa;color:#eff6ff}.dark .sf-admin-stock-heading{color:#bfdbfe}.dark .sf-admin-stock-list>div{background:#0f172a;border-color:#3b82f6}.dark .sf-admin-stock-list dt{color:#cbd5e1}.dark .sf-admin-stock-list dd{color:#93c5fd}
+@media(max-width:767px){.sf-product .sf-admin-stock{padding:8px;font-size:12px}.sf-admin-stock-list{gap:5px}.sf-admin-stock-list>div{padding:5px 6px}.sf-admin-stock-list dd{font-size:16px}}

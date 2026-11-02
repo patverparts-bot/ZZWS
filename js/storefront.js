@@ -49,7 +49,12 @@
   const title=node('h4'),details=button(p.name,()=>ZZWS_DEALER.openProduct(p.articul),'sf-product-title');details.dataset.dealerDetails=p.articul;title.append(details);root.append(title);
   const code=button(p.articul,()=>copyArticul(p.articul),'sf-product-code');code.setAttribute('aria-label','Պատճենել արտիկուլը '+p.articul);root.append(code);
   const badges=node('div');badges.innerHTML=window.ZZWS_CATALOG_CONTROLS?.badges(p.articul)||'';root.append(badges,prices(p));
-  const stock=node('p',p.stockStatus,'sf-stock');root.append(stock);
+  const stock=node(catalogIsAdmin()?'div':'p',p.stockStatus,'sf-stock');
+  if(catalogIsAdmin()){
+   stock.classList.add('sf-admin-stock');const rows=Object.entries(window.ZZWS_WAREHOUSE_ALLOCATION?.stocks(p)||{});
+   if(rows.length){stock.replaceChildren(node('p','Պահեստներ / Քանակ','sf-admin-stock-heading'));const list=node('dl',null,'sf-admin-stock-list');for(const [code,quantity]of rows){const pair=node('div');pair.dataset.warehouseCode=code;pair.append(node('dt',code),node('dd',String(quantity)));list.append(pair);}stock.append(list);}
+  }
+  root.append(stock);
   const row=node('div',null,'sf-product-actions'),buy=node('div',null,'js-action');buy.dataset.art=p.articul;buy.innerHTML=getActionControlHtml(p.articul,cart[p.articul],true);
   const compare=button('Համեմատել',()=>ZZWS_DEALER.toggleCompare(p.articul),'sf-button sf-compare');compare.dataset.dealerCompare=p.articul;compare.setAttribute('aria-pressed',String(ZZWS_DEALER.isSelected(p.articul)));compare.setAttribute('aria-label','Համեմատել՝ '+p.name);row.append(buy,compare);root.append(row);return root;
  }
