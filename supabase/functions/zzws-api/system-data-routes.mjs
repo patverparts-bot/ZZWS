@@ -10,6 +10,16 @@ export async function systemDataRoutes(c){
  if(path==='admin/system-data/unlock'&&req.method==='POST'){
   const p=await body(req);await confirmAccountPassword(req,user,hash,p.password,mfaVerified);const unlockToken=random(),result=await rpc('unlock',{p_token_hash:await digest(unlockToken)});return json({...result,unlockToken});
  }
+ if(path==='admin/system-data/archive-import'&&req.method==='POST'){
+  const p=await body(req);if(typeof p.fileText!=='string'||new TextEncoder().encode(p.fileText).length>52428800)fail(400,'Ֆայլը պետք է լինի մինչև 50 ՄԲ');
+  return json(await rpc('archive_import',{p_unlock:await token(p.unlockToken),p_text:p.fileText}));
+ }
+ const archiveDelete=/^admin\/system-data\/archives\/([^/]+)\/delete$/.exec(path);
+ if(archiveDelete&&req.method==='POST'){
+  const p=await body(req);if(!uuid(archiveDelete[1])||![1,2,3].includes(p.step))fail(400,'Սխալ գործողություն');
+  await confirmAccountPassword(req,user,hash,p.password,mfaVerified);
+  return json(await rpc('archive_delete',{p_unlock:await token(p.unlockToken),p_archive:archiveDelete[1],p_token_hash:await token(p.confirmationToken),p_step:p.step}));
+ }
  if(['admin/system-data/preview','admin/system-data/restore-preview'].includes(path)&&req.method==='POST'){
   const p=await body(req),restore=path.endsWith('/restore-preview');if(restore&&!uuid(p.archiveId))fail(400,'Ընտրեք պահուստը');
   if(!restore&&(!Array.isArray(p.categories)||p.categories.some(v=>typeof v!=='string')))fail(400,'Ընտրեք տվյալների բաժինները');

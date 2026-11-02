@@ -56,6 +56,9 @@ export const cleanSchemaFiles=[
   "supabase/migrations/20261101224815_maintenance_auth_recovery.sql",
   "supabase/migrations/20261101224900_system_data_maintenance.sql",
   "supabase/migrations/20261101225513_maintenance_payload_restore.sql",
-  "supabase/migrations/20261102033640_application_backup_maintenance_archives.sql"
+  "supabase/migrations/20261102033640_application_backup_maintenance_archives.sql",
+  "supabase/migrations/20261102130000_maintenance_archive_file_recovery.sql",
+  "supabase/migrations/20261102130100_maintenance_archive_private_policy.sql",
+  "supabase/migrations/20261102130200_maintenance_selection_sizes.sql"
 ];
 export const schemaVersion="zzws-unified-4.1.0-optimized";
