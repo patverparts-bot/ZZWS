@@ -1,6 +1,7 @@
 import {knowledgeProduct} from './assistant.mjs';
 import {technicalFacts} from './dealer.mjs';
 import {canAccess} from './operations.mjs';
+import {validateStockReplacementInput,suggestStockReplacements} from './stock-replacements.mjs';
 const normalized=v=>String(v||'').normalize('NFKC').toLowerCase().trim();
 const critical={washer:['capacity','drying','installation'],dryer:['capacity','installation'],fridge:['volume','noFrost','installation'],dishwasher:['placeSettings','installation'],tv:['diagonal','resolution','screen'],oven:['volume','connection','installation'],hob:['connection','installation']};
 export function replacementGroup(source,target){
@@ -27,6 +28,22 @@ export function suggestReplacements(source,products,knowledge,{priceMode='WS',in
 }
 export async function replacementRoutes(c){
  const {path,req,user,body,current,project,table,query,json,fail,knowledge}=c;
+ if(path==='catalog/stock-replacements'){
+  if(req.method!=='POST')fail(405,'Չթույլատրված գործողություն');
+  if(!['admin','client'].includes(user.role))fail(403,'Հասանելիությունն արգելված է');
+  let input;try{input=validateStockReplacementInput(await body(req));}catch(e){fail(e.code||400,e.message);}
+  const v=await current(),all=project(v.products,user,v.rules,{forOrder:true,mainWarehouses:v.mainWarehouses}),source=all.find(p=>p.articul===input.sourceArticul);
+  if(!source)fail(404,'Ապրանքը հասանելի չէ ձեր կատալոգում։');
+  const visible=project(v.products,user,v.rules,{mainWarehouses:v.mainWarehouses}),admin=user.role==='admin';
+  // Raw quantities are joined only after account projection. They never enter
+  // client DTOs; inaccessible catalog rows cannot become replacement sources.
+  const raw=admin?new Map(v.products.map(p=>[p.articul,p])):null;
+  const internal=admin?all.map(p=>({...p,_stockStatus:Object.entries(raw.get(p.articul)?.stocks||{}).filter(([,qty])=>qty>0).map(([code,qty])=>code+': '+qty).join(', ')})):all;
+  const allowed=new Set(visible.map(p=>p.articul)),eligible=internal.filter(p=>p.articul===source.articul||allowed.has(p.articul));
+  const mode=user.role==='admin'&&input.priceMode==='KP'?'KP':'WS';
+  let result;try{result=suggestStockReplacements(internal.find(p=>p.articul===source.articul),eligible,knowledge,{...input,priceMode:mode,includeLast:user.role==='admin'&&input.includeLast,priority:v.warehousePriority,admin:user.role==='admin'});}catch(e){fail(e.code||400,e.message);}
+  return json({catalogueVersion:v.id,warehouseRevision:v.warehouseRevision,priceMode:mode,...result});
+ }
  if(path==='admin/orders/replacements'&&req.method==='POST'){
   if(user.role!=='admin'||!canAccess(user.adminScope,path,'POST'))fail(403,'Այս գործողության իրավունքը չունեք');
   const p=await body(req);
