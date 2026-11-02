@@ -161,6 +161,7 @@ const wholesaleOnly = isAdminUser() && window.ZZWS_CATALOG_CONTROLS?.enabled('wh
 document.getElementById('clearSearchBtn').classList.toggle('hidden', searchQuery.length === 0);
 
 filteredProducts = allProducts.filter(p => {
+  const listMatch=window.ZZWS_STOCK_PICKER?.visualMatch(p);if(listMatch!=null)return listMatch;
   const matchBrand = !selectedBrands.length || selectedBrands.some(b => p.brand.toLowerCase() === b.toLowerCase());
   const matchCategory = !selectedCategories.length || selectedCategories.some(c => p.category.toLowerCase() === c.toLowerCase());
   const matchSearch = !searchQuery || multiSearch.matches.has(p.articul);
@@ -486,5 +487,4 @@ function getActionControlHtml(articul, cartItem, isMobile = false) {
 <button data-act="qty" data-delta="1" data-art="${a}" aria-label="Ավելացնել քանակը" class="${btnPadding} bg-blue-100 dark:bg-blue-900/60 hover:bg-blue-200 dark:hover:bg-blue-900 text-blue-800 dark:text-blue-200 font-bold active:bg-blue-300">+</button>
 </div>`;
 }
-
 

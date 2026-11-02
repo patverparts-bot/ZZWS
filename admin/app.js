@@ -14,6 +14,7 @@ async function api(path, options = {}) {
   catch(e) { if(e.status === 401) showLogin(); throw e; }
 }
 function showLogin() {
+  window.ZZWS_STOCK_PICKER?.reset();
   window.ZZWS_SYSTEM_DATA_RESET?.reset();
   window.ZZWS_ADMIN_VIEW_STATE?.stop();
   window.ZZWS_ADMIN_STOREFRONT?.reset();
@@ -114,6 +115,7 @@ async function enter() {
   window.ZZWS_ADMIN_VIEW_STATE?.start(user);
   window.ZZWS_ENTRY?.navigation(user);window.ZZWS_HELP_USER=user;ZZWS_ADMIN_HOME.setUser(user);for(const group of document.querySelectorAll('.admin-nav-group'))group.hidden=![...group.querySelectorAll('[data-tab]')].some(button=>!button.hidden);
   window.ZZWS_SYSTEM_DATA_RESET?.start(user);
+  window.ZZWS_STOCK_PICKER?.start(user);
   ZZWS_ADMIN_CHANNELS.start(user);
   window.ZZWS_REOPEN_ALERTS?.start(user);
   window.ZZWS_ADMIN_APPROVAL_REMINDERS?.start(user);

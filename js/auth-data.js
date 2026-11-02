@@ -17,6 +17,7 @@ async function secureApi(path, options = {}) {
   catch(e) { if (e.status === 401) lockCatalog(); throw e; }
 }
 function lockCatalog() {
+  window.ZZWS_STOCK_PICKER?.reset();
   window.ZZWS_LOADING_SCENES?.cancelOrder();
   window.ZZWS_PAGE_STATE?.stop();
   window.ZZWS_STOREFRONT?.reset();
@@ -50,6 +51,7 @@ async function acceptIdentity(user) {
   if(user.needsPasswordSetup||user.needsProfileSetup){user=await requirePasswordSetup(user);if(!user){finishSessionLoading();return;}}
   beginSessionLoading();
   window.ZZWS_ASSISTED?.start(user);
+  window.ZZWS_STOCK_PICKER?.start(user);
   window.ZZWS_CATALOG_VIEW?.start(user);
   window.ZZWS_ENTRY?.navigation(user);
   serverIdentity = user;window.ZZWS_HELP_USER=user; authorizedClient = user.client; userSheetType = user.sheet; clientRowsData = user.rowsList;
