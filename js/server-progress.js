@@ -18,7 +18,7 @@
   if(uploads.length===1){const item=uploads[0];bar.max=item.total;bar.value=item.loaded;caption.textContent=text.upload+' '+Math.floor(item.loaded/item.total*100)+'%';bar.setAttribute('aria-label',text.upload);}else{bar.removeAttribute('value');bar.removeAttribute('max');caption.textContent=transferred?text.transferred:text.processing;bar.setAttribute('aria-label',text.processing);}
   host.querySelector('small').textContent=active.size>1?text.requests+' '+active.size:'';
  }
- function begin(options={}){const button=target(options.target);if(!mutating(options.method)&&!button)return null;const origin=action,id=++serial,item={button,loaded:null,total:0};active.set(id,item);lock(button);render();let finished=false;
+ function begin(options={}){const button=target(options.target);if(options.interactive&&!button||!mutating(options.method)&&!button)return null;const origin=action,id=++serial,item={button,loaded:null,total:0};active.set(id,item);lock(button);render();let finished=false;
   return Object.freeze({finish(){if(finished)return;finished=true;active.delete(id);unlock(button);if(action===origin)action=null;render();},transfer({loaded,total}){if(finished)return;if(Number.isFinite(loaded)&&loaded>=0&&Number.isFinite(total)&&total>0){item.loaded=Math.min(loaded,total);item.total=total;}else{item.loaded=null;item.total=0;}render();}});
  }
  function response(response,ticket){if(!ticket)return response;let reading=false;for(const name of ['json','text','blob','arrayBuffer','formData']){const original=response[name]?.bind(response);if(!original)continue;try{response[name]=(...args)=>{reading=true;return Promise.resolve().then(()=>original(...args)).finally(()=>ticket.finish());};}catch{}}
@@ -26,7 +26,9 @@
   // their await continuation before this next task. No duplicate body is read.
   setTimeout(()=>{if(!reading)ticket.finish();},0);return response;
  }
- async function fetchWithProgress(input,options){const ticket=begin({method:options?.method||input?.method||'GET'});try{return response(await nativeFetch(input,options),ticket);}catch(error){ticket?.finish();throw error;}}
+ // POST alone does not imply a user action: autosave and read receipts use it too.
+ // Async foreground actions may opt in with progress:true or an explicit target.
+ async function fetchWithProgress(input,options){const ticket=options?.progress===false?null:begin({method:options?.method||input?.method||'GET',target:options?.progressTarget,interactive:options?.progress!==true});try{return response(await nativeFetch(input,options),ticket);}catch(error){ticket?.finish();throw error;}}
  window.fetch=fetchWithProgress;
  window.ZZWS_SERVER_PROGRESS=Object.freeze({begin,response,reset(){for(const item of active.values())unlock(item.button);active.clear();action=null;render();},state:()=>({pending:active.size,measuredUploads:[...active.values()].filter(v=>v.total>0).length})});
  window.addEventListener('zzws:languagechange',render);window.addEventListener('pagehide',()=>window.ZZWS_SERVER_PROGRESS.reset());
