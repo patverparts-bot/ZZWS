@@ -190,3 +190,6 @@ html[data-manager-open=true] main{max-width:1600px}.manager-toolbar{display:flex
 .receipt-acknowledgement-dialog{width:540px}.receipt-acknowledgement-items{list-style:none;padding:0;margin:16px 0}.receipt-acknowledgement-items li{padding:10px 0;border-bottom:1px solid #e2e8f0}.receipt-acknowledgement-items strong,.receipt-acknowledgement-items small{display:block;overflow-wrap:anywhere}.receipt-acknowledgement-items small{margin-top:4px;color:#64748b}.receipt-acknowledgement-total{font-size:18px;font-weight:700}
 
 .organized-user-card #adminRoleSetupNote,.organized-user-card #adminScopePanel{grid-column:1/-1}.organized-user-card #adminScopePanel{margin:0;padding:16px 0 0;border:0;border-top:1px solid #cbd5e1;border-radius:0;background:transparent}
+
+/* Keep the navigation menu above workspace sticky navigation and action bars. */
+.admin-navigation{z-index:100;isolation:isolate}
