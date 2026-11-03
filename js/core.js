@@ -170,7 +170,7 @@ function updateMobileFilterBadge() {
 }
 
 function toggleMobileFilters(forcedState) {
-  if(window.ZZWS_CATALOG_COMMAND&&document.documentElement.dataset.storefrontPage!=='home'){if(forcedState===false)ZZWS_CATALOG_COMMAND.close();else ZZWS_CATALOG_COMMAND.open('filters');return;}
+  if(window.ZZWS_CATALOG_COMMAND&&document.documentElement.dataset.storefrontPage!=='home'&&document.documentElement.dataset.dealerView!=='cards'){if(forcedState===false)ZZWS_CATALOG_COMMAND.close();else ZZWS_CATALOG_COMMAND.open('filters');return;}
   const container = document.getElementById('filtersContainer');
   const icon = document.getElementById('filterToggleIcon');
   if (!container || !icon) return;

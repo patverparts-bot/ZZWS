@@ -79,3 +79,9 @@ html[data-dealer-view=cards] .sf-catalog-results #mobileCardsContainer .product-
 .sf-admin-stock-list dd{margin:0;font-size:17px;font-weight:800;color:#1d4ed8;font-variant-numeric:tabular-nums}
 .dark .sf-product .sf-admin-stock{background:#172554;border-color:#60a5fa;color:#eff6ff}.dark .sf-admin-stock-heading{color:#bfdbfe}.dark .sf-admin-stock-list>div{background:#0f172a;border-color:#3b82f6}.dark .sf-admin-stock-list dt{color:#cbd5e1}.dark .sf-admin-stock-list dd{color:#93c5fd}
 @media(max-width:767px){.sf-product .sf-admin-stock{padding:8px;font-size:12px}.sf-admin-stock-list{gap:5px}.sf-admin-stock-list>div{padding:5px 6px}.sf-admin-stock-list dd{font-size:16px}}
+
+/* Keep the original card grid; only its filter sidebar follows the viewport. */
+@media(min-width:1024px){
+ .sf-catalog-layout[data-sidebar=true]>.sf-catalog-sidebar{position:sticky;top:12px;max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior-y:contain;scrollbar-width:thin}
+ .sf-catalog-layout[data-sidebar=true] .sf-catalog-sidebar #stickySearchBar{position:static!important}
+}
