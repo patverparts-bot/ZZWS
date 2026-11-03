@@ -15,3 +15,8 @@
 .sf-product-name-actions{display:flex;align-items:flex-start;gap:6px}.sf-product-name-actions>.sf-product-title{flex:1;min-width:0;cursor:copy}
 .sf-product-name-actions>.sf-product-details{flex:0 0 22px;min-width:22px;padding:0;border:0;background:none;color:var(--sf-muted,#587286);font-size:18px;line-height:22px}
 .dark #catalogTable .catalog-site-link{background:#23384d;color:#b3dff5}
+
+/* Clearly track the active product row without highlighting category headings. */
+#catalogTable tbody tr:not(.category-row):focus-within>td{background-color:#dbeafe!important;box-shadow:inset 0 1px #93c5fd,inset 0 -1px #93c5fd}
+@media(hover:hover){#catalogTable tbody tr:not(.category-row):hover>td{background-color:#dbeafe!important;box-shadow:inset 0 1px #93c5fd,inset 0 -1px #93c5fd}#catalogTable tbody tr:not(.category-row):hover>td:first-child{box-shadow:inset 4px 0 #2563eb,inset 0 1px #93c5fd,inset 0 -1px #93c5fd}.dark #catalogTable tbody tr:not(.category-row):hover>td{background-color:#1e4267!important;box-shadow:inset 0 1px #60a5fa,inset 0 -1px #60a5fa}.dark #catalogTable tbody tr:not(.category-row):hover>td:first-child{box-shadow:inset 4px 0 #60a5fa,inset 0 1px #60a5fa,inset 0 -1px #60a5fa}}
+.dark #catalogTable tbody tr:not(.category-row):focus-within>td{background-color:#1e4267!important;box-shadow:inset 0 1px #60a5fa,inset 0 -1px #60a5fa}
