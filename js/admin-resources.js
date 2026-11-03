@@ -6,6 +6,14 @@
  const maxApkBytes=150*1024*1024;
  let owner=null,ticket=0,mount=null,loading=false,clientAccount=false;
  const node=(tag,text)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;return n;};
+ function mobileAppIcon(){
+  const ns='http://www.w3.org/2000/svg',icon=document.createElementNS(ns,'svg');
+  for(const [name,value]of Object.entries({viewBox:'0 0 24 24',width:'22',height:'22',fill:'none',stroke:'currentColor','stroke-width':'1.6','stroke-linecap':'round','stroke-linejoin':'round','aria-hidden':'true',focusable:'false'}))icon.setAttribute(name,value);
+  icon.style.cssText='display:inline-block;vertical-align:middle;flex-shrink:0;margin-inline-end:7px';
+  const phone=document.createElementNS(ns,'rect');for(const [name,value]of Object.entries({x:'5',y:'1.5',width:'14',height:'21',rx:'3'}))phone.setAttribute(name,value);
+  const screen=document.createElementNS(ns,'path');screen.setAttribute('d','M10 5h4M9 8h2v2H9zM13 8h2v2h-2zM12 12v5m-2-2 2 2 2-2M10 20h4');icon.append(phone,screen);return icon;
+ }
+ function mobileAppLabel(target,text){target.replaceChildren(mobileAppIcon(),node('span',text));}
  function root(){
   if(mount?.isConnected)return mount;
   mount=document.getElementById('adminResourcesPanel')||document.getElementById('catalogAdminResources');
@@ -37,7 +45,7 @@
   card.querySelector('[data-apk-description]').textContent=release.description;
  }
  async function availability(button,notice,card,who,requestTicket){
-  button.disabled=true;button.textContent='Ստուգվում է APK-ի հասանելիությունը…';
+  button.disabled=true;mobileAppLabel(button,'Ստուգվում է Բջջային Հավելվածի հասանելիությունը…');
   try{
    const release=await readRelease();
    if(!release.server){const response=await fetch(release.url,{...assetOptions,method:'HEAD'});
@@ -45,8 +53,8 @@
     if(!response.ok||!/^(application\/vnd\.android\.package-archive|application\/octet-stream)(;|$)/i.test(response.headers.get('content-type')||'')||length!==null&&Number(length)!==release.bytes)throw Error('APK-ը դեռ հասանելի չէ։ Փորձեք ավելի ուշ։');
    }
    if(owner!==who||requestTicket!==ticket)return;
-   showRelease(card,release);button.textContent='Ներբեռնել ZZWS Android հավելվածը';button.onclick=()=>download(button,notice,card,who,requestTicket);button.disabled=false;notice.textContent='';
-  }catch(error){if(owner===who&&requestTicket===ticket){notice.textContent=textError(error);button.textContent='Կրկին ստուգել APK-ը';button.onclick=()=>availability(button,notice,card,who,requestTicket);button.disabled=false;}}
+   showRelease(card,release);mobileAppLabel(button,'Ներբեռնել Բջջային Հավելվածը');button.onclick=()=>download(button,notice,card,who,requestTicket);button.disabled=false;notice.textContent='';
+  }catch(error){if(owner===who&&requestTicket===ticket){notice.textContent=textError(error);mobileAppLabel(button,'Կրկին ստուգել Բջջային Հավելվածը');button.onclick=()=>availability(button,notice,card,who,requestTicket);button.disabled=false;}}
  }
  async function download(button,notice,card,who,requestTicket){
   if(loading||owner!==who||requestTicket!==ticket)return;loading=true;button.disabled=true;notice.textContent='Ֆայլը բեռնվում է…';
@@ -81,11 +89,11 @@
   if(!mobile&&!telegram)return;
   box.style.cssText='margin:10px 0;min-width:0;max-width:100%;line-height:1.5;flex-shrink:0';
   const details=node('details');details.dataset.resourceInstructions='';details.style.cssText='box-sizing:border-box;width:fit-content;max-width:min(100%,32rem);padding:10px 12px;border:1px solid #94a3b8;border-radius:10px';
-  const summary=node('summary',(mobile&&telegram?'APK և Telegram':mobile?'APK':'Telegram')+' · հրահանգներ');summary.style.cssText='cursor:pointer;font-weight:600;font-size:13px;list-style-position:inside;overflow-wrap:anywhere';
+  const summary=node('summary');if(mobile)mobileAppLabel(summary,(telegram?'Բջջային Հավելված և Telegram':'Բջջային Հավելված')+' · հրահանգներ');else summary.textContent='Telegram · հրահանգներ';summary.style.cssText='cursor:pointer;font-weight:600;font-size:13px;list-style-position:inside;overflow-wrap:anywhere';
   const content=node('div');content.style.cssText='display:grid;gap:12px;padding-top:12px;max-height:34vh;overflow:auto;font-size:13px;min-width:0;overflow-wrap:anywhere';details.append(summary,content);box.append(details);
   const notice=node('p');notice.setAttribute('role','status');notice.style.fontSize='13px';
   if(mobile){
-   const card=node('div');card.style.cssText='display:grid;gap:6px;min-width:0';card.append(node('h4','ZZWS՝ Android հավելված'));
+   const card=node('div');card.style.cssText='display:grid;gap:6px;min-width:0';const heading=node('h4');mobileAppLabel(heading,'Բջջային Հավելված');card.append(heading);
    const button=node('button');button.type='button';button.dataset.resource='apk';button.style.cssText='padding:10px 14px;border:1px solid #2563eb;border-radius:8px;background:#1d4ed8;color:white;cursor:pointer;justify-self:start;max-width:100%;white-space:normal';card.append(button);
    const version=node('p');version.dataset.apkVersion='';card.append(version);const description=node('p');description.dataset.apkDescription='';description.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere';card.append(description);availability(button,notice,card,who,requestTicket);
    card.append(node('p','Մուտք գործեք ձեր անձնական ZZWS հաշվով։ Հավելվածը չի ընդլայնում հաշվի իրավունքները։'));content.append(card);

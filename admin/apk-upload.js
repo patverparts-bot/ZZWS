@@ -7,7 +7,7 @@
  function start(user){
   reset();if(user?.role!=='admin'||user.adminScope!=='owner'||!user.id)return;actor=user.id;const who=actor,ticket=++serial;
   panel=document.getElementById('apkUploadPanel');if(!panel){panel=node('section');panel.id='apkUploadPanel';document.getElementById('adminResourcesPanel').after(panel);}
-  const field=node('fieldset');field.style.minWidth='0';field.append(node('legend','Android հավելվածի թարմացում'));
+  const field=node('fieldset');field.style.minWidth='0';field.append(node('legend','Բջջային Հավելված · թարմացում'));
   field.append(node('p','Ընտրեք նոր APK-ը և գրեք՝ ինչ է փոխվել։ Տարբերակը կկարդացվի ֆայլից։ Հրապարակումից հետո այն հասանելի կլինի APK թույլտվություն ունեցող հաշիվներին։ Պահվում են վերջին 2 հրապարակված տարբերակները․ ավելի հները ջնջվում են ինքնաշխատ։'));
   const current=node('p','Ընթացիկ տարբերակը բեռնվում է…');current.dataset.apkCurrent='';field.append(current);
   const form=node('form'),label=node('label','Նոր APK ֆայլ'),file=node('input');form.style.cssText='display:grid;gap:12px;min-width:0';label.style.cssText='display:grid;gap:6px;min-width:0';file.type='file';file.accept='.apk,application/vnd.android.package-archive';file.required=true;file.name='file';file.style.cssText='display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box';label.append(file);form.append(label);
