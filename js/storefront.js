@@ -46,7 +46,7 @@
   const photo=node('div',null,'sf-product-photo');photo.innerHTML=getProductImageHtml(p.articul,p.name);root.append(photo);
   const favorite=button(favoritesSet.has(p.articul)?'★':'♡',()=>toggleFavorite(p.articul),'star-btn sf-favorite');favorite.dataset.art=p.articul;favorite.setAttribute('aria-label','Ավելացնել ընտրվածներում');root.append(favorite);
   root.append(node('p',p.category,'sf-product-category'));
-  const title=node('h4'),details=button(p.name,()=>ZZWS_DEALER.openProduct(p.articul),'sf-product-title');details.dataset.dealerDetails=p.articul;title.append(details);root.append(title);
+  const title=node('h4'),copy=button(p.name,()=>copyModel(p.name),'sf-product-title'),details=button('ⓘ',()=>ZZWS_DEALER.openProduct(p.articul),'sf-product-details');copy.title='Պատճենել մոդելը';details.dataset.dealerDetails=p.articul;details.setAttribute('aria-label','Ապրանքի քարտ՝ '+p.name);details.title='Ապրանքի քարտ';title.classList.add('sf-product-name-actions');title.append(copy,details);root.append(title);
   const code=button(p.articul,()=>copyArticul(p.articul),'sf-product-code');code.setAttribute('aria-label','Պատճենել արտիկուլը '+p.articul);root.append(code);
   const badges=node('div');badges.innerHTML=window.ZZWS_CATALOG_CONTROLS?.badges(p.articul)||'';root.append(badges,prices(p));
   const stock=node(catalogIsAdmin()?'div':'p',p.stockStatus,'sf-stock');
@@ -115,7 +115,7 @@
   for(const group of ZZWS_STOREFRONT_CATEGORIES.groups(allProducts,ZZWS_DEALER.facts())){const tile=button('',()=>{navigate('catalog');selectedCategories=[...group.categories];updateCategorySelectionSummary();resetAndRender();},'sf-category');tile.dataset.majorCategory=group.id;const src=ZZWS_STOREFRONT_CATEGORIES.photo(group.id);if(src){const img=node('img');img.src=src;img.alt='';img.width=90;img.height=68;img.decoding='async';img.loading='eager';img.onerror=()=>{img.hidden=true;};tile.append(img);}tile.append(node('span',group.label));categories.append(tile);}
   home.append(categories,button('Բոլոր կատեգորիաները →',()=>{navigate('catalog');toggleMobileFilters(true);el('categoryInput').focus();},'sf-button sf-category-all-link'));
   const available=allProducts.filter(inStock);if(controls.promo!==false)collection('Ակցիաներ',available.filter(isPromo),'promo');
-  const strip=node('section',null,'sf-editorial');strip.append(node('div','Համեմատեք, ընտրեք և առաջարկեք գնորդին'),button('Վաճառողի գործիքներ',()=>{tools.open=true;tools.querySelector('button')?.focus();window.scrollTo({top:0});},'sf-button'));home.append(strip);
+  const strip=node('section',null,'sf-editorial');strip.append(node('div','Համեմատեք, ընտրեք և առաջարկեք գնորդին'),button('Վաճառողի գործիքներ',()=>{if(window.ZZWS_CATALOG_COMMAND){navigate('catalog',false);ZZWS_CATALOG_COMMAND.open('tools');return;}tools.open=true;tools.querySelector('button')?.focus();window.scrollTo({top:0});},'sf-button'));home.append(strip);
   collection('Նորույթներ',available.filter(isNew),'new');
   if(!available.some(isPromo)&&!available.some(isNew))collection('Առկա ապրանքներ',available,'catalog');
   renderBrands();

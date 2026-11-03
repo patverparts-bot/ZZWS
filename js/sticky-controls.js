@@ -28,6 +28,7 @@
   panel.classList.toggle('filter-body-closed',body.classList.contains('hidden'));
  }
  function onScroll(){scheduled=false;const app=document.getElementById('mainApp');if(app.classList.contains('hidden'))return;
+  if(window.ZZWS_CATALOG_COMMAND?.active()){manualExpanded=false;setCompact(false);bar.classList.remove('controls-stuck');refreshSummary();return;}
   if(window.ZZWS_CATALOG_LAYOUT?.sidebarActive()){manualExpanded=false;setCompact(false);body.classList.remove('hidden');bar.classList.remove('controls-stuck');refreshSummary();return;}
   const y=window.scrollY,atTop=y<=8||marker.getBoundingClientRect().top>12;
   if(atTop){manualExpanded=false;setCompact(false);}

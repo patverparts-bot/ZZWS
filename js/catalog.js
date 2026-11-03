@@ -375,21 +375,19 @@ tr.innerHTML = `
   <button data-act="toggle-fav" data-art="${escapeHtml(p.articul)}" class="star-btn" aria-label="${starTitle}" title="${starTitle}">${starIcon}</button>
 </td>
 <td class="font-mono font-medium">
-  <div class="flex flex-col gap-1">
+  <div class="catalog-sku-tools">
     <button type="button" data-act="copy-articul" data-art="${escapeHtml(p.articul)}" title="Պատճենել արտիկուլը" aria-label="Պատճենել արտիկուլը ${escapeHtml(p.articul)}" class="text-left text-blue-600 dark:text-blue-400 font-bold text-xs whitespace-nowrap hover:underline cursor-copy">${escapeHtml(p.articul)}</button>
-    <a href="${escapeHtml(searchUrl)}" target="_blank" aria-label="Որոնել կայքում" class="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 text-blue-700 dark:text-blue-300 rounded border border-blue-200 dark:border-blue-800 text-[10px] font-semibold transition w-fit shadow-xs" title="Որոնել Zigzag.am կայքում">
-      <span>🔍 Որոնել կայքում</span>
-    </a>
+    <a href="${escapeHtml(searchUrl)}" target="_blank" rel="noopener noreferrer" class="catalog-site-link" title="Որոնել կայքում" aria-label="Որոնել կայքում՝ ${escapeHtml(p.articul)}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9"/><path d="M20 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h5"/></svg></a>
   </div>
 </td>
 <td>${getBrandLogoHtml(p.brand)}</td>
 <td>
 <div class="flex items-center gap-3">
 ${getProductImageHtml(p.articul, p.name)}
-<div class="min-w-0"><span class="text-gray-900 dark:text-white font-medium whitespace-normal">${escapeHtml(p.name || '—')}</span>${window.ZZWS_CATALOG_CONTROLS?.badges(p.articul)||''}${groupByCategory ? '' : `<div class="text-[11px] text-gray-500 dark:text-gray-400">${escapeHtml(p.category)}</div>`}<button type="button" class="zigzag-product-ask" data-zigzag-art="${escapeHtml(p.articul)}">ԶիգԶագ · Բնութագրեր</button></div>
+<div class="min-w-0"><button type="button" data-act="copy-model" data-model="${escapeHtml(p.name||'')}" class="catalog-model-copy" title="Պատճենել մոդելը">${escapeHtml(p.name || '—')}</button>${window.ZZWS_CATALOG_CONTROLS?.badges(p.articul)||''}${groupByCategory ? '' : `<div class="text-[11px] text-gray-500 dark:text-gray-400">${escapeHtml(p.category)}</div>`}<button type="button" class="zigzag-product-ask" data-zigzag-art="${escapeHtml(p.articul)}">ԶիգԶագ · Բնութագրեր</button></div>
 </div>
 </td>
-<td><span class="inline-block px-2.5 py-1 rounded-md font-semibold break-words ${stockBadgeClass}">${escapeHtml(p.stockStatus)}</span></td>
+<td>${window.ZZWS_CATALOG_WAREHOUSE?.html(p)??`<span class="inline-block px-2.5 py-1 rounded-md font-semibold break-words ${stockBadgeClass}">${escapeHtml(p.stockStatus)}</span>`}</td>
 <td class="text-right">${retailCellHtml}</td>
 ${resaleColHtml}
 ${priceTdsHtml}

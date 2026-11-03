@@ -1,0 +1,9 @@
+/* Help belongs to the label/action it explains, never on top of an input. */
+.context-help-caption{display:inline-flex;align-items:center;gap:6px;max-width:100%;vertical-align:middle}
+.context-help-action,.context-help-control-row{display:inline-flex;align-items:center;gap:6px;max-width:100%;min-width:0}
+.context-help-control-row>input,.context-help-control-row>select,.context-help-control-row>textarea{flex:1;min-width:0}
+.context-help-caption>.context-help,.context-help-action>.context-help,.context-help-control-row>.context-help{position:static!important;flex:0 0 24px;margin:0;align-self:center}
+.context-help[hidden]{display:none!important}
+.context-help-action:has(>[hidden])>.context-help,.context-help-action:has(>.hidden)>.context-help{display:none!important}
+#catalogCommandPanel .context-help{padding:0;width:24px;height:24px;min-width:24px;min-height:24px;line-height:24px}
+html[data-catalog-command] .catalog-header-main{grid-template-columns:minmax(160px,1fr) auto}

@@ -1,0 +1,17 @@
+#catalogTable .catalog-stock-list{width:100%;max-width:100px;min-width:70px;margin:0;padding:0;display:grid;gap:0}
+#catalogTable .catalog-stock-list>div{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:baseline;min-height:15px;line-height:15px}
+#catalogTable .catalog-stock-list dt{margin:0;color:#64748b;font:500 11px/15px ui-monospace,Consolas,monospace;letter-spacing:.02em}
+#catalogTable .catalog-stock-list dd{margin:0;text-align:right;color:#155777;font:800 13px/15px system-ui,sans-serif;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.dark #catalogTable .catalog-stock-list dt{color:#a4b2c4}.dark #catalogTable .catalog-stock-list dd{color:#a4def7}
+#catalogTable td:nth-child(4) .product-img-container{flex:0 0 64px!important;width:64px!important;height:64px!important}
+#catalogTable td:nth-child(4) .product-img{width:64px!important;height:64px!important;max-width:64px;max-height:64px;object-fit:contain}
+#catalogTable .catalog-sku-tools{display:flex;align-items:center;gap:6px;min-width:0}
+#catalogTable .catalog-sku-tools>[data-act=copy-articul]{overflow:hidden;text-overflow:ellipsis;min-width:0}
+#catalogTable .catalog-site-link{display:inline-flex;align-items:center;justify-content:center;flex:0 0 24px;width:24px;height:24px;border-radius:50%;background:#edf5fa;color:#276482;text-decoration:none;border:0}
+#catalogTable .catalog-site-link:hover{background:#d9edf7;color:#0b496b}
+.catalog-model-copy{display:inline;background:none;border:0;padding:0;color:inherit;font:inherit;text-align:left;cursor:copy;overflow-wrap:anywhere}
+.catalog-model-copy:hover,.sf-product-title:hover{text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
+.catalog-model-copy:focus-visible,.catalog-site-link:focus-visible{outline:3px solid #38bdf8;outline-offset:3px}
+.sf-product-name-actions{display:flex;align-items:flex-start;gap:6px}.sf-product-name-actions>.sf-product-title{flex:1;min-width:0;cursor:copy}
+.sf-product-name-actions>.sf-product-details{flex:0 0 22px;min-width:22px;padding:0;border:0;background:none;color:var(--sf-muted,#587286);font-size:18px;line-height:22px}
+.dark #catalogTable .catalog-site-link{background:#23384d;color:#b3dff5}

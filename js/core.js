@@ -44,7 +44,9 @@ function getProduct(articul) {
 }
 
 let copyToastTimer = null;
-async function copyArticul(articul) {
+async function copyArticul(articul) { return copyCatalogValue(articul, 'Չհաջողվեց պատճենել արտիկուլը'); }
+async function copyModel(model) { return copyCatalogValue(model, 'Չհաջողվեց պատճենել մոդելը'); }
+async function copyCatalogValue(articul, failureText) {
   let copied = false;
   try {
     if (navigator.clipboard && window.isSecureContext) {
@@ -72,7 +74,7 @@ async function copyArticul(articul) {
 
   const toast = document.getElementById('copyToast');
   if (toast) {
-    toast.textContent = copied ? `Պատճենվեց՝ ${articul}` : 'Չհաջողվեց պատճենել արտիկուլը';
+    toast.textContent = copied ? `Պատճենվեց՝ ${articul}` : failureText;
     toast.classList.remove('hidden');
     if (copyToastTimer) clearTimeout(copyToastTimer);
     copyToastTimer = setTimeout(() => toast.classList.add('hidden'), 1800);
@@ -168,6 +170,7 @@ function updateMobileFilterBadge() {
 }
 
 function toggleMobileFilters(forcedState) {
+  if(window.ZZWS_CATALOG_COMMAND&&document.documentElement.dataset.storefrontPage!=='home'){if(forcedState===false)ZZWS_CATALOG_COMMAND.close();else ZZWS_CATALOG_COMMAND.open('filters');return;}
   const container = document.getElementById('filtersContainer');
   const icon = document.getElementById('filterToggleIcon');
   if (!container || !icon) return;

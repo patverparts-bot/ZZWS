@@ -198,6 +198,7 @@ document.addEventListener('click', (e) => {
     case 'restore-history': restoreOrderFromHistory(el.dataset.id); break;
     case 'ack-price':     if (cart[art]) { cart[art].addedPrice = getItemWholesalePrice(cart[art]); saveCartToStorage(); renderModalItems(); } break;
     case 'copy-articul':  e.preventDefault(); copyArticul(art); break;
+    case 'copy-model':    e.preventDefault(); copyModel(el.dataset.model); break;
   }
 });
 
