@@ -23,7 +23,7 @@ test('date filters use Yerevan boundaries and reject invalid dates or review val
 });
 test('chat waits for history persistence and does not silently discard a save failure',async()=>{
  let saved;const row={id:crypto.randomUUID()},q={insert(value){saved=value;return this;},select(){return this;},single(){return Promise.resolve(row);}};
- const base={path:'assistant/chat',req:new Request('https://test',{method:'POST'}),user:{id:crypto.randomUUID(),login:'test'},body:async()=>({message:'hello',conversationId:crypto.randomUUID(),advisor:null}),current:async()=>({products:[],rules:{}}),project:()=>[],json:x=>x,fail,knowledge:{products:{}},table:()=>q,query:async x=>x};
+ const base={path:'assistant/chat',req:new Request('https://test',{method:'POST'}),user:{id:crypto.randomUUID(),login:'test'},body:async()=>({message:'hello',conversationId:crypto.randomUUID(),advisor:null}),current:async()=>({products:[],rules:{}}),project:()=>[],json:x=>x,fail,knowledge:{products:{}},table:name=>name==='assistant_lessons'?{select(){return this;},in(){return this;},order(){return Promise.resolve([]);}}:q,query:async x=>x};
  const result=await assistantRoutes(base);assert.equal(result.historyId,row.id);assert.equal(saved.response.answer,result.answer);
  await assert.rejects(assistantRoutes({...base,query:async()=>{throw Error('storage failed');}}),/storage failed/);
 });

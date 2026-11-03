@@ -1,5 +1,6 @@
 import {answerQuestion, validateQuestion} from './assistant.mjs';
 import {conversationId,historyEntry} from './assistant-history.mjs';
+import {feedbackKey,feedbackSemanticKey,combineLessons} from './assistant-learning.mjs';
 const gates = new Map();
 // Best-effort per-isolate protection in addition to authenticated application access.
 export async function assistantRoutes(c) {
@@ -22,9 +23,17 @@ export async function assistantRoutes(c) {
     const orderPriceMode=user.role==='admin'&&payload.orderPriceMode==='KP'?'KP':'WS';
     // Production assistant is fully deterministic: no provider request or usage charge,
     // even if legacy free-tier provider variables remain configured on the project.
-    const result=await answerQuestion(payload, products, knowledge, {...options,freeTierConfirmed:false,orderPriceMode,publicCatalog});
+    const baseOptions={...options,freeTierConfirmed:false,orderPriceMode,publicCatalog};
+    let result=await answerQuestion(payload, products, knowledge, baseOptions);
+    const semanticKey=feedbackSemanticKey(result.advisor),family=result.advisor?.category;
+    const keys=[feedbackKey(validated),...(semanticKey?[semanticKey]:[]),...(family?['similar-category:'+family]:[])];
+    const lessons=c.table&&c.query?await c.query(c.table('assistant_lessons').select('history_id,correction,excluded_articuls').in('intent_key',keys).order('updated',{ascending:true})):[];
+    const learning=combineLessons(lessons);
+    if(lessons.length)result=await answerQuestion(payload, products, knowledge, {...baseOptions,learning});
+    if(result.choices)result.choices=result.choices.filter(p=>!learning.excluded.has(p.articul));
+    if(learning.ids.length)result.learningApplied={count:learning.ids.length};
     if(c.table&&c.query){
-      const saved=await c.query(c.table('assistant_history').insert(historyEntry(user,{...validated,orderPriceMode},result,conversation)).select('id').single());
+      const saved=await c.query(c.table('assistant_history').insert(historyEntry(user,{...validated,orderPriceMode,learningKey:semanticKey||feedbackKey(validated)},result,conversation)).select('id').single());
       return json({...result,historyId:saved.id,conversationId:conversation});
     }
     return json(result);

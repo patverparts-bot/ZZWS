@@ -302,7 +302,7 @@ async function handleRequest(req:Request){
     if(['admin/catalog-controls','admin/warehouses'].includes(path)&&req.method==='POST'&&!(confirmedUntil&&Date.parse(confirmedUntil)>Date.now()))return json({error:'Հաստատեք ձեր ընթացիկ գաղտնաբառը',reauthRequired:true},428);
     const warehouseResponse=await warehouseRoutes({path,req,user,table,query,body,json,fail,audit});if(warehouseResponse)return warehouseResponse;
     const controlResponse=await catalogControlRoutes({path,req,user,table,query,body,json,fail,audit,service,current});if(controlResponse)return controlResponse;
-    const historyResponse=await assistantHistoryRoutes({path,req,user,body,table,query,json,fail,audit});if(historyResponse)return historyResponse;
+    const historyResponse=await assistantHistoryRoutes({path,req,user,body,table,query,json,fail,audit,service});if(historyResponse)return historyResponse;
     const assistantResponse=await assistantRoutes({path,req,user,body,current,project,json,fail,table,query,knowledge:assistantKnowledge,publicCatalog:assistantPublicCatalog,options:{apiKey:Deno.env.get('ZZWS_ASSISTANT_GEMINI_KEY'),freeTierConfirmed:Deno.env.get('ZZWS_ASSISTANT_GEMINI_FREE_TIER')==='true'}});if(assistantResponse)return assistantResponse;
     const receiptResponse=await receiptRoutes({path,req,user,service,table,query,body,json,fail});if(receiptResponse)return receiptResponse;
     const invitationResponse=await invitationEmailRoutes({path,req,user,service,table,query,body,json,fail});if(invitationResponse)return invitationResponse;

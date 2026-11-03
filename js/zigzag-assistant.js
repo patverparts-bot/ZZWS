@@ -132,7 +132,8 @@
     }
     if(product.match){
       const match=create('div','zigzag-match zigzag-match-'+product.match.kind);match.append(create('strong','',t(product.match.kind==='near'?'nearMatch':'exactMatch')));
-      for(const difference of product.match.deviations||[])match.append(create('span','',t(difference.field)+': '+difference.actual+' '+t('cm')+' ('+(difference.difference>0?'+':'')+difference.difference+' '+t('cm')+' · '+t('requested')+': '+difference.requested+')'));
+      const deviationUnit=unit=>({hy:{cm:'սմ',kg:'կգ',l:'լ',sets:'հավաքածու',rpm:'պտ/րոպե',AMD:'֏'},ru:{cm:'см',kg:'кг',l:'л',sets:'компл.',rpm:'об/мин',AMD:'֏'}}[locale]?.[unit]||unit||t('cm'));
+      for(const difference of product.match.deviations||[])match.append(create('span','',(difference.labels?.[{hy:0,ru:1,en:2}[locale]??0]||t(difference.field))+': '+difference.actual+' '+deviationUnit(difference.unit)+' ('+(difference.difference>0?'+':'')+difference.difference+' '+deviationUnit(difference.unit)+' · '+(difference.fromSource?(locale==='ru'?'Исходное':locale==='en'?'Source':'Սկզբնական'):t('requested'))+': '+difference.requested+')'));
       box.insertBefore(match,summary);
     }
     if (product.status !== 'verified') { box.append(create('p', 'zigzag-source', t('missing'))); return box; }
