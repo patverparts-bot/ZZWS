@@ -1,8 +1,8 @@
 #catalogTable .catalog-stock-list{width:100%;max-width:100px;min-width:70px;margin:0;padding:0;display:grid;gap:0}
-#catalogTable .catalog-stock-list>div{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:baseline;min-height:15px;line-height:15px}
-#catalogTable .catalog-stock-list dt{margin:0;color:#64748b;font:500 11px/15px ui-monospace,Consolas,monospace;letter-spacing:.02em}
-#catalogTable .catalog-stock-list dd{margin:0;text-align:right;color:#155777;font:800 13px/15px system-ui,sans-serif;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.dark #catalogTable .catalog-stock-list dt{color:#a4b2c4}.dark #catalogTable .catalog-stock-list dd{color:#a4def7}
+#catalogTable .catalog-stock-list>div{display:grid;grid-template-columns:36px minmax(0,1fr);gap:10px;align-items:baseline;min-height:23px;line-height:23px}
+#catalogTable .catalog-stock-list dt{margin:0;color:#334155;font:700 15px/23px ui-monospace,Consolas,monospace;letter-spacing:.02em}
+#catalogTable .catalog-stock-list dd{margin:0;text-align:right;color:#155777;font:800 15px/23px system-ui,sans-serif;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.dark #catalogTable .catalog-stock-list dt{color:#d1deed}.dark #catalogTable .catalog-stock-list dd{color:#a4def7}
 #catalogTable td:nth-child(4) .product-img-container{flex:0 0 64px!important;width:64px!important;height:64px!important}
 #catalogTable td:nth-child(4) .product-img{width:64px!important;height:64px!important;max-width:64px;max-height:64px;object-fit:contain}
 #catalogTable .catalog-sku-tools{display:flex;align-items:center;gap:6px;min-width:0}
