@@ -89,13 +89,14 @@ async function selectAdminTab(name,options={}){
   if(!adminTabs.includes(name)||!ZZWS_ADMIN_HOME.can(name))name='dashboard';
   for(const section of adminTabs)el(section).hidden=section!==name;
   document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('admin-tab-active',b.dataset.tab===name);b.setAttribute('aria-current',b.dataset.tab===name?'page':'false');});
+  window.ZZWS_ADMIN_ORDERS_HUB?.sync(name);
   try{sessionStorage.setItem('zzws_admin_tab_v1',name);}catch{}
   if(adminNavigationActive){
     if(options.history==='restore'||name===activeAdminTab)history.replaceState(adminHistoryState(name,adminHistoryPosition),'',adminTabUrl(name));
     else{adminHistoryPosition++;history.pushState(adminHistoryState(name,adminHistoryPosition),'',adminTabUrl(name));}
     activeAdminTab=name;updateAdminBackButton();
   }
-  ZZWS_ADMIN_WORKBENCH.mount(name);el('adminMoreMenu').open=false;const label=document.querySelector('[data-tab="'+name+'"]')?.cloneNode(true);label?.querySelectorAll('[hidden]').forEach(n=>n.remove());el('adminActiveSection').textContent=name==='templates'?'Հաճախորդի պահպանված զամբյուղները':label?.textContent.trim()||'';
+  ZZWS_ADMIN_WORKBENCH.mount(name);el('adminMoreMenu').open=false;const label=document.querySelector('[data-tab="'+name+'"]')?.cloneNode(true);label?.querySelectorAll('[hidden]').forEach(n=>n.remove());el('adminActiveSection').textContent=['manager','orders'].includes(name)?'Պատվերներ':name==='templates'?'Հաճախորդի պահպանված զամբյուղները':label?.textContent.trim()||'';
   window.ZZWS_ADMIN_VIEW_STATE?.prepare(name);
   if(name==='dashboard')await ZZWS_ADMIN_HOME.load();
   if(name==='assistantHistory')await ZZWS_ASSISTANT_HISTORY.load();
