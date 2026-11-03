@@ -12,9 +12,11 @@ const categories = {
   coffee: /кофемашин|кофевар|սրճեփ|coffee machine|coffee maker/i,
   laptop: /ноутбук|նոթբուք|laptop|notebook/i,
   microwave: /микроволн|միկրոալիք|microwave/i,
+  oven: /духов|\boven\b|(?<!միկրոալիքային )վառարան|ջեռոց/i,
   kettle: /чайник|թեյնիկ|kettle/i,
   iron: /утюг|արդուկ|\biron\b/i
 };
+const installationPattern=/built[ -]?in|встраива|встроенн|ներկառուց/i;
 const axes = {width: /ширин|шире|width|լայնու/i, depth: /глубин|глубже|depth|խորու/i, height: /высот|выше|height|բարձրու/i};
 const pendingValues = ['category','dimension','dimensionValue','budget','currency','relax','priority','family'];
 const labels = {
@@ -22,6 +24,7 @@ const labels = {
   hy: {category:'Ի՞նչ տեխնիկա եք փնտրում։',dimension:'{n} սմ-ը առավելագույն լայնությո՞ւնն է, թե՞ խորությունը։',dimensionValue:'Որքա՞ն է առավելագույն չափը սանտիմետրերով։',budget:'Որքա՞ն է առավելագույն բյուջեն դրամով։ Օրինակ՝ «մինչև 200 հազար», կամ ընտրեք ամենամատչելիները։',currency:'Նշեք բյուջեն հայկական դրամով (֏)։',low:'Ամենամատչելիները',width:'Լայնություն',depth:'Խորություն',height:'Բարձրություն',washer:'Լվացքի մեքենա',dishwasher:'Սպասք լվացող մեքենա',dryer:'Չորանոց',fridge:'Սառնարան',tv:'Հեռուստացույց',vacuum:'Փոշեկուլ',coffee:'Սրճեփ',laptop:'Նոթբուք',microwave:'Միկրոալիքային վառարան',kettle:'Թեյնիկ',iron:'Արդուկ',found:'Գտա համապատասխան տարբերակներ։ Գները՝ ձեր ընթացիկ կատալոգից, բնութագրերը՝ zigzag.am-ից։',none:'Այս պայմաններով ձեր կատալոգում հաստատված տարբերակներ չգտնվեցին։ Ո՞ր պայմանը կփոխեք։ Մյուս ցանկությունները կպահպանեմ։',empty:'Ձեր հասանելի կատալոգում այս կատեգորիան հիմա չկա։ Ի՞նչ այլ տեխնիկա փնտրեմ։',unknown:'Չհաստատված պարամետրերով ապրանքները չեն ներառվել։',budgetChange:'Փոխել բյուջեն',sizeChange:'Փոխել չափը',loadChange:'Փոխել տարողությունը',brandChange:'Այլ բրենդ',featureChange:'Փոխել գործառույթները',features:'Նշեք՝ պե՞տք է չորացում, և պարտադի՞ր է ինվերտորային շարժիչը։',more:'Նշեք՝ ինչ փոխել՝ բյուջե, չափ, տարողություն, բրենդ կամ գործառույթներ։',summary:'Ձեր պայմանները',budgetLabel:'Բյուջե՝ մինչև',widthLabel:'Լայնություն՝ մինչև',depthLabel:'Խորություն՝ մինչև',heightLabel:'Բարձրություն՝ մինչև',loadLabel:'Տարողություն',loadMin:'Տարողություն՝ սկսած',cheap:'Սկզբում մատչելիները',noLimit:'Առանց բյուջեի սահմանափակման',brand:'Բրենդ',withDryer:'Չորացումով',noDryer:'Առանց չորացման',inverter:'Ինվերտորային շարժիչ',cm:'սմ',kg:'կգ',priceUnknown:'Համապատասխան ապրանքների գինը հաստատված չէ։ Ճշտեք մենեջերի հետ։'},
   en: {category:'What kind of appliance are you looking for?',dimension:'Is {n} cm the maximum width or depth?',dimensionValue:'What is the maximum size in centimetres?',budget:'What is your maximum budget in Armenian drams? For example, “up to 200 thousand”, or choose the lowest-priced options.',currency:'Please give your budget in Armenian drams (֏).',low:'Lowest-priced options',width:'Width',depth:'Depth',height:'Height',washer:'Washing machine',dishwasher:'Dishwasher',dryer:'Tumble dryer',fridge:'Fridge',tv:'TV',vacuum:'Vacuum cleaner',coffee:'Coffee machine',laptop:'Laptop',microwave:'Microwave',kettle:'Kettle',iron:'Iron',found:'Here are matching options. Prices are from your current catalogue; specifications are from zigzag.am.',none:'No verified options in your catalogue meet these requirements. Which requirement would you like to change? I will keep the others.',empty:'That category is not currently in your accessible catalogue. What other appliance should I look for?',unknown:'Products with unconfirmed required specifications were excluded.',budgetChange:'Change budget',sizeChange:'Change size',loadChange:'Change capacity',brandChange:'Another brand',featureChange:'Change feature requirements',features:'Please specify whether drying and an inverter motor are required.',more:'Tell me what to change: budget, size, capacity, brand or features.',summary:'Your requirements',budgetLabel:'Budget up to',widthLabel:'Width up to',depthLabel:'Depth up to',heightLabel:'Height up to',loadLabel:'Capacity',loadMin:'Capacity at least',cheap:'Lowest price first',noLimit:'No budget limit',brand:'Brand',withDryer:'With drying',noDryer:'Without drying',inverter:'Inverter motor',cm:'cm',kg:'kg',priceUnknown:'Matching product prices are unconfirmed. Please check with your manager.'}
 };
+labels.ru.oven='Духовой шкаф';labels.hy.oven='Ջեռոց';labels.en.oven='Oven';
 Object.assign(labels.ru,{dimension:'{n} см — это ширина, глубина или высота?',dimensionValue:'Укажите размер в сантиметрах. Если это предел для ниши, напишите «не больше».',widthTarget:'Ширина',depthTarget:'Глубина',heightTarget:'Высота',near:'Сначала показаны точные размеры, затем близкие варианты с указанными отличиями. Проверьте размеры перед выбором.',found:'Подобрал варианты по вашим условиям. Характеристики — с zigzag.am, цены — из вашего каталога.'});
 Object.assign(labels.hy,{dimension:'{n} սմ-ը լայնությո՞ւնն է, խորությո՞ւնը, թե՞ բարձրությունը։',dimensionValue:'Նշեք չափը սանտիմետրերով։ Եթե այն խորշի սահմանափակում է, գրեք «ոչ ավելի»։',widthTarget:'Լայնություն',depthTarget:'Խորություն',heightTarget:'Բարձրություն',near:'Սկզբում ճշգրիտ չափերով տարբերակներն են, ապա՝ մոտ չափերով՝ տարբերությունների նշումով։ Ընտրելուց առաջ ստուգեք չափերը։',found:'Ընտրեցի ձեր պայմաններին համապատասխան տարբերակներ։ Բնութագրերը՝ zigzag.am-ից, գները՝ ձեր կատալոգից։'});
 Object.assign(labels.en,{dimension:'Is {n} cm the width, depth or height?',dimensionValue:'Enter the size in cm. If this is a hard space limit, say “no more than”.',widthTarget:'Width',depthTarget:'Depth',heightTarget:'Height',near:'Exact sizes appear first, followed by nearby sizes with explicit differences. Check dimensions before choosing.',found:'Here are options for your requirements. Specifications are from zigzag.am; prices are from your catalogue.'});
@@ -46,7 +49,7 @@ export function validateAdvisor(value) {
     const max = name === 'budgetMax' ? 1e9 : name === 'capacity' ? 100 : name==='minVolume'?3000:name==='minDiagonal'?300:name==='minPlaces'?30:name==='maxNoise'?160:1000;
     if (typeof value[name] !== 'number' || !Number.isFinite(value[name]) || value[name] <= 0 || value[name] > max) invalid(); result[name] = value[name];
   }
-  for (const name of ['cheap','budgetSkipped','capacityMin','drying','inverter','best','family','noFrost','smart','fourK','inStock','promo','volumeMax','diagonalMax','placesMax']) if (value[name] != null) {
+  for (const name of ['builtIn','cheap','budgetSkipped','capacityMin','drying','inverter','best','family','noFrost','smart','fourK','inStock','promo','volumeMax','diagonalMax','placesMax']) if (value[name] != null) {
     if (typeof value[name] !== 'boolean') invalid(); result[name] = value[name];
   }
   if(value.page!=null){if(!Number.isInteger(value.page)||value.page<0||value.page>100)invalid();result.page=value.page;}
@@ -73,6 +76,8 @@ function parseRequirements(message, prior, visibleProducts, responseLanguage) {
   const category = detectCategory(message);
   const state = category && category !== prior?.category ? {} : {...prior};
   state.language = responseLanguage || langOf(message,state.language); if (category) state.category = category;
+  if(installationPattern.test(message))state.builtIn=true;
+  if(/отдельно[ -]стоящ|freestanding|free standing|անկախ տեղադրմամբ/i.test(message))state.builtIn=false;
   const text = message.toLowerCase(), oldPending = state.pending; delete state.pending;
   if (/недорог|дешев|бюджетн|cheap|affordable|lowest.priced|մատչելի|էժան/i.test(text)) state.cheap = true;
   if (/без ограничени.*бюджет|без бюджета|no budget limit|առանց բյուջեի/i.test(text) || text.trim() === labels[state.language].low.toLowerCase()) {state.budgetSkipped=true;state.cheap=true;delete state.budgetMax;}
@@ -144,6 +149,7 @@ const customerPrice = (p,mode) => {
 const categoryMatches = (p,category) => {
   const name=p.category||'';
   if(/параг|պարագա|аксессуар|accessor|cleaning product|մաքրող նյութ/i.test(name))return false;
+  if(category==='oven'&&/միկրոալիք|microwave|микроволн|мини|mini|մինի|պիցցա|օդային/i.test(name))return false;
   return categories[category].test(name);
 };
 
@@ -154,6 +160,7 @@ export function requirementSummary(state) {
   if(state.cheap)parts.push(t.cheap);
   for(const axis of Object.keys(axes))if(state[axis])parts.push(t[axis+(dimensionMode(state,axis)==='max'?'Label':'Target')]+' '+(dimensionMode(state,axis)==='min'?'≥ ':dimensionMode(state,axis)==='exact'?'= ':'')+state[axis]+' '+t.cm);
   if(state.capacity)parts.push(t[state.capacityMin?'loadMin':'loadLabel']+' '+state.capacity+' '+t.kg);
+  if(state.builtIn!==undefined)parts.push(state.language==='ru'?(state.builtIn?'Встраиваемая':'Отдельно стоящая'):state.language==='en'?(state.builtIn?'Built-in':'Freestanding'):(state.builtIn?'Ներկառուցվող':'Անկախ տեղադրմամբ'));
   if(state.brand)parts.push(t.brand+': '+state.brand);
   if(state.drying!==undefined)parts.push(t[state.drying?'withDryer':'noDryer']);
   if(state.inverter!==undefined)parts.push(state.inverter?t.inverter:state.language==='hy'?'Առանց ինվերտորային շարժիչի':state.language==='en'?'Without inverter':'Без инвертора');
@@ -192,6 +199,11 @@ export function advise(message, prior, visibleProducts, verifiedProduct, respons
     const product=verifiedProduct(p);
     if(product.status!=='verified'){uncertain++;continue;}
     const specs=product.specifications,dims=dimensions(specs),load=quantity(specs,/load capacity|capacity.*kg|загрузка|տարողություն.*կգ/i);
+    if(state.builtIn!==undefined){
+      const built=installationPattern.test(p.category||'')||specs.some(s=>/embedding|built[ -]?in|встраива|ներկառուց/i.test(s.name+' '+s.value));
+      const free=/отдельно[ -]стоящ|freestanding|free standing|անկախ տեղադրմամբ/i.test(p.category||'')||specs.some(s=>/^(?:type|installation|installation type)$/i.test(s.name)&&/free[ -]?standing/i.test(s.value));
+      if(state.builtIn?!built:built||!free){uncertain++;continue;}
+    }
     const preference=preferenceMatch(state,p,specs,orderPriceMode);if(!preference.accepted){if(preference.unconfirmed)uncertain++;continue;}
     const sizeMatch=matchDimensions(state,dims);if(!sizeMatch.accepted&&!sizeMatch.unconfirmed)continue;
     if(state.capacity&&load!=null&&(state.capacityMin?load<state.capacity:Math.abs(load-state.capacity)>.001))continue;

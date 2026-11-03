@@ -1,0 +1,53 @@
+(() => {
+ 'use strict';
+ const root=document.getElementById('assistantHistory'),node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;if(cls)n.className=cls;return n;};
+ const ru=()=>window.ZZWS_I18N?.language==='ru',t=(hy,ruText)=>ru()?ruText:hy;
+ const date=value=>new Date(value).toLocaleString(ru()?'ru-RU':'hy-AM',{timeZone:'Asia/Yerevan'});
+ let generation=0,owner=null,busy=false,offset=0,data=null,conversation='';
+ const heading=node('h1'),help=node('p'),form=node('form',null,'assistant-history-filters'),from=node('input'),to=node('input'),search=node('input'),status=node('select'),find=node('button'),yesterday=node('button'),all=node('button'),message=node('p'),list=node('div'),pager=node('div',null,'assistant-history-pager'),previous=node('button'),next=node('button'),count=node('span');
+ from.type=to.type='date';search.type='search';search.maxLength=100;from.id='assistantHistoryFrom';to.id='assistantHistoryTo';search.id='assistantHistorySearch';status.id='assistantHistoryStatus';
+ const fields=[['Սկսած','С даты',from],['Մինչև','По дату',to],['Հարց, պատասխան, ապրանք կամ օգտատեր','Вопрос, ответ, товар или пользователь',search],['Գնահատական','Оценка',status]].map(([hy,r,input])=>{const label=node('label'),span=node('span');label.append(span,input);form.append(label);return {hy,r,span};});
+ for(const value of ['','unreviewed','incorrect','correct']){const option=node('option');option.value=value;status.append(option);}
+ find.type='submit';yesterday.type=all.type=previous.type=next.type='button';form.append(find,yesterday,all);message.setAttribute('role','status');pager.append(previous,count,next);root.append(heading,help,form,message,list,pager);
+ const reviewLabel=value=>({unreviewed:t('Չստուգված','Не проверено'),incorrect:t('Սխալ','Неправильно'),correct:t('Ճիշտ','Верно')}[value]);
+ function controls(){for(const input of form.querySelectorAll('input,select,button'))input.disabled=busy;previous.disabled=busy||offset===0;next.disabled=busy||!data||offset+20>=data.total;}
+ function labels(){const nav=document.querySelector('[data-tab=assistantHistory]');if(nav)nav.textContent=t('Օգնականի պատմություն','История помощника');heading.textContent=t('Օգնականի պատմություն','История помощника');help.textContent=t('Պահպանվում են նոր հարցերը, պատասխանները և առաջարկված ապրանքների բնութագրերը։ Ժամը՝ Երևանի։ Գնահատականները ինքնաբերաբար չեն փոխում ընտրության կանոնները։','Сохраняются новые вопросы, ответы и характеристики предложенных товаров. Время — Ереван. Оценки сами по себе не меняют правила подбора.');for(const f of fields)f.span.textContent=t(f.hy,f.r);for(const option of status.options)option.textContent=option.value?reviewLabel(option.value):t('Բոլորը','Все');find.textContent=t('Գտնել / թարմացնել','Найти / обновить');yesterday.textContent=t('Երեկ','Вчера');all.textContent=conversation?t('Բոլոր զրույցները','Все диалоги'):t('Մաքրել զտիչները','Сбросить фильтры');previous.textContent=t('Նախորդը','Назад');next.textContent=t('Հաջորդը','Далее');}
+ function photo(p){
+   const box=node('div',null,'assistant-history-photo'),path=window.ZZWS_PRODUCT_PHOTO_PATHS?.[p.articul],origin='https://www.zigzag.am',folder=encodeURIComponent(String(p.articul).slice(0,1))+'/'+encodeURIComponent(String(p.articul).slice(1,2))+'/'+encodeURIComponent(p.articul);
+   const urls=[...(path?[path.startsWith('https://www.zigzag.am/')?path:path.startsWith('js/product-images/')?'../'+path:origin+window.ZZWS_PRODUCT_PHOTO_PREFIX+path]:[]),origin+'/media/catalog/product/'+folder+'.jpg',origin+window.ZZWS_PRODUCT_PHOTO_FALLBACK_PREFIX+folder+'.jpg'];
+   let index=0;const img=node('img');img.alt=p.name;img.loading='lazy';img.src=urls[index];
+   img.onerror=()=>{if(++index<urls.length)img.src=urls[index];else{img.remove();box.textContent=t('Նկար չկա','Нет фото');}};box.append(img);return box;
+ }
+ function product(p){
+   const card=node('article',null,'assistant-history-product');card.append(photo(p),node('strong',p.name),node('small',p.articul));
+   if(p.price?.amount)card.append(node('p',p.price.amount.toLocaleString()+' ֏'));
+   const dl=node('dl');for(const s of window.ZZWS_ASSISTANT_SUMMARY(p.specifications)){dl.append(node('dt',ru()?s.name:window.ZZWS_ARMENIAN_SPECS?.label(s.name)||s.name),node('dd',ru()?String(s.value):window.ZZWS_ARMENIAN_SPECS?.value(s.value)||String(s.value)));}card.append(dl);
+   if(!dl.children.length)card.append(node('p',t('Հաստատված բնութագրերը հասանելի չեն','Подтверждённые характеристики недоступны')));
+   if(p.specifications?.length){const details=node('details'),summary=node('summary',t('Բոլոր բնութագրերը','Все характеристики')),full=node('dl');for(const s of p.specifications)full.append(node('dt',ru()?s.name:window.ZZWS_ARMENIAN_SPECS?.label(s.name)||s.name),node('dd',ru()?String(s.value):window.ZZWS_ARMENIAN_SPECS?.value(s.value)||String(s.value)));details.append(summary,full);card.append(details);}
+   return card;
+ }
+ function render(){
+   labels();list.replaceChildren();if(!data){controls();return;}
+   count.textContent=(data.total?offset+1:0)+'–'+Math.min(offset+20,data.total)+' / '+data.total;
+   if(!data.rows.length)list.append(node('p',t('Գրառումներ չկան։ Պատմությունը սկսվում է պահպանումը միացնելու պահից։','Записей нет. История начинается с момента включения сохранения.')));
+   for(const row of data.rows){
+     const card=node('article',null,'assistant-history-entry'),head=node('div',null,'assistant-history-head');card.dataset.id=row.id;card.dataset.review=row.review_status;
+     head.append(node('strong',date(row.created)),node('span',[row.actor?.name,row.actor?.login].filter(Boolean).join(' · ')),node('strong',reviewLabel(row.review_status)));
+     const thread=node('button',t('Այս զրույցը','Этот диалог'));thread.type='button';thread.onclick=()=>{conversation=row.conversation_id;offset=0;load();};head.append(thread);card.append(head,node('h3',t('Հարց','Вопрос')),node('p',row.request.message,'assistant-history-text'),node('h3',t('Պատասխան','Ответ')),node('p',row.response.answer,'assistant-history-text'));
+     if(row.response.requirementSummary)card.append(node('p',row.response.requirementSummary));
+     for(const [key,hy,r]of [['recommendations','Առաջարկված ապրանքներ','Предложенные товары'],['publicRecommendations','Լրացուցիչ տարբերակներ','Дополнительные варианты'],['products','Ընտրված ապրանքներ','Выбранные товары'],['choices','Ընտրության տարբերակներ','Варианты для выбора']])if(row.response[key]?.length){const grid=node('div',null,'assistant-history-products');card.append(node('h4',t(hy,r)));for(const p of row.response[key])grid.append(product(p));card.append(grid);}
+     const review=node('form',null,'assistant-history-review'),select=node('select'),note=node('textarea'),save=node('button',t('Պահպանել գնահատականը','Сохранить оценку')),result=node('p');
+     for(const value of ['unreviewed','incorrect','correct']){const option=node('option',reviewLabel(value));option.value=value;select.append(option);}select.value=row.review_status;select.setAttribute('aria-label',t('Գնահատական','Оценка'));note.value=row.review_note;note.maxLength=2000;note.rows=2;note.placeholder=t('Ի՞նչն է սխալ և ինչպե՞ս պետք է պատասխաներ','Что неверно и как следовало ответить');note.setAttribute('aria-label',note.placeholder);result.setAttribute('role','status');save.type='submit';review.append(select,note,save,result);
+     review.onsubmit=async e=>{e.preventDefault();const ticket=generation,session=owner;save.disabled=true;try{const saved=await ZZWS.json('admin/assistant-history/review',{method:'POST',body:JSON.stringify({id:row.id,status:select.value,note:note.value,revision:row.revision})});if(ticket!==generation||session!==owner)return;Object.assign(row,saved);card.dataset.review=row.review_status;head.children[2].textContent=reviewLabel(row.review_status);result.textContent=t('Պահպանված է','Сохранено');}catch(error){if(ticket===generation&&session===owner)result.textContent=ZZWS.message(error);}finally{if(ticket===generation&&session===owner)save.disabled=false;}};
+     card.append(review);list.append(card);
+   }
+   controls();
+ }
+ function reset(){generation++;owner=null;data=null;busy=false;offset=0;conversation='';from.value=to.value=search.value=status.value='';message.textContent='';list.replaceChildren();count.textContent='';labels();controls();}
+ async function load(){
+   const session=sessionStorage.getItem('zzws_session_v3');if(session!==owner){reset();owner=session;}if(busy)return;const ticket=++generation;busy=true;message.textContent=t('Բեռնվում է…','Загрузка…');controls();
+   try{const params=new URLSearchParams({from:from.value,to:to.value,search:search.value.trim(),status:status.value,offset:String(offset),conversation}),response=await ZZWS.json('admin/assistant-history?'+params);if(ticket!==generation||owner!==session)return;data=response;message.textContent='';render();}catch(error){if(ticket===generation&&owner===session){data=null;list.replaceChildren();message.textContent=ZZWS.message(error);}}finally{if(ticket===generation&&owner===session){busy=false;controls();}}
+ }
+ form.onsubmit=e=>{e.preventDefault();offset=0;load();};yesterday.onclick=()=>{const day=new Date(Date.now()+4*3600000-86400000).toISOString().slice(0,10);from.value=to.value=day;conversation='';offset=0;load();};all.onclick=()=>{conversation='';from.value=to.value=search.value=status.value='';offset=0;load();};previous.onclick=()=>{offset=Math.max(0,offset-20);load();};next.onclick=()=>{offset+=20;load();};
+ window.addEventListener('zzws:languagechange',render);window.ZZWS_ASSISTANT_HISTORY={load,reset};labels();controls();
+})();

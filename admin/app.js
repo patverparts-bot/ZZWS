@@ -14,6 +14,7 @@ async function api(path, options = {}) {
   catch(e) { if(e.status === 401) showLogin(); throw e; }
 }
 function showLogin() {
+  window.ZZWS_ASSISTANT_HISTORY?.reset();
   window.ZZWS_PRICE_REVIEW?.reset();
   window.ZZWS_SYSTEM_DATA_RESET?.reset();
   window.ZZWS_ADMIN_VIEW_STATE?.stop();
@@ -48,7 +49,7 @@ function table(headers, rows) {
 }
 function button(label, callback) { const b = document.createElement('button'); b.type='button'; b.textContent = label; b.onclick = () => run(callback); return b; }
 async function run(fn) { try { await fn(); } catch(e) { if(!e.staleSession)status(ZZWS.message(e), true); } }
-const adminTabs=['dashboard','manager','orders','templates','price','users','rules','audit','storage','email','offers','catalogControls','warehouses','operations','apkDownloads','systemDataReset'];
+const adminTabs=['assistantHistory','dashboard','manager','orders','templates','price','users','rules','audit','storage','email','offers','catalogControls','warehouses','operations','apkDownloads','systemDataReset'];
 let adminNavigationActive=false,adminHistoryPosition=0,activeAdminTab=null;
 const adminBackButton=document.createElement('button');adminBackButton.id='adminBackSection';adminBackButton.type='button';adminBackButton.textContent='← Նախորդ բաժին';
 const adminSectionTrail=document.createElement('div');adminSectionTrail.className='admin-section-trail';el('adminActiveSection').before(adminSectionTrail);adminSectionTrail.append(adminBackButton,el('adminActiveSection'));
@@ -97,6 +98,7 @@ async function selectAdminTab(name,options={}){
   ZZWS_ADMIN_WORKBENCH.mount(name);el('adminMoreMenu').open=false;const label=document.querySelector('[data-tab="'+name+'"]')?.cloneNode(true);label?.querySelectorAll('[hidden]').forEach(n=>n.remove());el('adminActiveSection').textContent=name==='templates'?'Հաճախորդի պահպանված զամբյուղները':label?.textContent.trim()||'';
   window.ZZWS_ADMIN_VIEW_STATE?.prepare(name);
   if(name==='dashboard')await ZZWS_ADMIN_HOME.load();
+  if(name==='assistantHistory')await ZZWS_ASSISTANT_HISTORY.load();
   if(name==='audit')await loadAudit();
   if(name==='storage')await ZZWS_STORAGE.load();
   if(name==='orders')await ZZWS_ADMIN_ORDERS.load();if(name==='manager')await ZZWS_ADMIN_WORKBENCH.load();if(name==='templates')await ZZWS_ADMIN_TEMPLATES.load();if(name==='catalogControls')await ZZWS_ADMIN_CATALOG_CONTROLS.load();if(name==='operations')await ZZWS_ADMIN_OPERATIONS.load();

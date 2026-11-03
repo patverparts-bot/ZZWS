@@ -163,5 +163,5 @@ export async function answerQuestion(payload, visibleProducts, knowledge, option
   if(!compared)try { const generated = await modelAnswer(message, products, {...options,responseLanguage:locale}); if (generated) { answer = generated; mode = 'ai'; } }
   catch { modelUnavailable = true; }
   return {name: 'ԶիգԶագ', answer, mode, modelUnavailable, products, advisor: null,
-    choices: products.length ? [] : found.choices.map(p => ({articul: p.articul, name: p.name})), context: products.map(p => p.articul)};
+    choices: products.length ? [] : found.choices.map(p => knowledgeProduct(p,knowledge)), context: products.map(p => p.articul)};
 }

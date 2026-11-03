@@ -10,6 +10,7 @@ import {validateOperationsReport,operationStatus} from './operations-health.mjs'
 import {catalogControlRoutes,effectiveControls,visiblePopularity,popularityRules} from './catalog-controls.mjs';
 import {storefrontSettings,storefrontDTO,storefrontRanking} from './storefront.mjs';
 import {assistantRoutes} from './assistant-routes.mjs';
+import {assistantHistoryRoutes} from './assistant-history.mjs';
 import assistantKnowledge from './assistant-knowledge.json' with {type:'json'};
 import assistantPublicCatalog from './assistant-public-catalog.json' with {type:'json'};
 import {invitationEmailRoutes} from './invitation-email.mjs';
@@ -301,7 +302,8 @@ async function handleRequest(req:Request){
     if(['admin/catalog-controls','admin/warehouses'].includes(path)&&req.method==='POST'&&!(confirmedUntil&&Date.parse(confirmedUntil)>Date.now()))return json({error:'Հաստատեք ձեր ընթացիկ գաղտնաբառը',reauthRequired:true},428);
     const warehouseResponse=await warehouseRoutes({path,req,user,table,query,body,json,fail,audit});if(warehouseResponse)return warehouseResponse;
     const controlResponse=await catalogControlRoutes({path,req,user,table,query,body,json,fail,audit,service,current});if(controlResponse)return controlResponse;
-    const assistantResponse=await assistantRoutes({path,req,user,body,current,project,json,fail,knowledge:assistantKnowledge,publicCatalog:assistantPublicCatalog,options:{apiKey:Deno.env.get('ZZWS_ASSISTANT_GEMINI_KEY'),freeTierConfirmed:Deno.env.get('ZZWS_ASSISTANT_GEMINI_FREE_TIER')==='true'}});if(assistantResponse)return assistantResponse;
+    const historyResponse=await assistantHistoryRoutes({path,req,user,body,table,query,json,fail,audit});if(historyResponse)return historyResponse;
+    const assistantResponse=await assistantRoutes({path,req,user,body,current,project,json,fail,table,query,knowledge:assistantKnowledge,publicCatalog:assistantPublicCatalog,options:{apiKey:Deno.env.get('ZZWS_ASSISTANT_GEMINI_KEY'),freeTierConfirmed:Deno.env.get('ZZWS_ASSISTANT_GEMINI_FREE_TIER')==='true'}});if(assistantResponse)return assistantResponse;
     const receiptResponse=await receiptRoutes({path,req,user,service,table,query,body,json,fail});if(receiptResponse)return receiptResponse;
     const invitationResponse=await invitationEmailRoutes({path,req,user,service,table,query,body,json,fail});if(invitationResponse)return invitationResponse;
     const reportResponse=await reportRoutes({path,req,user,service,table,query,body,json,current,project,rowsFromBuffer,fail});

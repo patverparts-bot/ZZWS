@@ -18,15 +18,15 @@ const publicRoot = process.env.ZZWS_UI_ROOT ? path.resolve(process.env.ZZWS_UI_R
   const nearbySku=washerRows[2][0];knowledge.products[nearbySku]=JSON.parse(JSON.stringify(knowledge.products[nearbySku]));
   knowledge.products[nearbySku][3]=knowledge.products[nearbySku][3].map(([name,value])=>[name,name==='Dimensions(HxWxD)'?'85 x 61 x 45 cm':value]);
   products.push(...washerRows.map(([articul,row],i)=>({articul,name:row[0],brand:row[0].split(' ')[0],category:'Լվացքի մեքենաներ',retail:300000,wholesale:[150000,190000,180000][i],marginVal:10,stockStatus:'Առկա է',hasWholesale:true})));
-  const managerSkus=['ui-retail-1','ui-retail-2'];
+  const managerSkus=['9ui-retail-1','9ui-retail-2'];
   for(const [i,articul] of managerSkus.entries()){
     const name='Samsung REF'+(i+1),row=JSON.parse(JSON.stringify(knowledge.products[washerRows[0][0]]));
     row[0]=name;row[3]=row[3].map(([key,value])=>[key,key==='Dimensions(HxWxD)'?'85 x '+(i?59.8:60)+' x 45 cm':value]);knowledge.products[articul]=row;
     products.push({articul,name,brand:'Samsung',category:'Լվացքի մեքենաներ',retail:50000+i*10000,wholesale:0,hasWholesale:false,stockStatus:'Ճշտել'});
   }
-  const publicCatalog={products:{'ui-public-1':'washer','ui-public-2':'washer'}};
+  const publicCatalog={products:{'9ui-public-1':'washer','9ui-public-2':'washer'}};
   for(const [i,noise] of [42,35,38,39,40].entries()){
-    const articul='ui-fridge-'+i,name='Bosch FRIDGE'+i;
+    const articul='9ui-fridge-'+i,name='Bosch FRIDGE'+i;
     knowledge.products[articul]=[name,'https://www.zigzag.am/en/'+articul+'.html','2026-11-01T00:00:00Z',[['Noise level (dB)',String(noise)],['Total volume(l)',String(300+i*50)],['Refrigerator','NoFrost'],['Freezer','NoFrost']]];
     products.push({articul,name,brand:'Bosch',category:'Սառնարաններ',retail:400000,wholesale:150000+i*20000,stockAvailable:true,stockStatus:'Առկա է',hasWholesale:true});
   }
@@ -111,11 +111,11 @@ const publicRoot = process.env.ZZWS_UI_ROOT ? path.resolve(process.env.ZZWS_UI_R
     assert.equal(await page.locator('.zigzag-message img[src="x"]').count(),0);
     await page.locator('.zigzag-toolbar button').click();
     await submit('Panasonic');
-    assert.equal(await page.locator('.zigzag-choices>div').count(),3);
-    await page.locator('.zigzag-choices>div').nth(0).locator('button').nth(1).click();
-    await page.locator('.zigzag-choices>div').nth(1).locator('button').nth(1).click();
+    assert.equal(await page.locator('.zigzag-choices>.zigzag-product').count(),3);assert.equal(await page.locator('.zigzag-choices .zigzag-product-photo img').count(),3);assert.ok(await page.locator('.zigzag-choices .zigzag-highlights span').count()>0);
+    await page.locator('.zigzag-choices>.zigzag-product').nth(0).locator('.zigzag-choice[aria-pressed]').click();
+    await page.locator('.zigzag-choices>.zigzag-product').nth(1).locator('.zigzag-choice[aria-pressed]').click();
     await page.locator('.zigzag-context button').last().click();
-    await page.waitForFunction(()=>document.querySelectorAll('.zigzag-product').length===2);
+    await page.waitForFunction(()=>document.querySelector('.zigzag-message:last-child')?.querySelectorAll('.zigzag-product').length===2);
     await page.locator('.zigzag-pending').waitFor({state:'detached'});
     for(const dark of [false,true])for(const width of [390,768,1440]) {
       await page.setViewportSize({width,height:844});
@@ -221,7 +221,7 @@ const publicRoot = process.env.ZZWS_UI_ROOT ? path.resolve(process.env.ZZWS_UI_R
     const externalCard=external.locator('.zigzag-product').first(),externalSku=await externalCard.getAttribute('data-articul');
     assert.equal(await page.evaluate(id=>!!getProduct(id),externalSku),false);
     const externalMail=new URL(await externalCard.locator('.zigzag-contact-manager').getAttribute('href'));
-    assert.ok(externalMail.searchParams.get('body').includes('Մոդել՝ Samsung OUTSIDE1'));assert.ok(externalMail.searchParams.get('body').includes('Արտիկուլ՝ ui-public-1'));
+    assert.ok(externalMail.searchParams.get('body').includes('Մոդել՝ Samsung OUTSIDE1'));assert.ok(externalMail.searchParams.get('body').includes('Արտիկուլ՝ 9ui-public-1'));
     await externalCard.locator('.zigzag-copy-inquiry').click();assert.equal(await page.evaluate(()=>window.__managerInquiry),externalMail.searchParams.get('body'));
     await page.evaluate(()=>window.__clipboardFail=true);await externalCard.locator('.zigzag-copy-inquiry').click();assert.ok((await externalCard.locator('.zigzag-inquiry-status').innerText()).includes('Չհաջողվեց'));await page.evaluate(()=>window.__clipboardFail=false);
     const outsideRequests=requests;await externalCard.locator('.zigzag-offer-details').click();
@@ -235,7 +235,7 @@ const publicRoot = process.env.ZZWS_UI_ROOT ? path.resolve(process.env.ZZWS_UI_R
     await page.setViewportSize({width:1440,height:1000});await external.locator('.zigzag-availability-title').evaluate(el=>{const log=el.closest('.zigzag-messages');log.scrollTo({top:log.scrollTop+el.getBoundingClientRect().top-log.getBoundingClientRect().top-12,behavior:'instant'});});await page.screenshot({path:path.join(root,'work/zigzag-public-offers-desktop.png')});
     enablePublicOffers=false;await page.locator('.zigzag-toolbar button').click();
     await submit('Самый лучший холодильник предложи');assert.equal(await lastReply().locator('.zigzag-product').count(),0);
-    await quick('Ավելի լուռ');assert.equal(await lastReply().locator('.zigzag-product').first().getAttribute('data-articul'),'ui-fridge-1');
+    await quick('Ավելի լուռ');assert.equal(await lastReply().locator('.zigzag-product').first().getAttribute('data-articul'),'9ui-fridge-1');
     assert.ok((await lastReply().locator('.zigzag-reasons').first().innerText()).includes('35 dB'));
     assert.equal(await lastReply().locator('.zigzag-reasons').count(),3);
     await page.setViewportSize({width:390,height:844});
@@ -250,7 +250,7 @@ const publicRoot = process.env.ZZWS_UI_ROOT ? path.resolve(process.env.ZZWS_UI_R
     const held=new Promise(resolve=>heldReady=resolve);holdNext=true;
     await page.locator('#zigzagInput').fill('Բարև');await page.locator('.zigzag-send').click();await held;
     assert.equal(await page.locator('.zigzag-pending[role="status"]').count(),1);assert.equal(await page.locator('.zigzag-typing-dots i').count(),3);
-    const waitingBox=await page.locator('.zigzag-pending').boundingBox(),messagesBox=await page.locator('.zigzag-messages').boundingBox();assert.ok(waitingBox.y>=messagesBox.y&&waitingBox.y+waitingBox.height<=messagesBox.y+messagesBox.height,'typing indicator stays visible while waiting');
+    await page.waitForFunction(()=>{const p=document.querySelector('.zigzag-pending')?.getBoundingClientRect(),m=document.querySelector('.zigzag-messages')?.getBoundingClientRect();return p&&m&&p.top>=m.top-1&&p.bottom<=m.bottom+1;},{},{timeout:3000}).catch(async error=>{console.log(await page.evaluate(()=>({pending:document.querySelector('.zigzag-pending')?.getBoundingClientRect().toJSON(),log:document.querySelector('.zigzag-messages')?.getBoundingClientRect().toJSON(),scroll:document.querySelector('.zigzag-messages')?.scrollTop,height:document.querySelector('.zigzag-messages')?.scrollHeight})));throw error;});
     assert.equal(await page.locator('.zigzag-chat-status').innerText(),'ԶիգԶագ AI-ն գրում է');assert.equal(await page.locator('.zigzag-send').isDisabled(),true);
     assert.equal(await page.locator('.zigzag-typing-dots i').first().evaluate(el=>getComputedStyle(el).animationName),'zigzag-typing');
     await page.emulateMedia({reducedMotion:'reduce'});assert.equal(await page.locator('.zigzag-typing-dots i').first().evaluate(el=>getComputedStyle(el).animationName),'none');

@@ -15,6 +15,7 @@
   let locale = window.ZZWS_I18N?.language||'hy';
   // Existing administrator reply-to address, checked in the current settings.
   const managerEmail = 'levon.grigoryan@zigzag.am';
+  let conversationId=crypto.randomUUID();
   let context = [], selected = [], advisor = null, requirements = '', currentMode = 'specifications', controller, revision = 0, busy = false, owner = null;
   const t = key => copy.hy[key]??key;
   const cartWidgets = new WeakMap(),inquiries=new WeakMap();
@@ -64,7 +65,7 @@
   }
   function reset(closeDialog = true) {
     if(detailsDialog.open)detailsDialog.close();detailsBody.replaceChildren();
-    revision++; controller?.abort(); busy = false; controller = null; send.disabled = false; input.value = ''; context = []; selected = []; advisor = null; requirements = ''; currentMode = 'specifications'; messages.replaceChildren(); messages.removeAttribute('aria-busy'); updateContext(); mode.textContent = t('mode');
+    conversationId=crypto.randomUUID();revision++; controller?.abort(); busy = false; controller = null; send.disabled = false; input.value = ''; context = []; selected = []; advisor = null; requirements = ''; currentMode = 'specifications'; messages.replaceChildren(); messages.removeAttribute('aria-busy'); updateContext(); mode.textContent = t('mode');
     chatStatus();if (closeDialog) { if (dialog.open) dialog.close(); owner = null; } else { welcome(); input.focus(); }
   }
   function bubble(text, user = false) { const el = create('div', 'zigzag-message' + (user ? ' zigzag-message-user' : '')); if(user)el.dataset.i18nSkip='true'; el.append(create('span', 'zigzag-message-label', user ? t('you') : 'ԶիգԶագ AI'), document.createTextNode(text)); messages.append(el); return el; }
@@ -142,7 +143,7 @@
     }else{
       const highlights=create('div','zigzag-highlights');let count=0;
       for(const axis of ['width','depth','height'])if(product.matchedDimensions?.[axis]!=null){highlights.append(create('span','',t(axis)+': '+product.matchedDimensions[axis]+' '+t('cm')));count++;}
-      const important=(product.specifications||[]).filter(s=>/load capacity|spin speed|screen size|resolution|capacity.*l\b|memory|processor/i.test(s.name));
+      const important=window.ZZWS_ASSISTANT_SUMMARY(product.specifications);
       for(const spec of important.slice(0,Math.max(0,4-count)))highlights.append(create('span','',ZZWS_ARMENIAN_SPECS.label(spec.name)+': '+ZZWS_ARMENIAN_SPECS.value(spec.value)));
       if(highlights.children.length)box.append(highlights);
       box.append(button(t('details'),()=>openProductDetails(product),'zigzag-offer-details'));
@@ -161,10 +162,12 @@
     bubble(message, true); input.value = ''; busy = true; send.disabled = true; messages.setAttribute('aria-busy', 'true');chatStatus();
     const pending = create('div', 'zigzag-pending');pending.setAttribute('role','status');pending.append(avatar(28),create('span','zigzag-pending-label',t('typing')));
     const dots=create('span','zigzag-typing-dots');dots.setAttribute('aria-hidden','true');for(let i=0;i<3;i++)dots.append(create('i'));pending.append(dots);messages.append(pending); scroll(); controller = new AbortController();
+    // Translated labels can wrap after the first layout on a phone.
+    const waitingObserver=new ResizeObserver(()=>{if(busy&&pending.isConnected)scroll();});waitingObserver.observe(pending);waitingObserver.observe(messages);
     const requestController = controller, timeout = setTimeout(() => requestController.abort(), 45000);
     try {
       const orderPriceMode=isAdminUser()&&adminOrderPriceMode==='KP'?'KP':'WS';
-      const data = await secureApi('assistant/chat', {method: 'POST', body: JSON.stringify({message, context, refresh, advisor, locale,orderPriceMode}), signal: requestController.signal});
+      const data = await secureApi('assistant/chat', {method: 'POST', body: JSON.stringify({message, context, refresh, advisor, locale,orderPriceMode,conversationId}), signal: requestController.signal});
       if (currentRevision !== revision || serverIdentity?.id !== userId) return;
       pending.remove(); currentMode=data.mode;mode.textContent = t(data.mode==='selection'?'selection':data.mode === 'ai' ? 'ai' : 'mode'); const reply = bubble(data.answer);
       context = (data.context || []).filter(id => visibleProduct(id)).slice(0, 2); advisor=data.advisor||null;requirements=data.requirementSummary||'';updateContext();
@@ -202,9 +205,9 @@
         reply.append(button(t('refresh'), () => { context = ids; submit(t('example') + ids.join(', '), true); }, 'zigzag-refresh'));
       }
       if (data.choices?.length) {
-        const choices = create('div', 'zigzag-choices');
+        const choices = create('div', 'zigzag-products zigzag-choices');
         for (const p of data.choices) {
-          const entry = create('div'), choose = button(p.name, () => askProduct(p.articul), 'zigzag-choice'); choose.append(create('small', '', p.articul));
+          const entry = showProduct(p), choose = button(locale==='ru'?'Выбрать модель':'Ընտրել մոդելը', () => askProduct(p.articul), 'zigzag-choice');
           const compare = button('+ ' + t('choose'), () => { if (busy) return; if (selected.includes(p.articul)) selected = selected.filter(id => id !== p.articul); else if (selected.length < 2) selected.push(p.articul); else { input.value = ''; input.placeholder = t('limit'); } context = []; compare.setAttribute('aria-pressed', String(selected.includes(p.articul))); updateContext(); }, 'zigzag-choice');
           compare.setAttribute('aria-pressed', 'false'); entry.append(choose, document.createTextNode(' '), compare); choices.append(entry);
         }
@@ -216,7 +219,7 @@
       pending.remove(); const reply = bubble(error.status === 404 ? t('notDeployed') : error.status === 429 ? error.message : t('error')); reply.classList.add('zigzag-message-error');
       reply.append(create('br'), button(t('retry'), () => submit(message, refresh), 'zigzag-refresh')); scroll();
     } finally {
-      clearTimeout(timeout); if (currentRevision === revision) { pending.remove(); busy = false; send.disabled = false; controller = null; messages.removeAttribute('aria-busy');chatStatus(); }
+      waitingObserver.disconnect();clearTimeout(timeout); if (currentRevision === revision) { pending.remove(); busy = false; send.disabled = false; controller = null; messages.removeAttribute('aria-busy');chatStatus(); }
     }
   }
   form.addEventListener('submit', event => { event.preventDefault(); submit(input.value); });
