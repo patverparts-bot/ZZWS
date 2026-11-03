@@ -15,7 +15,7 @@
   }
   group.replaceChildren(...columns);table.style.minWidth=total+'px';
   const wide=document.documentElement.dataset.dealerView==='table'&&total>wrap.clientWidth+1;
-  wrap.dataset.wide=String(wide);wrap.style.overflowX=wide?'auto':'clip';wrap.tabIndex=wide?0:-1;
+  wrap.dataset.wide=String(wide);wrap.style.overflowX=wide?'auto':'clip';wrap.tabIndex=document.documentElement.dataset.dealerView==='table'?0:-1;
   wrap.setAttribute('aria-label',window.ZZWS_I18N?.language==='ru'?'Каталог товаров. Таблицу можно прокручивать.':'Ապրանքների կատալոգ։ Աղյուսակը կարող եք ոլորել։');
   requestAnimationFrame(()=>{if(typeof fitCatalogHeadings==='function')fitCatalogHeadings();});
  }
@@ -23,6 +23,6 @@
  new MutationObserver(schedule).observe(head,{childList:true});
  new MutationObserver(schedule).observe(document.documentElement,{attributes:true,attributeFilter:['data-dealer-view','data-storefront-page']});
  new ResizeObserver(schedule).observe(wrap);window.addEventListener('zzws:languagechange',schedule);
- wrap.addEventListener('scroll',()=>{if(wrap.dataset.wide==='true'&&wrap.scrollHeight-wrap.scrollTop-wrap.clientHeight<400&&typeof loadMoreProducts==='function')loadMoreProducts();},{passive:true});
+ wrap.addEventListener('scroll',()=>{if(document.documentElement.dataset.dealerView==='table'&&wrap.scrollHeight-wrap.scrollTop-wrap.clientHeight<400&&typeof loadMoreProducts==='function')loadMoreProducts();},{passive:true});
  window.ZZWS_TABLE_WIDTH={sync:schedule};schedule();
 })();

@@ -5,3 +5,6 @@ html[data-storefront-page=home] #catalogViewBar{display:none}#catalogViewBar{dis
 html[data-dealer-view=table] #tableScrollWrapper{display:block!important;overflow:auto;max-width:100%}html[data-dealer-view=table] #mobileCardsContainer{display:none!important}@media(max-width:767px){html[data-dealer-view=table] #catalogTable{min-width:1100px}html[data-dealer-view=table] #tableScrollWrapper{max-height:72dvh;overscroll-behavior-x:contain}}
 
 html[data-dealer-view=table] #catalogContent>div:has(>#tableScrollWrapper){display:block!important}html[data-dealer-view=table] #tableScrollWrapper{overflow-x:auto!important}
+
+/* All table layouts share one bounded scroll viewport and a fixed header origin. */
+html[data-dealer-view=table] #tableScrollWrapper{max-height:75dvh!important;overflow:auto!important;--stick-top:0px;scrollbar-gutter:stable}html[data-dealer-view=table] #catalogTable thead{position:sticky!important;top:0!important;z-index:32}html[data-dealer-view=table] #catalogTable thead th{background:#fff}.dark[data-dealer-view=table] #catalogTable thead th{background:#1f2937}
