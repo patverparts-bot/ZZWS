@@ -287,7 +287,8 @@ function renderModalItems() {
     div.className = 'basket-item';
     div.innerHTML = `
       <div class="basket-item-heading">
-        <div><h4>${escapeHtml(name)}</h4><div class="basket-item-meta"><span>Արտիկուլ՝ <strong>${escapeHtml(articul)}</strong></span><span class="px-2 py-0.5 rounded-md font-semibold ${stockBadgeClass}">${escapeHtml(stockStatus)}</span></div></div>
+        <div class="basket-item-photo">${getProductImageHtml(articul,name)}</div>
+        <div class="basket-item-info"><h4>${escapeHtml(name)}</h4><div class="basket-item-meta"><span>Արտիկուլ՝ <strong>${escapeHtml(articul)}</strong></span><span class="px-2 py-0.5 rounded-md font-semibold ${stockBadgeClass}">${escapeHtml(stockStatus)}</span></div></div>
         ${priceDiffNotice ? `<div class="basket-price-notice">${priceDiffNotice}</div>` : ''}
       </div>
       <div class="basket-item-details">
