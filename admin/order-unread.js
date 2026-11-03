@@ -28,6 +28,6 @@
   }
   return true;
  }
- window.ZZWS_ADMIN_ORDER_UNREAD={apply,acknowledge,reset(){++generation;acknowledged.clear();}};
+ window.ZZWS_ADMIN_ORDER_UNREAD={apply,acknowledge,get generation(){return generation;},pending(root){return [...root.querySelectorAll('[data-admin-order-read]')].map(el=>bindings.get(el)?.order).filter(order=>order&&unread(order)).map(order=>({...order}));},reset(){++generation;acknowledged.clear();}};
  window.addEventListener('zzws:languagechange',()=>{for(const element of document.querySelectorAll('[data-admin-order-read]')){const binding=bindings.get(element);if(binding)paint(element,binding.order,binding.host);}});
 })();
