@@ -1,0 +1,5 @@
+.workspace-settings>h1{margin-top:0}.workspace-settings>fieldset,.workspace-settings>section{max-width:850px}.workspace-settings #adminResourcesPanel{padding:0;border:0;background:transparent}.workspace-settings #apkUploadPanel{padding:0;border:0;background:transparent}
+.admin-navigation .admin-primary-navigation>[data-tab=dashboard][hidden]{display:none!important}
+.admin-navigation button[data-tab]:not(.admin-tab-active){background:#fff;color:#334155;border:1px solid #cbd5e1}
+.admin-navigation button[data-tab].admin-tab-active{background:#1d4ed8;color:#fff;border:1px solid #1d4ed8}
+@media(max-width:650px){html[data-owner-overview=true] .admin-navigation .admin-primary-navigation{grid-template-columns:repeat(4,minmax(0,1fr))}html[data-owner-overview=true] .admin-navigation .admin-primary-navigation>button{font-size:11px}.workspace-settings{min-width:0}.workspace-settings fieldset{min-width:0}}

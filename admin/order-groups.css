@@ -1,0 +1,11 @@
+.order-groups{margin:1.1rem 0 1rem;display:grid;gap:.65rem}
+.order-group-switch,.order-status-chips{display:flex;align-items:center;flex-wrap:wrap;gap:.45rem}
+.order-group-switch{padding:.3rem;border:1px solid #d9e2ed;border-radius:12px;background:#f1f5f9;width:fit-content;max-width:100%}
+.order-group-switch button{min-width:145px;padding:.7rem 1rem;border-radius:8px;font-weight:700}
+.order-groups button[aria-pressed=false]{background:#fff;color:#334155;border:1px solid #cbd5e1}
+.order-groups button[aria-pressed=true]{background:#1d4ed8;color:#fff;border:1px solid #1d4ed8}
+.order-groups button:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}
+.order-status-chips button{padding:.45rem .8rem;min-height:36px;border-radius:20px;font-size:.9rem}
+.order-status-chips button[hidden]{display:none}
+.order-group-hint{margin:0;max-width:850px;font-size:.85rem;line-height:1.45}
+@media(max-width:600px){.order-group-switch{width:100%;box-sizing:border-box}.order-group-switch button{flex:1;min-width:0;padding:.65rem .6rem}.order-status-chips{gap:.35rem}.order-status-chips button{font-size:.82rem;padding:.4rem .65rem}}

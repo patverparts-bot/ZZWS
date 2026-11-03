@@ -28,7 +28,7 @@
   for(const [label,value] of [['Կազմակերպություն',order.delivery?.organization],['Կոնտակտ',order.delivery?.contact],['Հասցե',order.delivery?.address],['Առաքման օր',order.delivery?.date]])if(value)details.append(node('p',label+'՝ '+value));
   root.append(details);
   if(order.user_id){const templates=node('button','Պահպանված զամբյուղներ');templates.type='button';templates.onclick=safe(()=>ZZWS_ADMIN_TEMPLATES.openCustomer(order.user_id));root.append(templates);}
-  if(rows.some(r=>r.id===order.id))rows=rows.map(r=>r.id===order.id&&Number(order.revision)>=Number(r.revision)?{...r,...order}:r);render();
+  if(rows.some(r=>r.id===order.id))rows=rows.map(r=>r.id===order.id&&Number(order.revision)>=Number(r.revision)?{...r,...order}:r).filter(r=>window.ZZWS_ADMIN_ORDER_GROUPS?.matches(r,el('managerStatusFilter').value)??true);render();
  }
  function render(){
   const root=el('managerQueue');root.replaceChildren();
@@ -43,13 +43,13 @@
  }
  async function load(more=false,background=false){
   if(background&&refreshing)return;refreshing=true;
+  window.ZZWS_ADMIN_ORDER_GROUPS?.sync('manager');
   const ticket=++epoch,params=new URLSearchParams(),status=el('managerStatusFilter').value,search=el('managerSearch').value.trim();if(status)params.set('status',status);if(search)params.set('search',search);
   const filterKey=params.toString(),previous=more&&key===filterKey?rows:[];
   if(previous.length)params.set('before',previous.at(-1).number);
   el('managerQueue').setAttribute('aria-busy','true');
-  try{const data=await ZZWS.json('admin/orders?'+params);if(ticket!==epoch)return;key=filterKey;const incoming=data.orders;
-   if(background){const known=new Set(incoming.map(r=>r.id)),oldest=incoming.length?Math.min(...incoming.map(r=>Number(r.number))):0;rows=[...incoming,...rows.filter(r=>!known.has(r.id)&&Number(r.number)<oldest&&(!status||r.status===status))];}else rows=[...previous,...incoming];
-   updatedAt=new Date();render();el('managerMore').hidden=data.orders.length<100;el('managerMessage').textContent='';}
+  try{const groups=window.ZZWS_ADMIN_ORDER_GROUPS,path='admin/orders?'+params,data=groups?await groups.fetchWindow(path,p=>ZZWS.json(p),background&&key===filterKey?rows.length:100):await ZZWS.json(path);if(ticket!==epoch||el('managerStatusFilter').value!==status||el('managerSearch').value.trim()!==search)return;key=filterKey;rows=groups?groups.merge([...previous,...data.orders]):[...previous,...data.orders];
+   updatedAt=new Date();render();el('managerMore').hidden=!(data.hasMore??data.orders.length===100);el('managerMessage').textContent='';}
   catch(error){if(ticket===epoch)el('managerMessage').textContent='Չհաջողվեց թարմացնել հերթը։ '+ZZWS.message(error);if(!background)throw error;}
   finally{if(ticket===epoch){refreshing=false;el('managerQueue').setAttribute('aria-busy','false');}}
  }

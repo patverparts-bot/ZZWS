@@ -39,10 +39,11 @@
  function finish(token){if(token===operation){busy=false;controls();}}
  function filters(){const params=new URLSearchParams();if(el('orderSearch').value.trim())params.set('search',el('orderSearch').value.trim());for(const id of ['from','to'])if(el('orderDate'+id).value)params.set(id,el('orderDate'+id).value);if(el('orderStatusFilter').value)params.set('status',el('orderStatusFilter').value);return params;}
  async function load(more=false,background=false){
+  window.ZZWS_ADMIN_ORDER_GROUPS?.sync('orders');
   const ticket=++listEpoch,params=filters(),filterKey=params.toString(),append=more&&listKey===filterKey,previous=append?[...list]:[];
   if(append&&previous.length)params.set('before',previous.at(-1).number);
   el('adminOrderList').setAttribute('aria-busy','true');el('moreAdminOrders').disabled=true;
-  try{const data=await request('admin/orders?'+params);if(ticket!==listEpoch||filters().toString()!==filterKey)return;const tail=background&&listKey===filterKey&&data.orders.length?list.filter(o=>Number(o.number)<Number(data.orders.at(-1).number)):[];list=[...previous,...data.orders,...tail];listKey=filterKey;renderList();el('moreAdminOrders').hidden=data.orders.length<100;}
+  try{const groups=window.ZZWS_ADMIN_ORDER_GROUPS,path='admin/orders?'+params,data=groups?await groups.fetchWindow(path,request,background&&listKey===filterKey?list.length:100):await request(path);if(ticket!==listEpoch||filters().toString()!==filterKey)return;list=groups?groups.merge([...previous,...data.orders]):[...previous,...data.orders];listKey=filterKey;renderList();el('moreAdminOrders').hidden=!(data.hasMore??data.orders.length===100);}
   catch(e){if(ticket===listEpoch)throw e;}
   finally{if(ticket===listEpoch){el('adminOrderList').setAttribute('aria-busy','false');el('moreAdminOrders').disabled=false;}}
  }
