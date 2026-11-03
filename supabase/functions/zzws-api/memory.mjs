@@ -24,7 +24,7 @@ export function validateMemory(section,value){
   const result=Object.create(null);
   for(const [key,row] of Object.entries(value)){
    if(!object(row)||key.length>100||['__proto__','constructor','prototype'].includes(key)||!Number.isInteger(row.qty)||row.qty<1||row.qty>1000000)throw new Error('Զամբյուղի սխալ դիրք');
-   result[key]={articul:String(row.articul||key).slice(0,100),qty:row.qty,addedPrice:Math.max(0,Number(row.addedPrice)||0),addedPriceMode:row.addedPriceMode==='KP'?'KP':'WS'};
+   result[key]={articul:String(row.articul||key).slice(0,100),qty:row.qty,addedPrice:Math.max(0,Number(row.addedPrice)||0),addedPriceMode:row.addedPriceMode==='KP'?'KP':'WS',...(/^[a-f0-9]{64}$/.test(row.proposalHash||'')?{proposalHash:row.proposalHash}:{})};
   }return result;
  }
  if(section==='preferences'){

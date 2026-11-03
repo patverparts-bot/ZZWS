@@ -1,4 +1,5 @@
 import {orderExportData} from './order-export.mjs';
+import {proposalCartProducts} from './proposal-cart.mjs';
 import {clientOrderExportRoute} from './client-order-export.mjs';
 import {viberContacts} from './contacts.mjs';
 import {priceVersionLabel} from './workbook-layout.mjs';
@@ -44,16 +45,19 @@ export async function orderRoutes(c){
  if(path==='orders/quote'&&req.method==='POST'){
   const p=await body(req);if(!Array.isArray(p.articuls)||p.articuls.length>500||p.articuls.some(a=>typeof a!=='string'||!a||a.length>100))fail(400,'Ստուգեք զամբյուղի արտիկուլները');
   const wanted=new Set(p.articuls),v=await current(),products=project(v.products.filter(p=>wanted.has(p.articul)),user,v.rules,{forOrder:true,mainWarehouses:v.mainWarehouses});
-  return json({products,unavailable:[...wanted].filter(a=>!products.some(p=>p.articul===a))});
+  const refs=new Map((Array.isArray(p.proposalRefs)?p.proposalRefs:[]).filter(r=>r&&typeof r.articul==='string'&&typeof r.proposalHash==='string').map(r=>[r.articul,r.proposalHash]));const grants=(await proposalCartProducts(c,wanted)).filter(g=>refs.get(g.articul)===g.proposalHash),merged=[...new Map([...products,...grants].map(p=>[p.articul,p])).values()];
+  if([...refs].some(([sku,hash])=>!grants.some(g=>g.articul===sku&&g.proposalHash===hash)))fail(409,'Առաջարկի ժամկետը լրացել է կամ այն հասանելի չէ։ Թարմացրեք զամբյուղը');
+  return json({products:merged,unavailable:[...wanted].filter(a=>!merged.some(p=>p.articul===a))});
  }
  if(path==='orders'&&req.method==='POST'){
   const p=await body(req);if(!deliveryId(p.requestId))fail(400,'Ուղարկման սխալ նույնացուցիչ');
   const existing=await query(table('orders').select('*').eq('user_id',user.id).eq('request_id',p.requestId).maybeSingle());if(existing)return json(existing);
   const owned=ownedDeliverySnapshot(user,{...p.delivery,variantId:p.deliveryVariantId},p.profileRevision);
   return json(await checked(async()=>{
-   const v=await current(),priceMode=user.role==='admin'&&p.priceMode==='KP'?'KP':'WS',products=project(v.products,user,v.rules,{forOrder:true,mainWarehouses:v.mainWarehouses}),lines=normalizeLines(p.lines,products,[],false,priceMode);if(!lines.length)fail(400,'Զամբյուղը դատարկ է');
+   const v=await current(),priceMode=user.role==='admin'&&p.priceMode==='KP'?'KP':'WS',ordinary=project(v.products,user,v.rules,{forOrder:true,mainWarehouses:v.mainWarehouses}),grants=(await proposalCartProducts(c,new Set(Array.isArray(p.lines)?p.lines.map(l=>l?.articul):[]))).filter(g=>Array.isArray(p.lines)&&p.lines.some(l=>l.articul===g.articul&&l.proposalHash===g.proposalHash)),products=[...new Map([...ordinary,...grants].map(p=>[p.articul,p])).values()],lines=normalizeLines(p.lines,products,[],false,priceMode);if(!lines.length)fail(400,'Զամբյուղը դատարկ է');
+   if(p.lines.some(l=>l.proposalHash&&!grants.some(g=>g.articul===l.articul&&g.proposalHash===l.proposalHash)))fail(409,'Առաջարկի ժամկետը լրացել է կամ այն հասանելի չէ։ Թարմացրեք զամբյուղը');
    if(lines.some((line,i)=>Number(p.lines[i].unitPrice)!==line.unitPrice))fail(409,'Գները փոխվել են։ Թարմացրեք զամբյուղը և ստուգեք գումարը մինչև ուղարկելը');
-   const context=buildOrderContext({catalog:v,user,lines,priceMode});
+   const context=buildOrderContext({catalog:v,user,lines,priceMode,proposalProducts:grants});
    return rpc('zzws_submit_order_v3',{p_user:user.id,p_request:p.requestId,p_delivery_variant:owned.variantId,p_profile_revision:p.profileRevision,p_delivery:owned.delivery,p_lines:lines,p_total:totalOf(lines),p_context:context});
   }));
  }

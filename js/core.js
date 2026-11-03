@@ -40,7 +40,7 @@ function debounce(fn, delay) {
 const debouncedResetAndRender = debounce(() => resetAndRender(), DEBOUNCE_MS);
 
 function getProduct(articul) {
-  return productIndex.get(articul) || null;
+  return window.ZZWS_PROPOSAL_CART?.product(articul) || productIndex.get(articul) || null;
 }
 
 let copyToastTimer = null;

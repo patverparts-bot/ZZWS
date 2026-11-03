@@ -36,7 +36,7 @@
  const quickReview=button('Անցնել վերջնական ստուգմանը',()=>go(3),'checkout-button');quickReview.id='checkoutQuickReview';controls.insertBefore(quickReview,next);quickReview.title='Պահպանված տվյալները կստուգվեն, ապա կբացվի պատվերի ամփոփումը';
  function activeCart(){return Object.fromEntries(Object.entries(cart).filter(([id])=>!excluded.has(id)));}
  function delivery(){return {organization:getSelectedOrganizationName().trim(),address:getDeliveryAddressValue().trim(),contact:el('contactPersonInput').value.trim(),method:getSelectedDeliveryMethod(),date:el('deliveryDateInput').value,comment:el('orderCommentInput').value.trim()};}
- function payload(){return {lines:Object.values(activeCart()).map(i=>({articul:i.articul,qty:i.qty,unitPrice:getItemWholesalePrice(i)})).sort((a,b)=>a.articul.localeCompare(b.articul)),delivery:delivery(),priceMode:adminOrderPriceMode};}
+ function payload(){return {lines:Object.values(activeCart()).map(i=>({articul:i.articul,qty:i.qty,unitPrice:getItemWholesalePrice(i),...(i.proposalHash?{proposalHash:i.proposalHash}:{})})).sort((a,b)=>a.articul.localeCompare(b.articul)),delivery:delivery(),priceMode:adminOrderPriceMode};}
  function fingerprint(){return JSON.stringify(payload());}
  function tell(text,field){notice.textContent=text;if(field){errorField=field;const input=el(field);input?.setAttribute('aria-invalid','true');input?.focus();}}
  function validateSelection(){

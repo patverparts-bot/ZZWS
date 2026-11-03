@@ -22,6 +22,7 @@ try{
  const payload={priceMode:'KP',lines:[{articul:product.articul,quantity:3,price:12345,special:true}]};
  assert.equal((await call('catalog/proposals',null,payload)).status,401);
  const created=await call('catalog/proposals',owner,payload);assert.equal(created.status,200,JSON.stringify(created.data));assert.equal(Date.parse(created.data.expiresAt)-Date.parse(created.data.createdAt),604800000);
+ const custom=await call('catalog/proposals',owner,{...payload,validDays:14});assert.equal(custom.status,200);assert.equal(Date.parse(custom.data.expiresAt)-Date.parse(custom.data.createdAt),14*86400000);for(const validDays of [0,-1,1.5,366])assert.equal((await call('catalog/proposals',owner,{...payload,validDays})).status,400);
  const read=await call('proposal/view?token='+created.data.token);assert.equal(read.status,200);assert.equal(read.data.lines[0].price,12345);assert.equal(read.data.lines[0].quantity,3);assert.equal(read.data.lines[0].special,true);
  assert(!JSON.stringify(read.data).includes('stockPickerPrices'));assert(!('owner_id'in read.data));assert(!('stockStatus'in read.data.lines[0]));
  assert.equal((await call('proposal/view?token='+'a'.repeat(64))).status,404);

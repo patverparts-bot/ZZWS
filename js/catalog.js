@@ -160,7 +160,8 @@ const wholesaleOnly = isAdminUser() && window.ZZWS_CATALOG_CONTROLS?.enabled('wh
 
 document.getElementById('clearSearchBtn').classList.toggle('hidden', searchQuery.length === 0);
 
-filteredProducts = allProducts.filter(p => {
+filteredProducts = (window.ZZWS_PROPOSAL_CART?.source()||allProducts).filter(p => {
+  if(window.ZZWS_PROPOSAL_CART?.source())return true;
   const offerMatch=window.ZZWS_PROPOSALS?.match(p);if(offerMatch!=null)return offerMatch;
   const listMatch=window.ZZWS_STOCK_PICKER?.visualMatch(p);if(listMatch!=null)return listMatch;
   const matchBrand = !selectedBrands.length || selectedBrands.some(b => p.brand.toLowerCase() === b.toLowerCase());
@@ -394,7 +395,7 @@ ${resaleColHtml}
 ${priceTdsHtml}
 <td class="text-center js-action" data-art="${escapeHtml(p.articul)}">${actionCellHtml}</td>
 `;
-window.ZZWS_DEALER?.decorate(tr,p);return tr;
+window.ZZWS_DEALER?.decorate(tr,p);window.ZZWS_PROPOSAL_CART?.decorate(tr,p);return tr;
 }
 
 function createCardElement(p) {

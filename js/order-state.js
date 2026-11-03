@@ -16,6 +16,7 @@ function normalizeCart(raw) {
       qty: qty,
       addedPrice: Number(v.addedPrice) || 0,
       addedPriceMode: v.addedPriceMode === 'KP' ? 'KP' : 'WS',
+      ...(/^[a-f0-9]{64}$/.test(v.proposalHash||'')?{proposalHash:v.proposalHash}:{}),
     };
   });
   return out;
@@ -127,8 +128,9 @@ function refreshAllActions() {
 }
 
 function getItemWholesalePrice(item) {
+  const proposalPrice=window.ZZWS_PROPOSAL_CART?.price(item?.articul);if(proposalPrice!=null)return proposalPrice;
   if(window.ZZWS_ASSISTED?.active())return ZZWS_ASSISTED.price(item?.articul);
-  const p = getProduct(item && item.articul);
+  const p = productIndex.get(item && item.articul);
   if (!p) return 0;
   const selectedPrice = isAdminUser() && adminOrderPriceMode === 'KP' ? p.kpPrice : p.wholesale;
   return selectedPrice > 0 ? selectedPrice : 0;
