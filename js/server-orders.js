@@ -50,11 +50,16 @@
   try{const data=await ZZWS.json('orders'+(params.size?'?'+params:''));if(owner!==activeOwner||ticket!==loadTicket||pending!==el('pendingReceiptOnly').checked)return;orders=more?[...orders,...data.orders]:data.orders;appliedFilters=filters;filteredExport.hidden=serverIdentity?.role!=='client'||!Object.keys(filters).length;render();el('moreServerOrders').hidden=data.orders.length<50;}
   catch(e){if(owner===activeOwner&&ticket===loadTicket)root.textContent=ZZWS.message(e);}
  }
+ const closedLabel=received=>(received?'✓ ':'— ')+(window.ZZWS_I18N?.language==='ru'?'Заказ закрыт':'Պատվերը փակված է');
+ window.addEventListener('zzws:languagechange',()=>{for(const marker of document.querySelectorAll('#serverOrdersList .server-order-closure'))marker.textContent=closedLabel(marker.dataset.received==='true');});
  function render(){
   const root=el('serverOrdersList'),opened=new Set([...root.querySelectorAll('details[open][data-order-id]')].map(n=>n.dataset.orderId));root.replaceChildren();
   if(!orders.length){const pending=el('pendingReceiptOnly').checked;root.append(node('p',pending?'Չփակված պատվերներ չկան։':'Ընտրված պայմաններով պատվերներ չկան։','orders-empty'));if(pending){const all=node('button','Ցույց տալ բոլոր պատվերները');all.type='button';all.className='orders-show-all';all.onclick=()=>{el('pendingReceiptOnly').checked=false;load();};root.append(all);}return;}
   for(const order of orders){const card=node('details',null,'server-order-card'),summary=node('summary'),identity=node('div'),total=node('div');
    identity.append(node('strong','Պատվեր №'+order.number),node('span',shortDate(order.created),'server-order-date'));window.ZZWS_ORDER_ACTORS?.author(identity,order);
+   const received=!!order.received_at||order.status==='received',closed=received||order.status==='rejected'||order.approval?.state==='declined';
+   if(closed){card.classList.add('order-closed',received?'order-closed-success':'order-closed-cancelled');const marker=node('span',closedLabel(received),'server-order-closure');marker.dataset.received=String(received);marker.dataset.i18nSkip='true';identity.append(marker);}
+
    total.append(node('span',window.ZZWS_ORDER_APPROVAL?.label(order)||labels[order.status]||order.status,'order-status status-'+order.status),node('strong',money(order.total)));
    if(events.some(e=>e.order_id===order.id))identity.append(node('span','Կան փոփոխություններ','order-unread'));
    summary.append(identity,total);card.append(summary);const content=node('div',null,'server-order-content');card.append(content);card.dataset.orderId=order.id;

@@ -127,3 +127,13 @@ body.cabinet-open .zzws-language-bar,body:has(#orderModal:not(.hidden)) .zzws-la
 .dark .receipt-limit-box{--receipt-bg:#172d48;--receipt-ink:#e4efff;--receipt-line:#60a5fa;--receipt-action:#93c5fd;--receipt-action-ink:#10243d}
 .dark .receipt-limit-box.receipt-blocked{--receipt-bg:#382612;--receipt-ink:#fff2d3;--receipt-line:#fbbf24;--receipt-action:#fbbf24;--receipt-action-ink:#241608}
 @media(max-width:640px){.receipt-limit-box{gap:12px;flex-wrap:wrap;margin:12px 10px;padding:16px;border-left-width:5px}.receipt-notice-icon{flex-basis:38px;height:38px;border-radius:10px}.receipt-notice-content{flex-basis:calc(100% - 50px)}.receipt-notice-content strong{font-size:19px}.receipt-limit-box button{width:100%;min-height:46px}.receipt-limit-box{font-size:15px}}
+
+/* Terminal orders have a visible state beyond the small status chip. */
+#cabinetModal .server-order-card.order-closed-success{background:#f0fdf4;border-color:#86cfa6;border-inline-start:5px solid #22a06b}
+#cabinetModal .server-order-card.order-closed-cancelled{background:#f1f5f9;border-color:#cbd5e1;border-inline-start:5px solid #94a3b8}
+#cabinetModal .server-order-closure{display:flex;width:fit-content;align-items:center;gap:5px;margin-top:7px;padding:3px 8px;border-radius:6px;background:#dcfce7;color:#166534;font-size:11px;font-weight:700;line-height:1.5}
+#cabinetModal .order-closed-cancelled .server-order-closure{background:#e2e8f0;color:#475569}
+.dark #cabinetModal .server-order-card.order-closed-success{background:#102c24;border-color:#27644b;border-inline-start-color:#4ade80}
+.dark #cabinetModal .server-order-card.order-closed-cancelled{background:#1e293b;border-color:#475569;border-inline-start-color:#64748b}
+.dark #cabinetModal .server-order-closure{background:#164e36;color:#bbf7d0}
+.dark #cabinetModal .order-closed-cancelled .server-order-closure{background:#334155;color:#cbd5e1}
