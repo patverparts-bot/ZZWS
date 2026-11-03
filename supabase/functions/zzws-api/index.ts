@@ -309,7 +309,7 @@ async function handleRequest(req:Request){
     const reportResponse=await reportRoutes({path,req,user,service,table,query,body,json,current,project,rowsFromBuffer,fail});
     if(reportResponse)return reportResponse;
     const dealerResponse=await dealerRoutes({path,req,user,body,current,project,table,query,json,fail,knowledge:assistantKnowledge});if(dealerResponse)return dealerResponse;
-    const proposalResponse=await proposalRoutes({path,req,user,body,current,project,table,query,json,fail,random,digest});if(proposalResponse)return proposalResponse;
+    const proposalResponse=await proposalRoutes({path,req,user,body,current,project,table,query,json,fail,random,digest,service});if(proposalResponse)return proposalResponse;
     const replacementResponse=await replacementRoutes({path,req,user,body,current,project,table,query,json,fail,knowledge:assistantKnowledge});if(replacementResponse)return replacementResponse;
     const templateResponse=await adminTemplateRoutes({path,req,user,body,current,project,table,query,json,fail,service,audit});if(templateResponse)return templateResponse;
     const orderResponse=await orderRoutes({path,req,user,service,table,query,body,json,file,current,project,rowsFromBuffer,draft,fail});

@@ -1,3 +1,4 @@
+import {proposalManagementRoutes} from './proposal-management.mjs';
 export const PROPOSAL_LIFETIME=7*24*60*60*1000;
 import {groupedProposal,proposalCartRoutes} from './proposal-cart.mjs';
 import {effectiveRules} from './rules.mjs';
@@ -28,12 +29,13 @@ export function customerProposalLines(input,adminProducts,customerProducts,prici
 }
 export async function proposalRoutes(c){
  const {path,req,user,body,current,project,table,query,json,fail,random,digest}=c;
+ const managed=await proposalManagementRoutes({...c,proposalLines,customerProposalLines});if(managed)return managed;
  if(user){const cart=await proposalCartRoutes(c);if(cart)return cart;}
  if(path==='proposal/view'){
   if(req.method!=='GET')fail(405,'Չթույլատրված գործողություն');
   const token=new URL(req.url).searchParams.get('token')||'';if(!/^[a-f0-9]{64}$/.test(token))fail(404,'Առաջարկը չի գտնվել կամ ժամկետը լրացել է');
-  const row=await query(table('proposals').select('lines,customer_id,created_at,expires_at,price_mode').eq('token_hash',await digest(token)).gt('expires_at',new Date().toISOString()).maybeSingle());
-  if(!row)fail(404,'Առաջարկը չի գտնվել կամ ժամկետը լրացել է');
+  const row=await query(table('proposals').select('lines,customer_id,created_at,expires_at,price_mode,revoked_at').eq('token_hash',await digest(token)).gt('expires_at',new Date().toISOString()).maybeSingle());
+  if(!row||row.revoked_at)fail(404,'Առաջարկը չի գտնվել կամ ժամկետը լրացել է');
   if(row.customer_id)return json({requiresLogin:true,expiresAt:row.expires_at});
   return json({lines:row.lines,createdAt:row.created_at,expiresAt:row.expires_at,priceMode:row.price_mode});
  }

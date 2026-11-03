@@ -18,7 +18,7 @@ async function secureApi(path, options = {}) {
 }
 function lockCatalog() {
   window.ZZWS_PROPOSAL_CART?.reset();
-  window.ZZWS_PROPOSALS?.reset();
+  window.ZZWS_PROPOSALS?.reset();window.ZZWS_PROPOSAL_MANAGEMENT?.reset();
   window.ZZWS_STOCK_PICKER?.reset();
   window.ZZWS_LOADING_SCENES?.cancelOrder();
   window.ZZWS_PAGE_STATE?.stop();
@@ -54,7 +54,7 @@ async function acceptIdentity(user) {
   beginSessionLoading();
   window.ZZWS_ASSISTED?.start(user);
   window.ZZWS_STOCK_PICKER?.start(user);
-  window.ZZWS_PROPOSALS?.start(user);
+  window.ZZWS_PROPOSALS?.start(user);window.ZZWS_PROPOSAL_MANAGEMENT?.start(user);
   window.ZZWS_PROPOSAL_CART?.start(user);
   window.ZZWS_CATALOG_VIEW?.start(user);
   window.ZZWS_ENTRY?.navigation(user);

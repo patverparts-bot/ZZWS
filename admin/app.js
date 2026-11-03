@@ -19,7 +19,7 @@ function showLogin() {
   window.ZZWS_SYSTEM_DATA_RESET?.reset();
   window.ZZWS_ADMIN_VIEW_STATE?.stop();
   window.ZZWS_ADMIN_STOREFRONT?.reset();
-  window.ZZWS_OFFERS?.reset();
+  window.ZZWS_OFFERS?.reset();window.ZZWS_PROPOSAL_MANAGEMENT?.reset();
   window.ZZWS_REPORT_EMAIL?.clearCredentials();
   adminNavigationActive=false;adminHistoryPosition=0;updateAdminBackButton();
   pricePreviewTicket++;window.ZZWS_ADMIN_WAREHOUSES?.reset();window.ZZWS_ADMIN_CATALOG_CONTROLS?.reset();window.ZZWS_ADMIN_OPERATIONS?.reset();window.ZZWS_ADMIN_WORKBENCH?.reset();window.ZZWS_ADMIN_TEMPLATES?.reset();
@@ -49,7 +49,7 @@ function table(headers, rows) {
 }
 function button(label, callback) { const b = document.createElement('button'); b.type='button'; b.textContent = label; b.onclick = () => run(callback); return b; }
 async function run(fn) { try { await fn(); } catch(e) { if(!e.staleSession)status(ZZWS.message(e), true); } }
-const adminTabs=['assistantHistory','dashboard','manager','orders','templates','price','users','rules','audit','storage','email','offers','catalogControls','warehouses','operations','apkDownloads','systemDataReset'];
+const adminTabs=['proposalManagement','assistantHistory','dashboard','manager','orders','templates','price','users','rules','audit','storage','email','offers','catalogControls','warehouses','operations','apkDownloads','systemDataReset'];
 let adminNavigationActive=false,adminHistoryPosition=0,activeAdminTab=null;
 const adminBackButton=document.createElement('button');adminBackButton.id='adminBackSection';adminBackButton.type='button';adminBackButton.textContent='← Նախորդ բաժին';
 const adminSectionTrail=document.createElement('div');adminSectionTrail.className='admin-section-trail';el('adminActiveSection').before(adminSectionTrail);adminSectionTrail.append(adminBackButton,el('adminActiveSection'));
@@ -106,7 +106,7 @@ async function selectAdminTab(name,options={}){
   if(name==='apkDownloads')await ZZWS_APK_DOWNLOADS.load();
   if(name==='systemDataReset')await ZZWS_SYSTEM_DATA_RESET.load();
   if(name==='warehouses')await ZZWS_ADMIN_WAREHOUSES.load();
-  if(name==='offers')await ZZWS_OFFERS.load();
+  if(name==='offers')await ZZWS_OFFERS.load();if(name==='proposalManagement')ZZWS_PROPOSAL_MANAGEMENT.loadAll();
   if(name==='email')await ZZWS_REPORT_EMAIL.loadSettings();
   await window.ZZWS_ADMIN_VIEW_STATE?.loaded(name);
 }
@@ -116,7 +116,7 @@ async function enter() {
   if (user.role !== 'admin') { showLogin();const e=new Error('Անհրաժեշտ է ադմինիստրատորի հաշիվ');e.status=403;throw e; }
   if(!user.adminScope||!Array.isArray(user.permissions)||!user.permissions.length){showLogin();const e=new Error('Այս հաշվի ադմինիստրատորի իրավունքները դեռ նշանակված չեն։ Դիմեք սեփականատիրոջը։');e.status=403;throw e;}
   window.ZZWS_ADMIN_VIEW_STATE?.start(user);
-  window.ZZWS_ENTRY?.navigation(user);window.ZZWS_HELP_USER=user;ZZWS_ADMIN_HOME.setUser(user);for(const group of document.querySelectorAll('.admin-nav-group'))group.hidden=![...group.querySelectorAll('[data-tab]')].some(button=>!button.hidden);
+  window.ZZWS_ENTRY?.navigation(user);window.ZZWS_HELP_USER=user;ZZWS_ADMIN_HOME.setUser(user);window.ZZWS_PROPOSAL_MANAGEMENT?.start(user);for(const group of document.querySelectorAll('.admin-nav-group'))group.hidden=![...group.querySelectorAll('[data-tab]')].some(button=>!button.hidden);
   window.ZZWS_SYSTEM_DATA_RESET?.start(user);
   ZZWS_ADMIN_CHANNELS.start(user);
   window.ZZWS_REOPEN_ALERTS?.start(user);
@@ -359,3 +359,5 @@ el('saveAdminPolling').onclick=()=>run(async()=>{
 });
 
 el('userSavedBaskets').onclick=()=>run(()=>ZZWS_ADMIN_TEMPLATES.openCustomer(editingUserId));
+
+document.getElementById('allProposalsOpen').onclick=()=>ZZWS_PROPOSAL_MANAGEMENT.loadAll();
