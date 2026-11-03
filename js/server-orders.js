@@ -27,7 +27,7 @@
   }catch(error){if(owner===who)exportNotice.textContent=ZZWS.message(error);}
   finally{if(owner===who){exportBusy=false;document.querySelectorAll('.order-export-button,.order-export-filtered').forEach(b=>b.disabled=false);}}
  }
- function setNotice(text){const box=el('orderNotificationNotice');box.textContent=text;box.hidden=!text;}
+ function setNotice(text){const box=el('orderNotificationNotice');box.replaceChildren();box.hidden=!text;if(!text)return;box.setAttribute('role','status');const icon=node('span','!','order-notice-icon'),content=node('span',null,'order-notice-content'),title=node('strong','Պատվերների փոփոխություններ'),description=node('span',text),action=node('button','Բացել պատվերը');icon.setAttribute('aria-hidden','true');content.append(title,description);action.type='button';action.onclick=()=>{document.querySelector('.header-notifications').click();};box.append(icon,content,action);}
  async function poll(){
   if(!owner||document.hidden||polling)return;polling=true;
   window.ZZWS_RECEIPTS?.refresh().catch(()=>{});
