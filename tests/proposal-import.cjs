@@ -13,3 +13,6 @@ assert.throws(()=>data.parse([header,['','','',2,1000,'003']]),/տող 2/);
 assert.throws(()=>data.parse([['Model',2,'not a price']]),/տող 1/);
 assert.equal(data.parse([header,...lines,['Итого','','',200,1000,'']]).length,107);
 console.log('107-row exports, headerless paste, footer exclusion, formatted prices and physical error rows passed');
+
+assert.deepEqual(data.counts([{articul:'001',quantity:2},{articul:'001',quantity:3},{articul:'002',quantity:4}]),{items:2,quantity:9});
+assert.deepEqual(data.counts([]),{items:0,quantity:0});

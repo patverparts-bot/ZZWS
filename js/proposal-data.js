@@ -39,5 +39,7 @@
  }
  function resolve(rows,products,mode,core){return rows.map(row=>{const match=core.match(row,products);if(!match.product)return {...row,...match};const p=match.product,base=p.stockPickerPrices?p.stockPickerPrices[mode]??null:p.wholesale??null;return {articul:p.articul,name:p.name,brand:p.brand,category:p.category,quantity:row.quantity,price:row.price!==null?row.price:p.stockPickerPrices?p.stockPickerPrices[mode]??null:p.wholesale??null,special:row.price!==null&&row.price!==base};});}
  function total(lines){let amount=0,unpriced=0;for(const row of lines){if(Number.isFinite(row.price)&&row.price>0)amount+=row.price*row.quantity;else unpriced+=row.quantity;}return {amount,unpriced};}
- const api={parse,resolve,total};if(typeof module==='object'&&module.exports)module.exports=api;else root.ZZWS_PROPOSAL_DATA=api;
+ function counts(lines){return {items:new Set(lines.map(r=>String(r.articul||r.sku||r.name||'').normalize('NFKC').trim().toUpperCase())).size,quantity:lines.reduce((sum,r)=>sum+r.quantity,0)};}
+ function summary(lines){const n=counts(lines);return 'Անվանումներ՝ '+n.items.toLocaleString('hy-AM')+' · Ընդհանուր քանակ՝ '+n.quantity.toLocaleString('hy-AM')+' հատ';}
+ const api={parse,resolve,total,counts,summary};if(typeof module==='object'&&module.exports)module.exports=api;else root.ZZWS_PROPOSAL_DATA=api;
 })(typeof window==='object'?window:globalThis);
