@@ -56,7 +56,7 @@
   }
   root.append(stock);
   const row=node('div',null,'sf-product-actions'),buy=node('div',null,'js-action');buy.dataset.art=p.articul;buy.innerHTML=getActionControlHtml(p.articul,cart[p.articul],true);
-  const compare=button('Համեմատել',()=>ZZWS_DEALER.toggleCompare(p.articul),'sf-button sf-compare');compare.dataset.dealerCompare=p.articul;compare.setAttribute('aria-pressed',String(ZZWS_DEALER.isSelected(p.articul)));compare.setAttribute('aria-label','Համեմատել՝ '+p.name);row.append(buy,compare);root.append(row);return root;
+  const compare=button('Համեմատել',()=>ZZWS_DEALER.toggleCompare(p.articul),'sf-button sf-compare');compare.dataset.dealerCompare=p.articul;compare.setAttribute('aria-pressed',String(ZZWS_DEALER.isSelected(p.articul)));compare.setAttribute('aria-label','Համեմատել՝ '+p.name);row.append(buy,compare);root.append(row);window.ZZWS_PROPOSALS?.decorate(root,p);return root;
  }
  function navigate(next,clear=true,historyMode='push'){
   window.ZZWS_DISCLOSURE_MENUS?.close();

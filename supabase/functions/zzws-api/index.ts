@@ -3,6 +3,7 @@ import {apkDownloadsRoute} from './apk-downloads.mjs';
 import {warehouseRoutes,mainWarehouses,warehousePriority} from './warehouses.mjs';
 import {dealerRoutes} from './dealer.mjs';
 import {replacementRoutes} from './replacements.mjs';
+import {proposalRoutes} from './proposals.mjs';
 import {adminTemplateRoutes} from './admin-templates.mjs';
 import {priceReportResponse} from './price-report.mjs';
 import {validateOperationsReport,operationStatus} from './operations-health.mjs';
@@ -254,6 +255,7 @@ async function handleRequest(req:Request){
       await query(table('attempts').delete().eq('id',attempt));await audit(row.id,'login');
       return json(result);
     }
+    if(path==='proposal/view')return await proposalRoutes({path,req,table,query,json,fail,digest});
     const {user,hash,setupOnly,invitationHash,mfaVerified,confirmedUntil}=await identity(req);requestClients.getStore().actor=user.id;requestClients.getStore().hash=hash;
     if(user.role==='admin'){const scope=await query(table('admin_scopes').select('scope').eq('user_id',user.id).maybeSingle());user.adminScope=scope?.scope||null;user.permissions=scopePermissions[user.adminScope]||[];}
     Object.assign(user,await channelFlags(table,query,user));user.capabilities={mobileAdmin:user.mobileAdminEnabled,telegram:user.telegramEnabled,systemDataMaintenance:user.adminScope==='owner'&&!!maintenanceMetadata&&(maintenanceMetadata.protectedOwner?maintenanceMetadata.protectedOwner===user.id:Number(maintenanceMetadata.ownerCount)===1)};
@@ -305,6 +307,7 @@ async function handleRequest(req:Request){
     const reportResponse=await reportRoutes({path,req,user,service,table,query,body,json,current,project,rowsFromBuffer,fail});
     if(reportResponse)return reportResponse;
     const dealerResponse=await dealerRoutes({path,req,user,body,current,project,table,query,json,fail,knowledge:assistantKnowledge});if(dealerResponse)return dealerResponse;
+    const proposalResponse=await proposalRoutes({path,req,user,body,current,project,table,query,json,fail,random,digest});if(proposalResponse)return proposalResponse;
     const replacementResponse=await replacementRoutes({path,req,user,body,current,project,table,query,json,fail,knowledge:assistantKnowledge});if(replacementResponse)return replacementResponse;
     const templateResponse=await adminTemplateRoutes({path,req,user,body,current,project,table,query,json,fail,service,audit});if(templateResponse)return templateResponse;
     const orderResponse=await orderRoutes({path,req,user,service,table,query,body,json,file,current,project,rowsFromBuffer,draft,fail});

@@ -1,6 +1,7 @@
 // Clean local installer; importing opens no connection. Do not replay this on an existing database.
 export const cleanSchemaFiles=[
-  "supabase/schema.sql",
+  "supabase/schema.sql",
+  "supabase/proposals.sql",
   "supabase/admin-scopes.sql",
   "supabase/security-hardening.sql",
   "supabase/sensitive-actions.sql",

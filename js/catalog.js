@@ -161,6 +161,7 @@ const wholesaleOnly = isAdminUser() && window.ZZWS_CATALOG_CONTROLS?.enabled('wh
 document.getElementById('clearSearchBtn').classList.toggle('hidden', searchQuery.length === 0);
 
 filteredProducts = allProducts.filter(p => {
+  const offerMatch=window.ZZWS_PROPOSALS?.match(p);if(offerMatch!=null)return offerMatch;
   const listMatch=window.ZZWS_STOCK_PICKER?.visualMatch(p);if(listMatch!=null)return listMatch;
   const matchBrand = !selectedBrands.length || selectedBrands.some(b => p.brand.toLowerCase() === b.toLowerCase());
   const matchCategory = !selectedCategories.length || selectedCategories.some(c => p.category.toLowerCase() === c.toLowerCase());

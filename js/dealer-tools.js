@@ -46,7 +46,7 @@
   d.showModal();h.querySelector('button').focus();return {d,body,close};
  }
  async function request(path,payload){return secureApi(path,{method:'POST',body:JSON.stringify(payload)});}
- function setView(value){view=value;document.documentElement.dataset.dealerView=value;tableButton.setAttribute('aria-pressed',String(value==='table'));cardsButton.setAttribute('aria-pressed',String(value==='cards'));if(catalogLoaded)rerenderVisible();}
+ function setView(value){if(window.ZZWS_PROPOSALS?.active())value='cards';view=value;document.documentElement.dataset.dealerView=value;tableButton.setAttribute('aria-pressed',String(value==='table'));cardsButton.setAttribute('aria-pressed',String(value==='cards'));if(catalogLoaded)rerenderVisible();}
  function updateSelection(){
   selected=selected.filter(id=>getProduct(id));compareButton.textContent='Համեմատել · '+selected.length;compareButton.disabled=selected.length<2;
   document.querySelectorAll('[data-dealer-compare]').forEach(b=>{b.setAttribute('aria-pressed',String(selected.includes(b.dataset.dealerCompare)));b.textContent=b.classList.contains('sf-compare')?(selected.includes(b.dataset.dealerCompare)?'✓ Համեմատել':'Համեմատել'):(selected.includes(b.dataset.dealerCompare)?'✓':'⇄');b.title=selected.includes(b.dataset.dealerCompare)?'Համեմատության մեջ':'Համեմատել';});
@@ -297,4 +297,3 @@
  window.ZZWS_DEALER={get view(){return view;},state:()=>({view,filters:{...filters},selected:[...selected]}),viewState,restoreView,restoreState,setView,toggleCompare,isSelected:articul=>selected.includes(articul),decorate,matches,renderFilters,refresh,reset,openProduct,compare,showroom,bundles,clearFilters(){filters={};renderFilters();},facts:()=>facts};
  setView('cards');renderFilters();updateSelection();if(catalogLoaded)refresh();
 })();
-
