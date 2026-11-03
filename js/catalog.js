@@ -248,7 +248,7 @@ function resetAndRender() {
 
 function appendProducts(list) {
   if (!list.length) return;
-  const desktop = desktopMQ.matches && window.ZZWS_DEALER?.view !== 'cards';
+  const desktop = window.ZZWS_DEALER ? window.ZZWS_DEALER.view === 'table' : desktopMQ.matches;
   const frag = document.createDocumentFragment();
   list.forEach(p => {
     if (desktop && groupByCategory && p.category !== lastRenderedCategory) {
