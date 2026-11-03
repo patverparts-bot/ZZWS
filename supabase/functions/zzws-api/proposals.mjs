@@ -25,7 +25,7 @@ export async function proposalRoutes(c){
  }
  if(path!=='catalog/proposals')return null;
  if(req.method!=='POST')fail(405,'Չթույլատրված գործողություն');
- if(!['admin','client'].includes(user.role))fail(403,'Հասանելիությունն արգելված է');
+ if(user?.role!=='admin')fail(403,'Հասանելիությունն արգելված է');
  const input=await body(req),validDays=input.validDays??7;if(!Number.isInteger(validDays)||validDays<1||validDays>365)fail(400,'Նշեք գործողության օրերը՝ 1-ից 365');let customerId=null;
  if(input.customerId!=null&&input.customerId!==''){
   if(user.role!=='admin'||!user.permissions?.includes('orders:write'))fail(403,'Հաճախորդ ընտրելու իրավունքը բացակայում է');

@@ -28,7 +28,8 @@ try{
  assert.equal((await call('proposal/view?token='+'a'.repeat(64))).status,404);
  assert.equal((await call('catalog/proposals',owner,{...payload,lines:[{...payload.lines[0],articul:'not-visible'}]})).status,400);
  assert.equal((await call('catalog/proposals',owner,{...payload,lines:[{...payload.lines[0],special:false,price:1}]})).status,400);
- const cp=(await call('catalog',client)).data.products[0];assert.equal((await call('catalog/proposals',client,{priceMode:'Dealers',lines:[{articul:cp.articul,quantity:1,price:cp.wholesale,special:false}]})).status,200);
+ const cp=(await call('catalog',client)).data.products[0],beforeDenied=(await runtime.db.query('select count(*)::int count from zzws_proposals')).rows[0].count;assert.equal((await call('catalog/proposals',client,{priceMode:'Dealers',lines:[{articul:cp.articul,quantity:1,price:cp.wholesale,special:false}]})).status,403);assert.equal((await runtime.db.query('select count(*)::int count from zzws_proposals')).rows[0].count,beforeDenied,'a valid client cannot create or share proposals');
+ for(const name of ['manager','viewer']){const admin=(await call('login',null,{login:'zzws-test-'+name,password:'24681012'})).data.sessionToken;assert.equal((await call('catalog/proposals',admin,payload)).status,200,'administrator role remains allowed independently of order-write scope');}
  await runtime.db.exec("reset role;update zzws_proposals set created_at=created_at-interval '8 days',expires_at=expires_at-interval '8 days';set role service_role");
  assert.equal((await call('proposal/view?token='+created.data.token)).status,404);
  await runtime.db.exec('reset role;set role anon');await assert.rejects(runtime.db.query('select * from zzws_proposals'));await runtime.db.exec('reset role;set role service_role');
