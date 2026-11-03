@@ -5,7 +5,7 @@
  function update(){
   const blocked=!!state?.blocked,waiting=Number(state?.pendingCount||0);let text='';
   if(state?.enabled&&waiting){text=blocked?'Նոր պատվերը փակված է, մինչև հաստատեք բոլոր '+waiting+' պատվերների ստացումը։':'Ստացման հաստատման սպասող պատվերներ՝ '+waiting+'։ Կարող եք ուղարկել ևս '+state.remaining+' նոր պատվեր։';}
-  for(const id of ['receiptLimitNotice','receiptCartNotice']){const root=el(id);if(!root)continue;root.replaceChildren();root.hidden=!text;root.classList.toggle('receipt-blocked',blocked);if(text){root.append(node('span',text));const button=node('button','Դիտել չփակված պատվերները');button.type='button';button.onclick=showPending;root.append(button);}}
+  for(const id of ['receiptLimitNotice','receiptCartNotice']){const root=el(id);if(!root)continue;root.replaceChildren();root.hidden=!text;root.classList.toggle('receipt-blocked',blocked);if(text){const icon=node('span',null,'receipt-notice-icon'),content=node('div',null,'receipt-notice-content');icon.setAttribute('aria-hidden','true');icon.innerHTML='<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5v9l-9 5-9-5V8zM3 8l9 5 9-5M12 13v9M7.5 5.5l9 5"/></svg>';content.append(node('strong','Հաստատել ապրանքների ստացումը'),node('span',text));root.append(icon,content);const button=node('button','Դիտել չփակված պատվերները');button.type='button';button.onclick=showPending;root.append(button);}}
   const button=el('submitServerOrder');if(button){button.disabled=submitting||(blocked&&!pendingRequest());button.textContent=blocked&&pendingRequest()?'Կրկին ստուգել ուղարկումը':'Ուղարկել պատվերը';}
   window.ZZWS_CHECKOUT?.syncSubmitButton();
  }
