@@ -1,0 +1,52 @@
+{
+  "date": "2026-11-04",
+  "item": "PUB-002",
+  "status": "PUBLISHED_AND_VERIFIED_FINITE_UPLOADS",
+  "function": "zzws-api",
+  "previousVersion": 81,
+  "version": 82,
+  "changedFiles": ["supabase/functions/zzws-api/body-reader.mjs"],
+  "sourceFilesMatchedAfterDownload": 68,
+  "otherSourceFilesUnchanged": 67,
+  "helperSha256": "3531578764d4b4850462a78af60475e55f01e9caf7500a4215f537ee73f77ad5",
+  "observedCause": "Early rejection and cancellation of an unfinished large request body withheld the response in the hosted path. Fully consuming a finite rejected body before returning removes the reproduced timeout. A cloned-body forwarding model reproduces the interaction; managed relay internals are not proven identical.",
+  "primarySource": "https://github.com/supabase/edge-runtime/issues/737",
+  "fix": {
+    "retainedAndParsedBytesLimit": 10100000,
+    "overflow": "Release stored chunks, discard the remainder of a finite body without retaining or parsing it, then return HTTP 413.",
+    "absoluteMonotonicReadDeadlineMs": 45000,
+    "stalledRead": "408 before detecting overflow; preserve 413 after overflow. Cancellation is never awaited."
+  },
+  "scopeLimitations": [
+    "Discard has a time bound, not a total-transit-byte cap or an early wire abort.",
+    "The function's retained bytes and parser input remain capped; no claim is made about buffering inside the managed relay.",
+    "Delivery after cancellation of an unfinished or endless body remains provider-dependent. This is a finite-upload workaround, not a provider runtime fix."
+  ],
+  "validation": {
+    "isolatedTestsPassed": 14,
+    "isolatedTestsSkipped": 0,
+    "helperAndRelayModelTests": 12,
+    "actualRouteIntegrationTests": 2,
+    "routesCovered": ["admin/orders/preview", "admin/price/preview", "admin/users/preview", "admin/orders/report-inspect"],
+    "finiteRouteBodyMiB": 30,
+    "retentionRegression": "Rejected 8 MiB synthetic stream releases stored chunks; incremental retained ArrayBuffer memory stayed below 4 MiB under forced GC.",
+    "live": [
+      {"bodyBytes": 24, "contentLength": true, "status": 400, "elapsedMs": 2654},
+      {"bodyBytes": 10100001, "contentLength": true, "status": 413, "elapsedMs": 726},
+      {"bodyBytes": 10300000, "contentLength": false, "chunked": true, "status": 413, "elapsedMs": 882}
+    ],
+    "liveRoute": "admin/price/preview",
+    "liveBodies": "Deliberately invalid multipart bytes; no valid XLSX submitted.",
+    "validXlsxPreview": "Isolated only; HTTP 200 without price publication.",
+    "authorization": "Isolated actual routes retain 401/403 before reading unauthorized uploads.",
+    "attachmentFieldsAndBytesPreserved": true
+  },
+  "productionEffects": {"databaseMigrations": [], "ordersCreated": 0, "draftsCreated": 0, "reportsSent": 0, "priceListsPublished": 0, "apkBinaryChanged": false},
+  "evidence": [
+    "work/upload-timeout/source-readback.json",
+    "work/upload-timeout/live-verification.json",
+    "work/upload-timeout/independent-reader-validation.json",
+    "work/upload-timeout/multipart-integration-result.json"
+  ],
+  "remainingUnpublishedItems": ["PUB-001", "PUB-003", "PUB-007", "PUB-008", "PUB-009"]
+}
