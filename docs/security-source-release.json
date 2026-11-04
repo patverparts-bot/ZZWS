@@ -1,0 +1,40 @@
+{
+  "status": "PREPARED_SERVER_SOURCE_ONLY_NOT_ACTIVATED",
+  "webCommit": "32beccc062f85390dd04b89c7025b8b28426fe20",
+  "preparedBranch": "prepared/security-and-customer-code-20261104",
+  "changes": [
+    {"issue": "BACKEND-UPLOAD-STREAM-LIMIT", "sourceReady": true, "liveServerApplied": false, "behavior": "Count and bound actual multipart bytes before parsing; cancellation cannot delay oversized-request rejection."},
+    {"issue": "MAINTENANCE-UNREVIEWED-PROPOSAL-DEPENDENCY", "sourceReady": true, "liveServerApplied": false, "behavior": "Archive, restore and review proposal dependencies with protected-owner, company and employee relationships; unknown dependencies still fail closed."},
+    {"issue": "APK-01", "sourceReady": true, "liveServerApplied": false, "behavior": "Verify pinned production certificate, RSA signature and whole-file APK v2 content digest before publication writes."},
+    {"issue": "APK-02", "sourceReady": true, "liveServerApplied": false, "behavior": "Hash current and previous keeper binaries before deletion; a failed check preserves fallback releases and reports cleanupPending."},
+    {"issue": "WEB-01", "webSourcePublished": true, "behavior": "Save authenticated history before logout, clear leaving-account business caches, restore authoritative history after login; preserve unsaved journals across ordinary reloads."},
+    {"issue": "WEB-02", "clientMitigationPublished": true, "httpHeadersApplied": false, "behavior": "Default-hidden pages and early top-level checks block framed startup. Real response headers remain a required hosting step; this finding is only partially mitigated."}
+  ],
+  "migration": "supabase/migrations/20261104051759_maintenance_proposal_coverage.sql",
+  "cors": {
+    "sourceReady": true,
+    "liveServerApplied": false,
+    "addedOrigin": "https://zzws-1z2.pages.dev",
+    "previousOriginsPreserved": true,
+    "environmentVariablesCreatedOrChanged": false,
+    "isolatedOptionsAndHealthResponsesChecked": 46
+  },
+  "customerCode": {"fullLabelSourceReady": true, "preserveLeadingZeros": true, "relationshipKey": "first six digits", "existingCustomerIdsPreserved": true, "liveServerApplied": false},
+  "verification": {"backendNodeAndPythonPassed": 34, "apkSignatureAndPublicationPassed": 26, "webUnitAndRegressionPassed": 32, "customerCodeUnitAndIntegrationPassed": 4, "customerCodeBrowser": "PASS", "independentSourceReviews": "APK cryptography/retention and backend maintenance/multipart reviewed"},
+  "deploymentConstraints": {
+    "supabaseDeploymentPerformed": false,
+    "productionMigrationApplied": false,
+    "apkBinaryBuiltOrPublished": false,
+    "cloudflareContactedOrChanged": false,
+    "realOrdersOrMessagesCreated": false,
+    "priorZzwsApiDeploymentRequestResolved": false,
+    "supportTicket": "SU-537346",
+    "requiredBeforeActivation": "Resolve the earlier deployment request, recheck installed versions and source, retain backups, and obtain the separately authorized server/hosting deployment scope. Do not blindly deploy again."
+  },
+  "limits": [
+    "These server and database changes are published as source only. Existing installed API79 and APK Function10 are not replaced.",
+    "APK verification intentionally accepts the reviewed single-signer RSA0x0103 v2 profile; key rotation or other signing schemes require review.",
+    "Fresh integration tests use a local schema overlay with existing workspace baseline SQL because 35 historical installer inputs are absent from the published repository. Private baseline SQL is not included in this source release.",
+    "GitHub Pages HTTP response headers were not configured. See docs/security-response-headers.json for the future hosting requirement."
+  ]
+}

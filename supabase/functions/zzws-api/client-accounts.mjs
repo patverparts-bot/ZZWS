@@ -7,7 +7,10 @@ export function accountPerson(value){
  for(const key of ['firstName','lastName']){const v=String(value?.[key]||'').trim();if(!v||v.length>100||/[\u0000-\u001f\u007f]/u.test(v))throw Error('Լրացրեք անունը և ազգանունը');out[key]=v;}
  out.phone=phoneNumber(value?.phone||'');if(!out.phone)throw Error('Նշեք հեռախոսահամարը');out.email=email(value?.email||'');return out;
 }
-export function customerCode(value){const s=String(value??'').trim();if(s.length>80||s&&!/^[\p{L}\p{N}._-]+$/u.test(s))throw Error('Ստուգեք հաճախորդի կոդը');return s;}
+// Keep the complete business label for display; never coerce its identity to a number.
+export function customerCodeKey(value){const s=String(value??'').trim();return /^[0-9]{6}/.exec(s)?.[0]||s.toLowerCase();}
+export function findCustomerByCode(rows,value){const key=customerCodeKey(value);if(!key)return null;const matches=rows.filter(u=>!u.customer_id&&!u.deleted_at&&!u.archived_at&&u.profile.role==='client'&&customerCodeKey(u.profile.customerCode)===key);if(matches.length>1)throw Error('Կրկնվող հաճախորդի կոդ կամ մուտքանուն');return matches[0]||null;}
+export function customerCode(value){const s=String(value??'').trim();if(s.length>80||/[\u0000-\u001f\u007f]/u.test(s)||s&&!/^[0-9]{6}/.test(s)&&!/^[\p{L}\p{N}._-]+$/u.test(s))throw Error('Ստուգեք հաճախորդի կոդը');return s;}
 export const accountDTO=row=>({...row.profile,id:row.id,login:row.login,active:row.active,profileRevision:row.profile_revision,needsPasswordSetup:row.needs_password_setup===true,needsProfileSetup:row.needs_profile_setup===true,person:row.person||{},customerId:row.profile.role==='client'?(row.customer_id||row.id):null,clientRole:row.profile.role==='client'?(row.customer_id?'employee':'manager'):null,lastLogin:row.last_login||null});
 
 export async function activateClient(c,p){

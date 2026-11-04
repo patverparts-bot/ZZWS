@@ -63,6 +63,40 @@ def verify_maintenance(tables):
     return len(archives)
 
 
+def verify_proposals(tables, users):
+    names = {'proposals', 'proposal_cart', 'proposal_reads'}
+    if not names.intersection(tables):
+        return 0  # Older application snapshots did not include these tables.
+    if not names.issubset(tables):
+        raise ValueError('proposal_tables_missing')
+    offers = {row.get('token_hash'): row for row in tables['proposals']}
+    if len(offers) != len(tables['proposals']) or any(not isinstance(key, str) or not key for key in offers):
+        raise ValueError('proposal_duplicate_identity')
+    accounts = {row['id']: row for row in tables['users']}
+    for offer in offers.values():
+        if offer.get('owner_id') not in users:
+            raise ValueError('missing_proposal_owner')
+        if offer.get('customer_id') and offer['customer_id'] not in users:
+            raise ValueError('missing_proposal_customer')
+    for name in ['proposal_cart', 'proposal_reads']:
+        identities = set()
+        for row in tables[name]:
+            user = row.get('user_id')
+            if user not in users:
+                raise ValueError('missing_owner')
+            offer = offers.get(row.get('token_hash'))
+            if offer is None:
+                raise ValueError('missing_proposal')
+            receiver = accounts[user].get('customer_id') or user
+            if offer.get('customer_id') and offer['customer_id'] != receiver:
+                raise ValueError('proposal_receiver_mismatch')
+            key = (user, row.get('articul') if name == 'proposal_cart' else row.get('token_hash'))
+            if key in identities:
+                raise ValueError('proposal_duplicate_identity')
+            identities.add(key)
+    return len(offers)
+
+
 def verify(snapshot):
     if not isinstance(snapshot, dict) or snapshot.get('format') != 'zzws-application-backup-v1':
         raise ValueError('invalid_manifest')
@@ -78,6 +112,10 @@ def verify(snapshot):
     for key, ids in [('users', users), ('versions', versions), ('orders', orders)]:
         if len(ids) != len(tables[key]):
             raise ValueError('duplicate_identity')
+    for row in tables['users']:
+        if row.get('customer_id') and row['customer_id'] not in users:
+            raise ValueError('missing_company')
+    proposals_verified = verify_proposals(tables, users)
     for row in tables['state']:
         if row.get('version') and row['version'] not in versions:
             raise ValueError('missing_price_version')
@@ -120,14 +158,14 @@ def verify(snapshot):
                 raise ValueError('restore_roundtrip_mismatch')
         if db.execute('pragma integrity_check').fetchone()[0] != 'ok':
             raise ValueError('restore_integrity_failed')
-    return {'ok': True, 'scope': 'application-data-only', 'created': snapshot.get('created'), 'tables': len(tables), 'rows': sum(map(len, tables.values())), 'orderTotalsVerified': checked, 'maintenanceArchivesVerified': maintenance_verified}
+    return {'ok': True, 'scope': 'application-data-only', 'created': snapshot.get('created'), 'tables': len(tables), 'rows': sum(map(len, tables.values())), 'orderTotalsVerified': checked, 'maintenanceArchivesVerified': maintenance_verified, 'proposalRowsVerified': proposals_verified}
 
 
 if __name__ == '__main__':
     try:
         result = verify(json.load(sys.stdin))
     except Exception as error:
-        safe_codes = {'invalid_manifest', 'missing_tables', 'invalid_rows', 'duplicate_identity', 'missing_price_version', 'missing_order_user', 'invalid_order_lines', 'invalid_order_amount', 'order_total_mismatch', 'missing_owner', 'missing_event_order', 'restore_roundtrip_mismatch', 'restore_integrity_failed', 'maintenance_tables_missing', 'maintenance_owner_or_freeze_invalid', 'maintenance_grants_revived', 'maintenance_duplicate_identity', 'maintenance_job_revived', 'maintenance_archive_missing', 'maintenance_lease_revived', 'maintenance_archive_text_missing', 'maintenance_archive_checksum', 'maintenance_archive_format', 'maintenance_archive_job_missing'}
+        safe_codes = {'invalid_manifest', 'missing_tables', 'invalid_rows', 'duplicate_identity', 'missing_price_version', 'missing_order_user', 'invalid_order_lines', 'invalid_order_amount', 'order_total_mismatch', 'missing_owner', 'missing_company', 'missing_event_order', 'proposal_tables_missing', 'proposal_duplicate_identity', 'missing_proposal_owner', 'missing_proposal_customer', 'missing_proposal', 'proposal_receiver_mismatch', 'restore_roundtrip_mismatch', 'restore_integrity_failed', 'maintenance_tables_missing', 'maintenance_owner_or_freeze_invalid', 'maintenance_grants_revived', 'maintenance_duplicate_identity', 'maintenance_job_revived', 'maintenance_archive_missing', 'maintenance_lease_revived', 'maintenance_archive_text_missing', 'maintenance_archive_checksum', 'maintenance_archive_format', 'maintenance_archive_job_missing'}
         code = str(error) if isinstance(error, ValueError) and str(error) in safe_codes else 'snapshot_rehearsal_failed'
         print(json.dumps({'ok': False, 'error': code, 'errorType': type(error).__name__}))
         sys.exit(1)

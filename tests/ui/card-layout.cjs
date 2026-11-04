@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const cached=path.join(process.env.USERPROFILE||'C:/Users/levon','.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
 const {chromium}=require(process.env.ZZWS_PLAYWRIGHT||(fs.existsSync(cached)?cached:'playwright'));
-const customerCodePrefix=process.env.ZZWS_CUSTOMER_CODE_PREFIX==='enabled';
+const customerCodePrefix=process.env.ZZWS_CUSTOMER_CODE_PREFIX!=='disabled';
 (async()=>{
  const {createRuntime}=await import('../support/runtime.mjs');
  const site=process.env.ZZWS_TEST_URL?null:await require('../support/serve-site.cjs')();

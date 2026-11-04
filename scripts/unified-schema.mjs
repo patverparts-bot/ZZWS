@@ -63,6 +63,8 @@ export const cleanSchemaFiles=[
   "supabase/migrations/20261102130200_maintenance_selection_sizes.sql",
   "supabase/migrations/20261102140000_maintenance_disk_report.sql",
   "supabase/proposal-recipients.sql",
-  "supabase/migrations/20261103142753_editable_proposal_management.sql"
+  "supabase/migrations/20261103142753_editable_proposal_management.sql",
+  "supabase/migrations/20261103211609_customer_code_prefix.sql",
+  "supabase/migrations/20261104051759_maintenance_proposal_coverage.sql"
 ];
 export const schemaVersion="zzws-unified-4.1.0-optimized";

@@ -1,4 +1,5 @@
 (() => {
+ const protect=(element,code)=>{window.ZZWS_I18N?.protectData?.(element,[code]);return element;};
  const el=id=>document.getElementById(id),node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;if(cls)n.className=cls;return n;};
  const labels={new:'Նոր',confirmed:'Հաստատված',in_progress:'Ձևակերպված է',completed:'Առաքված է',received:'Ստացված է',rejected:'Մերժված'};
  let epoch=0,lifecycle=0,rows=[],selected=null,timer,key='',orderTools=null,updatedAt=null,refreshing=false,pollTimer=null;
@@ -23,7 +24,7 @@
  function customer(order){
   selected=order;el('manager').dataset.orderSelected=String(!!order);const root=el('managerCustomer');root.replaceChildren();el('managerEmpty').hidden=!!order;
   if(!order)return;
-  root.append(node('h2',order.customer.client),node('p',order.customer.customerCode+' · Պատվեր №'+order.number+' · '+(window.ZZWS_ORDER_APPROVAL?.label(order)||labels[order.status]),'help'));
+  root.append(node('h2',order.customer.client),protect(node('p',order.customer.customerCode+' · Պատվեր №'+order.number+' · '+(window.ZZWS_ORDER_APPROVAL?.label(order)||labels[order.status]),'help'),order.customer.customerCode));
   const details=node('div',null,'manager-customer-data');
   for(const [label,value] of [['Կազմակերպություն',order.delivery?.organization],['Կոնտակտ',order.delivery?.contact],['Հասցե',order.delivery?.address],['Առաքման օր',order.delivery?.date]])if(value)details.append(node('p',label+'՝ '+value));
   root.append(details);

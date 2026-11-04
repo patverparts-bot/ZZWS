@@ -27,6 +27,7 @@ import { receiptRoutes } from './receipt-routes.mjs';
 import { clientCategory } from './receipt-policy.mjs';
 import { publicError } from './public-error.mjs';
 import { assertXlsxArchive } from './xlsx-validation.mjs';
+import { boundedMultipart } from './body-reader.mjs';
 import { priceDifference,scopePermissions,canAccess } from './operations.mjs';
 import { createClient } from 'npm:@supabase/supabase-js@2.95.0';
 import XLSX from './vendor/xlsx.mjs';
@@ -52,6 +53,7 @@ const service=new Proxy(fallbackService,{get(target,key){const store=requestClie
 async function ensureAuthMutation(actor:string,hash:string){const store=requestClients.getStore();if(store.authLease)return;const id=crypto.randomUUID();await query(service.rpc('zzws_maintenance_auth_claim',{p_actor:actor,p_hash:hash,p_id:id,p_orders_generation:store.ordersGeneration,p_workspace_generation:store.workspaceGeneration}));store.authLease=id;store.actor=actor;store.hash=hash;store.authTouched=new Set();store.authUncertain=false;}
 async function finishAuthMutation(response:any){const store=requestClients.getStore();if(!store?.authLease)return;const known=!!response&&(!store.authUncertain)&&((response.status>=200&&response.status<300)||store.authTouched.size===0);const result=await service.rpc('zzws_maintenance_auth_finish',{p_actor:store.actor,p_hash:store.hash,p_id:store.authLease,p_success:known});if(result.error)console.error('Credential operation requires reconciliation',result.error.code);}
 const originValues=(Deno.env.get('ZZWS_ALLOWED_ORIGINS')||'https://patverparts-bot.github.io,http://127.0.0.1:8080').split(',').map(v=>v.trim()).filter(Boolean);
+originValues.push('https://zzws-1z2.pages.dev');
 const allowed=new Set(originValues.map(value=>{const url=new URL(value);if(url.origin!==value||!(url.protocol==='https:'||(url.protocol==='http:'&&['127.0.0.1','localhost'].includes(url.hostname))))throw Error('Invalid allowed origin');return value;}));
 const digest=async(s:string)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)))).map(b=>b.toString(16).padStart(2,'0')).join('');
 const random=()=>Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b=>b.toString(16).padStart(2,'0')).join('');
@@ -76,8 +78,7 @@ function rowsFromBuffer(raw:ArrayBuffer){
   }catch(e:any){if(e.code)throw e;fail(400,'Չհաջողվեց կարդալ XLSX-ը');}
 }
 async function uploadRows(req:Request){
-  if(Number(req.headers.get('content-length')||0)>10_100_000)fail(413,'Ֆայլը չափազանց մեծ է');
-  const file=(await req.formData()).get('file');
+  const file=(await boundedMultipart(req)).get('file');
   if(!(file instanceof File)||!file.name.toLowerCase().endsWith('.xlsx'))fail(400,'Ընտրեք XLSX ֆայլ');
   return rowsFromBuffer(await file.arrayBuffer());
 }

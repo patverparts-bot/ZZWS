@@ -1,7 +1,9 @@
 import {orderExportData} from './order-export.mjs';
+import {boundedMultipart} from './body-reader.mjs';
 import {proposalCartProducts} from './proposal-cart.mjs';
 import {clientOrderExportRoute} from './client-order-export.mjs';
 import {viberContacts} from './contacts.mjs';
+import {customerCodeKey} from './client-accounts.mjs';
 import {priceVersionLabel} from './workbook-layout.mjs';
 import {orderPublic} from './order-public.mjs';
 import {projectOrderHistory} from './order-history.mjs';
@@ -114,7 +116,9 @@ export async function orderRoutes(c){
   const search=String(new URL(req.url).searchParams.get('search')||'').replace(/[^\p{L}\p{N} ._-]/gu,'').trim().slice(0,100);
   let q=table('users').select('id,profile').eq('active',true).is('customer_id',null).eq('profile->>role','client').order('profile->>customerCode').limit(50);
   if(search)q=q.or('profile->>customerCode.ilike.*'+search+'*,profile->>client.ilike.*'+search+'*');
-  const rows=await query(q),exact=search?await query(table('users').select('id,profile').eq('active',true).is('customer_id',null).eq('profile->>role','client').eq('profile->>customerCode',search).maybeSingle()):null;const choices=exact?[exact,...rows.filter(r=>r.id!==exact.id)].slice(0,50):rows;return json({customers:choices.map(r=>({id:r.id,customerCode:r.profile.customerCode||'',client:r.profile.client}))});
+  const rows=await query(q),key=customerCodeKey(search);let exact=null;
+  if(search){let match=table('users').select('id,profile').eq('active',true).is('customer_id',null).eq('profile->>role','client');match=/^[0-9]{6}$/.test(key)?match.or('profile->>customerCode.ilike.'+key+'*'):match.eq('profile->>customerCode',search);const matches=await query(match.limit(2));if(matches.length===1&&customerCodeKey(matches[0].profile.customerCode)===key)exact=matches[0];}
+  const choices=exact?[exact,...rows.filter(r=>r.id!==exact.id)].slice(0,50):rows;return json({customers:choices.map(r=>({id:r.id,customerCode:r.profile.customerCode||'',client:r.profile.client}))});
  }
  if(['admin/orders/customer-catalog','admin/orders/customer-catalog/version','admin/orders/customer-catalog/export'].includes(path)&&req.method==='GET'){
   const profile=await customerProfile(new URL(req.url).searchParams.get('customerId')),v=await current();
@@ -181,7 +185,7 @@ export async function orderRoutes(c){
  if(path==='admin/orders/preview'&&req.method==='POST'){
   let orderId,revision,parsed,filename;
   if((req.headers.get('content-type')||'').includes('application/json')){const p=await body(req);orderId=p.orderId;revision=p.revision;parsed=parsePastedConfirmation(p.text);filename='Տեղադրված աղյուսակ';}
-  else{const form=await req.formData(),upload=form.get('file');orderId=form.get('orderId');revision=Number(form.get('revision'));if(!(upload instanceof File)||!upload.name.toLowerCase().endsWith('.xlsx'))fail(400,'Ընտրեք XLSX');parsed=parseConfirmation(rowsFromBuffer(await upload.arrayBuffer()));filename=upload.name.slice(0,300);}
+  else{const form=await boundedMultipart(req),upload=form.get('file');orderId=form.get('orderId');revision=Number(form.get('revision'));if(!(upload instanceof File)||!upload.name.toLowerCase().endsWith('.xlsx'))fail(400,'Ընտրեք XLSX');parsed=parseConfirmation(rowsFromBuffer(await upload.arrayBuffer()));filename=upload.name.slice(0,300);}
   const o=await order(orderId,true);if(revision!==o.revision)fail(409,'Պատվերն արդեն փոխվել է։ Վերաբացեք այն');
   const {lines}=await prepare(o,parsed.lines),changes=changesBetween(o.lines,lines);
   const d=await query(table('drafts').insert({actor:user.id,kind:'order',payload:{orderId:o.id,revision:o.revision,lines,changes,filename,metadata:parsed.metadata,delivery:parsed.delivery}}).select('id').single());

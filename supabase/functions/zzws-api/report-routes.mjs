@@ -6,15 +6,13 @@ import {buildOrderContext} from './order-context.mjs';
 import {email,emailRows,emailList} from './report-email.mjs';
 import {reportRecipientPlan,recipientDeliveryDTO} from './report-recipients.mjs';
 import {parseConfirmation,normalizeLines,changesBetween,totalOf} from './orders.mjs';
+import {boundedMultipart} from './body-reader.mjs';
 const encoder=new TextEncoder(),limit=10*1024*1024;
 export const sha=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',typeof value==='string'?encoder.encode(value):value))).map(b=>b.toString(16).padStart(2,'0')).join('');
 const b64=bytes=>{let s='';for(let i=0;i<bytes.length;i+=8192)s+=String.fromCharCode(...bytes.subarray(i,i+8192));return btoa(s);};
 export async function attachmentBundle(req,rowsFromBuffer){
- // Read a bounded multipart stream into temporary memory; never create files or drafts.
- const reader=req.body?.getReader();if(!reader)throw Error('Ընտրեք ֆայլերը');let size=0;const chunks=[];
- for(;;){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>limit+200000){await reader.cancel();throw Error('Ֆայլերի ընդհանուր չափը պետք է լինի մինչև 10 ՄԲ');}chunks.push(value);}
- const bytes=new Uint8Array(size);let offset=0;for(const c of chunks){bytes.set(c,offset);offset+=c.length;}
- const form=await new Response(bytes,{headers:{'content-type':req.headers.get('content-type')||''}}).formData();
+ // The existing report total/count checks remain separate from the body bound.
+ const form=await boundedMultipart(req,{maxBytes:limit+200000,sizeMessage:'Ֆայլերի ընդհանուր չափը պետք է լինի մինչև 10 ՄԲ',missingMessage:'Ընտրեք ֆայլերը'});
  const files=form.getAll('files');if(!files.length||files.length>10||files.some(f=>typeof f==='string'||!f.size))throw Error('Ընտրեք 1-ից 10 ոչ դատարկ ֆայլ');
  if(files.reduce((s,f)=>s+f.size,0)>limit)throw Error('Ֆայլերի ընդհանուր չափը պետք է լինի մինչև 10 ՄԲ');
  const attachments=[];for(const f of files){if(/[\u0000-\u001f\u007f\u2028\u2029\\/]/u.test(f.name)||f.name.length>200)throw Error('Ֆայլի անվանումը սխալ է');const data=new Uint8Array(await f.arrayBuffer());attachments.push({name:f.name,size:f.size,data,hash:await sha(data)});}

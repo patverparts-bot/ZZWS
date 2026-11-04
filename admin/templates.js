@@ -1,4 +1,5 @@
 (() => {
+ const protect=(element,code)=>{window.ZZWS_I18N?.protectData?.(element,[code]);return element;};
  const el=id=>document.getElementById(id),node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;if(cls)n.className=cls;return n;};
  const money=n=>Number(n||0).toLocaleString('hy-AM')+' ֏',write=()=>document.documentElement.dataset.orderWrite==='true';
  let epoch=0,searchEpoch=0,lifecycle=0,customers=[],templates=[],customer=null,editing=null,lines=[],dirty=false,busy=false,requestId=null;
@@ -27,7 +28,7 @@
  async function load(userId=el('templateCustomer').value){
   if(dirty)return;
   const ticket=++epoch;++searchEpoch;customer=null;templates=[];el('templateList').replaceChildren();el('templateCount').textContent='';el('templateNew').disabled=true;el('templateStatus').textContent='Տվյալները բեռնվում են…';
-  if(!customers.length){const data=await ZZWS.json('admin/templates/customers');if(ticket!==epoch)return;customers=data.customers;const select=el('templateCustomer');select.replaceChildren(node('option','Ընտրեք հաճախորդին'));select.firstChild.value='';for(const row of customers){const option=node('option',row.client+' · '+row.customerCode+(row.active?'':' · անջատված'));option.value=row.id;select.append(option);}}
+  if(!customers.length){const data=await ZZWS.json('admin/templates/customers');if(ticket!==epoch)return;customers=data.customers;const select=el('templateCustomer');select.replaceChildren(node('option','Ընտրեք հաճախորդին'));select.firstChild.value='';for(const row of customers){const option=protect(node('option',row.client+' · '+row.customerCode+(row.active?'':' · անջատված')),row.customerCode);option.value=row.id;select.append(option);}}
   if(!userId){el('templateStatus').textContent='Ընտրեք հաճախորդին՝ նրա պահպանված զամբյուղներն ու պահպանված զամբյուղները կառավարելու համար։';return;}
   el('templateCustomer').value=userId;
   const data=await ZZWS.json('admin/templates?userId='+encodeURIComponent(userId));if(ticket!==epoch)return;customer=data.customer;templates=data.templates;render();el('templateStatus').textContent=customer.client+' · Փոփոխությունները հասանելի կլինեն հաճախորդի պահպանված զամբյուղներում։';
