@@ -35,7 +35,7 @@
     "currentReleaseExcluded": true
   },
   "coreCommit": "296bf87437f105d12791d4030fd33189dff861d8",
-  "apiVersion": 85,
+  "apiVersion": 87,
   "apiExactSourceFiles": 72,
   "canonicalVerified": {
     "deploymentId": "af9fdeea-2ba9-4758-8cb3-88d2b809f6db",
@@ -66,7 +66,8 @@
     "PUB-010-R1",
     "PUB-011",
     "PUB-012",
-    "PUB-013"
+    "PUB-013",
+    "PUB-014"
   ],
   "futureOnly": [
     "PUB-REMOTE-001"
@@ -82,5 +83,15 @@
     "productSpecifications": 1,
     "specificationRefreshJobs": 2,
     "encryptedAndVerified": true
+  },
+  "apiBaseBeforeCatalogueFollowup": 86,
+  "latestServerSourcePreparedCommit": "31c38cacc912e1697c46b81fdac723fceea2e923",
+  "customerStorefrontFollowup": {
+    "id": "PUB-014",
+    "changedModule": "order-routes.mjs",
+    "otherModulesUnchanged": 71,
+    "focusedTests": 11,
+    "realReadOnlyProductCount": 1294,
+    "pricesAndProductsUnchanged": true
   }
 }
