@@ -1,0 +1,84 @@
+{
+  "status": "PUBLISHED_VERIFIED",
+  "verifiedAt": "2026-11-04T11:24:06.710Z",
+  "featureCommit": "05aa36be1f355cf3f41f34959ccb57902b8c943e",
+  "repository": "patverparts-bot/ZZWS",
+  "branch": "main",
+  "website": "https://patverparts-bot.github.io/ZZWS/",
+  "pages": {
+    "runId": 41819695485,
+    "featureHead": "05aa36be1f355cf3f41f34959ccb57902b8c943e",
+    "conclusion": "success",
+    "publicAssetMatches": 6
+  },
+  "api": {
+    "version": 83,
+    "verify_jwt": false,
+    "readbackMatches": 70
+  },
+  "migrations": [
+    {
+      "source": "20261104100634_buyer_presentation_offers.sql",
+      "appliedVersion": "20261104111116",
+      "name": "buyer_presentation_offers"
+    },
+    {
+      "source": "20261104100750_buyer_offer_lifecycle_coverage.sql",
+      "appliedVersion": "20261104111154",
+      "name": "buyer_offer_lifecycle_coverage"
+    },
+    {
+      "source": "20261104111845_buyer_offer_catalog_version_index.sql",
+      "appliedVersion": "20261104112008",
+      "name": "buyer_offer_catalog_version_index"
+    }
+  ],
+  "tests": {
+    "node": 25,
+    "python": 8,
+    "failures": 0
+  },
+  "liveChecks": [
+    "Normal authenticated employee and current price categories",
+    "Public catalogue omits procurement and markup",
+    "Fresh server quote accepted",
+    "Persistent readable number and server finalization timestamp",
+    "Lost-ack retry returns the same offer number and timestamp",
+    "Actual live XLSX: buyer contact, literal SKU, readable number, sales and correct Yerevan time",
+    "Employee working cart unchanged; no handoff or order creation invoked"
+  ],
+  "excel": {
+    "readableNumber": "ZZWS-000001",
+    "finalizedAt": "2026-11-04T11:16:56.471288+00:00",
+    "yerevanTime": "04.11.2026 · 15:16 (Երևան)",
+    "timeSource": "Server finalization time, not draft-start time or a manually shifted timezone",
+    "buyerContact": true,
+    "confidentialCostMarkupProfit": false
+  },
+  "security": {
+    "newWarnings": 0,
+    "publicTableAccess": false,
+    "publicRPCExecute": false,
+    "publicSequenceAccess": false,
+    "catalogVersionForeignKeyIndexed": true
+  },
+  "browser": {
+    "liveSiteOpenedInEdge": true,
+    "finalVisualCheck": "Interrupted by browser-extension connection; not claimed as completed",
+    "fullWorkflow": "Verified in local isolated browser fixture and API/VM tests; actual production XLSX independently checked"
+  },
+  "backup": {
+    "file": "ZZWS-2026-11-04_14-57-52.zzwsbackup",
+    "sha256": "48492B64DB92823ACD766F5F4B6DDB6C7A026FAA6013FC92040535C8CC1C4FB8",
+    "restoreRehearsal": true
+  },
+  "boundaries": {
+    "ordersCreated": 0,
+    "messagesSent": 0,
+    "workingCartChanged": false,
+    "cloudflareChanged": false,
+    "apkChanged": false,
+    "otherDeferredPackagesActivated": false
+  },
+  "sourceNotes": "Initial feature commit contains20 scoped files. Follow-up adds the catalog foreign-key index and publication evidence. No wholesale upload of candidate or pending PUB-001/003/009."
+}

@@ -1,0 +1,1 @@
+create index zzws_buyer_offers_catalog_version on public.zzws_buyer_offers(catalog_version);
