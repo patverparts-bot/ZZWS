@@ -1,5 +1,5 @@
 {
-  "status": "PREPARED_NOT_PRODUCTION",
+  "status": "SITE_API_APK_PC_VERIFIED_MAIN_PIPELINE_FINALIZING",
   "date": "2026-11-04",
   "canonicalOrigin": "https://zzws-1z2.pages.dev",
   "sourceBranch": "release/cloudflare-complete-20261104",
@@ -9,7 +9,11 @@
     "version": "7.1.36",
     "versionCode": 70136,
     "sha256": "d67bb0a3182fb9b92a49c974369599d51379b6d2e600170e4af88a116b2ec89b",
-    "published": false
+    "published": true,
+    "retentionVerified": [
+      "7.1.36",
+      "7.1.35"
+    ]
   },
   "ownerScope": {
     "cloudflare": "website/admin/native-web-addresses",
@@ -26,16 +30,26 @@
     "allAcknowledged": true
   },
   "pending": [
-    "51 table encrypted application backup verification",
-    "prepared source branch update",
-    "final Cloudflare preview verification",
-    "API85 source readback/HTTP413/one-SKU refresh pilot",
-    "canonical Cloudflare activation",
-    "APK70136 publication+two-version retention",
-    "main automation linkage and PC verification"
+    "Cloudflare production branch main + final build/readback"
   ],
   "futureCompanion": {
     "id": "PUB-REMOTE-001",
     "currentReleaseExcluded": true
+  },
+  "coreCommit": "296bf87437f105d12791d4030fd33189dff861d8",
+  "apiVersion": 85,
+  "apiExactSourceFiles": 72,
+  "canonicalVerified": {
+    "deploymentId": "80c3365f-89cc-45c6-b3c4-acffe21979af",
+    "httpChecks": 203,
+    "anonymousEdgeChecks": 9,
+    "previewStaticResponses": 456,
+    "previewUniquePaths": 114
+  },
+  "pcVerified": {
+    "operationsChecks": 7,
+    "operatorFiles": 6,
+    "sizeAutomationUpdated": true,
+    "schedulePreserved": true
   }
 }
