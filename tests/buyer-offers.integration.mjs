@@ -1,0 +1,94 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {createRuntime} from './support/runtime.mjs';
+import XLSX from '../supabase/functions/zzws-api/vendor/xlsx.mjs';
+
+test('actual buyer-offer API validates confidential floor, exports sales, and merges the employee cart once',{timeout:120000},async()=>{
+ const r=await createRuntime({memory:true,debug:true});
+ const call=async(path,token,data)=>{
+  const res=await r.handle(new Request('http://127.0.0.1:8080/functions/v1/zzws-api/'+path,{method:data===undefined?'GET':'POST',headers:{origin:'http://127.0.0.1:8080','content-type':'application/json',...(token?{authorization:'Bearer '+token}:{})},...(data===undefined?{}:{body:JSON.stringify(data)})}));
+  if(res.headers.get('content-type')?.includes('spreadsheet'))return {status:res.status,bytes:new Uint8Array(await res.arrayBuffer()),headers:res.headers};
+  return {status:res.status,data:await res.json()};
+ };
+ const ok=async(...args)=>{const out=await call(...args);assert.equal(out.status,200,JSON.stringify(out.data));return out.data;};
+ const path=suffix=>'dealer/buyer-offers/'+suffix;
+ const fields={buyerName:'Synthetic buyer',buyerPhone:'091123456',markupPercent:15,priceCategory:'KP'};
+ try{
+  await r.db.exec('reset role');
+  if(!(await r.db.query("select to_regclass('zzws_buyer_offers') as t")).rows[0].t)await r.db.exec(await fs.readFile(new URL('../supabase/migrations/20261104100634_buyer_presentation_offers.sql',import.meta.url),'utf8'));
+  const raw=[{articul:'686626',name:'DeLonghi DLSC301 glass 6x270ml',brand:'DeLonghi',category:'Accessories',stocks:{'003':10},ws:100000,kp:0,kpPromo:0,retail:150000,base:150000},{articul:'686629',name:'Second model',brand:'DeLonghi',category:'Accessories',stocks:{'003':10},ws:10000,kp:0,kpPromo:0,retail:15000,base:15000}];
+  await r.db.query('update zzws_versions set products=$1 where id=(select version from zzws_state where id=true)',[JSON.stringify(raw)]);await r.db.exec('set role service_role');
+  const owner=(await ok('login',null,{login:'zzws-test-owner',password:'24681012'})).sessionToken;
+  const manager=(await ok('login',null,{login:'zzws-test-manager',password:'24681012'})).sessionToken;
+  const viewer=(await ok('login',null,{login:'zzws-test-viewer',password:'24681012'})).sessionToken;
+  const dealer=(await ok('login',null,{login:'zzws-test-dealer',password:'24681012'})).sessionToken;
+  assert.equal((await call(path('options'),null,{})).status,401);
+  assert.equal((await call(path('options'),viewer,{})).status,403);
+  const own=await ok(path('options'),dealer,{});assert.equal(own.priceCategories.length,1);assert.equal(own.priceCategories[0].id,'Dealers');
+  assert.equal((await call(path('start'),dealer,fields)).status,400);
+  assert.equal((await call(path('start'),owner,{...fields,buyerName:''})).status,400);
+  assert.equal((await call(path('start'),owner,{...fields,buyerPhone:''})).status,400);
+  const started=await ok(path('start'),owner,fields),catalog=await ok(path('catalog'),owner,{id:started.id});
+  const unnumbered=(await r.db.query('select offer_number from zzws_buyer_offers where id=$1',[started.id])).rows[0];assert.equal(unnumbered.offer_number,null,'Starting a draft does not allocate a public offer number');
+  await r.db.query("update zzws_buyer_offers set created_at=clock_timestamp()-interval '1 hour' where id=$1",[started.id]);
+  assert.equal(started.buyer.phone,'+37491123456');assert.equal(catalog.products[0].salePrice,150000);
+  assert.doesNotMatch(JSON.stringify(catalog),/unitCost|wholesale|kpPrice|markup|expectedProfit|minimum|floor|stockPickerPrices/i);
+  const details=await ok(path('details'),owner,{id:started.id,articuls:['686626']});assert.equal(details.items.length,1);assert.deepEqual(Object.keys(details.items[0]).sort(),['articul','name','highlights','specifications','sourceUrl','checkedAt'].sort());assert.doesNotMatch(JSON.stringify(details),/unitCost|wholesale|kpPrice|markup|expectedProfit|stockPickerPrices/i);
+  assert.equal((await call(path('details'),owner,{id:started.id,articuls:['not-authorized']})).status,404);assert.equal((await call(path('details'),owner,{id:started.id,articuls:[]})).status,400);
+  assert.equal((await call(path('catalog'),manager,{id:started.id})).status,404);
+  const low=await call(path('quote'),owner,{id:started.id,lines:[{articul:'686626',qty:1,salePrice:114999}]});assert.equal(low.status,409);assert.doesNotMatch(JSON.stringify(low),/115000|100000|15%|floor|unitCost/);
+  const lines=[{articul:'686626',qty:2,salePrice:115000}],quoted=await ok(path('quote'),owner,{id:started.id,lines});assert.equal(quoted.total,230000);
+  const beforeFinalized=Date.now(),requestId=crypto.randomUUID(),offer=await ok(path('finalize'),owner,{id:started.id,requestId,lines});assert.equal(offer.total,230000);assert.equal(offer.number,'ZZWS-000001');
+  assert.ok(Date.parse(offer.finalizedAt)>=beforeFinalized-1000&&Date.parse(offer.finalizedAt)<=Date.now()+1000,'Public offer date is generated by the server at finalization');assert.equal(offer.createdAt,offer.finalizedAt);
+  const finalRecord=(await r.db.query('select created_at,finalized_at,offer_number from zzws_buyer_offers where id=$1',[started.id])).rows[0];assert.ok(Date.parse(finalRecord.finalized_at)-Date.parse(finalRecord.created_at)>59*60*1000,'The draft creation time is not displayed as proposal finalization time');
+  assert.doesNotMatch(JSON.stringify(offer),/unitCost|wholesale|expectedProfit|markup|floor/);
+  assert.deepEqual(await ok(path('finalize'),owner,{id:started.id,requestId,lines}),offer);
+  assert.equal(Number((await r.db.query('select last_value from zzws_buyer_offer_number_seq')).rows[0].last_value),1,'Idempotent finalization does not consume another number');
+  assert.equal((await call(path('finalize'),owner,{id:started.id,requestId,lines:[{...lines[0],qty:3}]})).status,409);
+  const exported=await call(path('export'),owner,{id:started.id});assert.equal(exported.status,200);assert.equal(exported.headers.get('access-control-allow-origin'),'http://127.0.0.1:8080');assert.equal(exported.headers.get('content-disposition'),'attachment; filename="ZIGZAG-Offer-ZZWS-000001.xlsx"');
+  const book=XLSX.read(exported.bytes,{type:'array'}),sheet=XLSX.utils.sheet_to_json(book.Sheets[book.SheetNames[0]],{header:1});assert.equal(sheet[1][1],fields.buyerName);assert.equal(sheet[2][1],'+37491123456');assert.equal(sheet[3][1],offer.number);assert.equal(sheet.flat().includes(100000)||sheet.flat().includes(30000),false);assert.doesNotMatch(JSON.stringify(sheet),/markup|unitCost/);assert.ok(!JSON.stringify(sheet).includes(started.id));
+  await ok('me/state',owner,{section:'cart',version:0,value:{existing:{articul:'existing',qty:3,addedPrice:777,addedPriceMode:'WS'},'686626':{articul:'686626',qty:1,addedPrice:100000,addedPriceMode:'WS'}}});
+  const handoff=await ok(path('handoff'),owner,{id:started.id,requestId:crypto.randomUUID()});assert.equal(handoff.expectedProfit,30000);assert.equal(handoff.cart['686626'].qty,3);assert.equal(handoff.cart.existing.qty,3);assert.equal(handoff.cart['686626'].addedPrice,100000);assert.equal(handoff.cart['686626'].addedPriceMode,'KP');
+  assert.equal(handoff.alreadyTransferred,false);assert.equal(typeof handoff.actorId,'string');assert.equal(handoff.number,offer.number);
+  const repeat=await ok(path('handoff'),owner,{id:started.id,requestId:crypto.randomUUID()});assert.equal(repeat.alreadyTransferred,true);assert.equal(repeat.version,handoff.version);assert.equal(repeat.cart['686626'].qty,3);
+  const stored=await ok('me/state',owner);assert.deepEqual(stored.data.cart,handoff.cart);assert.equal(stored.versions.cart,handoff.version);
+  assert.equal((await call(path('handoff'),manager,{id:started.id,requestId:crypto.randomUUID()})).status,404);
+  const overflow=await ok(path('start'),owner,fields),twoLines=[{articul:'686626',qty:1,salePrice:115000},{articul:'686629',qty:1,salePrice:11500}];
+  const secondOffer=await ok(path('finalize'),owner,{id:overflow.id,requestId:crypto.randomUUID(),lines:twoLines});assert.equal(secondOffer.number,'ZZWS-000002','Distinct proposals get increasing server-assigned numbers');
+  const fullCart={...handoff.cart,'686629':{articul:'686629',qty:9999,addedPrice:10000,addedPriceMode:'WS'}};
+  await ok('me/state',owner,{section:'cart',version:handoff.version,value:fullCart});
+  assert.equal((await call(path('handoff'),owner,{id:overflow.id,requestId:crypto.randomUUID()})).status,409);
+  assert.deepEqual((await ok('me/state',owner)).data.cart,fullCart,'Failure on a later row rolls back every earlier quantity change');
+  assert.equal((await r.db.query('select state from zzws_buyer_offers where id=$1',[overflow.id])).rows[0].state,'finalized');
+  const expired=await ok(path('start'),owner,fields);await r.db.query("update zzws_buyer_offers set expires_at=now()-interval '1 second' where id=$1",[expired.id]);
+  assert.equal((await call(path('catalog'),owner,{id:expired.id})).status,409);
+  assert.equal((await r.db.query('select offer_number from zzws_buyer_offers where id=$1',[expired.id])).rows[0].offer_number,null,'Unused expired drafts never acquire an offer number');
+  const saveCart=async value=>{const state=await ok('me/state',owner);await ok('me/state',owner,{section:'cart',version:state.versions.cart,value});};
+  const sourceRow=qty=>({articul:'686626',qty,addedPrice:100000,addedPriceMode:'KP'});
+  await saveCart({'':{articul:'',qty:2,addedPrice:0,addedPriceMode:'WS'},'686626':sourceRow(2)});
+  // Legacy/corrupt server memory is not trusted as a source-presence marker.
+  await r.db.query("update zzws_user_memory set data=jsonb_set(data,'{cart,legacy-over-limit}',$2::jsonb) where user_id=$1",[handoff.actorId,JSON.stringify({articul:'legacy-over-limit',qty:1000001,addedPrice:0,addedPriceMode:'WS'})]);
+  const legacySource=await ok(path('start'),owner,{...fields,source:'cart'}),legacyBaseline=(await r.db.query('select base_cart from zzws_buyer_offers where id=$1',[legacySource.id])).rows[0].base_cart;
+  assert.deepEqual(legacyBaseline,{'686626':{qty:2}},'Empty SKU and out-of-range legacy quantity cannot become source-cart baseline entries');
+  for(const {selected,current,expected}of [{selected:2,current:2,expected:2},{selected:3,current:2,expected:3},{selected:3,current:5,expected:5},{selected:3,current:0,expected:3}]){
+   await saveCart({'686626':sourceRow(2),unrelated:{articul:'unrelated',qty:4,addedPrice:99,addedPriceMode:'WS'}});
+   const fromCart=await ok(path('start'),owner,{...fields,source:'cart',base_cart:{'686626':{qty:500}}});
+   const baseline=(await r.db.query('select source,base_cart from zzws_buyer_offers where id=$1',[fromCart.id])).rows[0];assert.equal(baseline.source,'cart');assert.deepEqual(baseline.base_cart['686626'],{qty:2},'Baseline quantities come from server memory, never client input');
+   const selection=[{articul:'686626',qty:selected,salePrice:115000},{articul:'686629',qty:2,salePrice:11500}];
+   await ok(path('finalize'),owner,{id:fromCart.id,requestId:crypto.randomUUID(),lines:selection});
+   await saveCart({...current?{'686626':sourceRow(current)}:{},'686629':{articul:'686629',qty:1,addedPrice:10000,addedPriceMode:'WS'},unrelated:{articul:'unrelated',qty:4,addedPrice:99,addedPriceMode:'WS'}});
+   const handed=await ok(path('handoff'),owner,{id:fromCart.id,requestId:crypto.randomUUID()});assert.equal(handed.cart['686626'].qty,expected);assert.equal(handed.cart['686629'].qty,3,'A newly selected SKU is additive to quantities independently added after session start');assert.equal(handed.cart.unrelated.qty,4);
+   const replay=await ok(path('handoff'),owner,{id:fromCart.id,requestId:crypto.randomUUID()});assert.equal(replay.cart['686626'].qty,expected);assert.equal(replay.cart['686629'].qty,3);assert.equal(replay.version,handed.version);assert.equal(replay.alreadyTransferred,true);
+  }
+  const more=await ok(path('start'),owner,fields),line2=[{articul:'686629',qty:1,salePrice:11500}];await ok(path('quote'),owner,{id:more.id,lines:line2});
+  await r.db.exec('reset role');raw[1].ws=12000;await r.db.query('update zzws_versions set products=$1 where id=(select version from zzws_state where id=true)',[JSON.stringify(raw)]);await r.db.exec('set role service_role');
+  assert.equal((await call(path('finalize'),owner,{id:more.id,requestId:crypto.randomUUID(),lines:line2})).status,409,'Fresh cost is checked again when forming the offer');
+  await r.db.exec('reset role');raw[0].ws=100000.001;await r.db.query('update zzws_versions set products=$1 where id=(select version from zzws_state where id=true)',[JSON.stringify(raw)]);await r.db.exec('set role service_role');
+  const fraction=await ok(path('start'),owner,fields);assert.equal((await call(path('quote'),owner,{id:fraction.id,lines:[{articul:'686626',qty:1,salePrice:115000}]})).status,409);
+  const fractionalLines=[{articul:'686626',qty:1,salePrice:115001}],fractional=await ok(path('finalize'),owner,{id:fraction.id,requestId:crypto.randomUUID(),lines:fractionalLines});assert.equal(fractional.total,115001);
+  assert.equal(Number((await r.db.query('select expected_profit from zzws_buyer_offers where id=$1',[fraction.id])).rows[0].expected_profit),15001,'JS floor/profit and SQL decimal verification agree without rounding down the procurement cost');
+  const countBefore=(await r.db.query('select count(*)::int n from zzws_orders')).rows[0].n;assert.equal(countBefore,0);assert.equal(r.telegramMessages.length,0);assert.equal(r.pushMessages.length,0);assert.equal(r.reportEmails.length,0);
+  await r.db.exec('reset role');await r.db.exec('set role anon');await assert.rejects(r.db.query('select * from zzws_buyer_offers'));await assert.rejects(r.db.query("select nextval('zzws_buyer_offer_number_seq')"));await assert.rejects(r.db.query('select zzws_handoff_buyer_offer($1,$2,$3)',[handoff.actorId,started.id,crypto.randomUUID()]));await r.db.exec('reset role');await r.db.exec('set role service_role');
+ }finally{await r.close();}
+});

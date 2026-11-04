@@ -8,9 +8,98 @@ than round-tripped through a JSON number serializer.
 """
 import hashlib
 import json
+import re
 import sqlite3
 import sys
-from decimal import Decimal
+from decimal import Decimal, ROUND_CEILING, ROUND_HALF_UP
+
+
+def verify_buyer_offers(tables, users, versions):
+    rows = tables.get('buyer_offers', [])
+    identities, offer_numbers = set(), set()
+    for row in rows:
+        identity = row.get('id')
+        if not isinstance(identity, str) or not identity or identity in identities:
+            raise ValueError('buyer_offer_identity_invalid')
+        identities.add(identity)
+        if row.get('actor_id') not in users:
+            raise ValueError('missing_owner')
+        if row.get('catalog_version') and row['catalog_version'] not in versions:
+            raise ValueError('missing_price_version')
+        name, phone = row.get('buyer_name'), row.get('buyer_phone')
+        if (not isinstance(name, str) or not name.strip() or len(name) > 200
+                or re.search(r'[\x00-\x1f\x7f]', name)
+                or not isinstance(phone, str) or not re.fullmatch(r'\+[1-9]\d{7,14}', phone)):
+            raise ValueError('buyer_offer_contact_invalid')
+        markup = Decimal(str(row.get('markup_percent')))
+        if not markup.is_finite() or not 0 <= markup <= 1000:
+            raise ValueError('buyer_offer_amount_invalid')
+        source = row.get('source', 'catalog')
+        base_cart = row.get('base_cart', {})
+        if (source not in {'catalog', 'cart', 'selection', 'product', 'bundle'}
+                or not isinstance(base_cart, dict) or len(base_cart) > 5000
+                or (source != 'cart' and base_cart)):
+            raise ValueError('buyer_offer_state_invalid')
+        for sku, item in base_cart.items():
+            if (not isinstance(sku, str) or not 1 <= len(sku) <= 100 or sku in {'__proto__', 'prototype', 'constructor'}
+                    or not isinstance(item, dict) or set(item) != {'qty'} or isinstance(item['qty'], bool)):
+                raise ValueError('buyer_offer_lines_invalid')
+            quantity = Decimal(str(item['qty']))
+            if not quantity.is_finite() or quantity != int(quantity) or not 1 <= quantity <= 1000000:
+                raise ValueError('buyer_offer_amount_invalid')
+        state = row.get('state')
+        number = row.get('offer_number')
+        if state == 'draft':
+            if number is not None:
+                raise ValueError('buyer_offer_number_invalid')
+        elif (isinstance(number, bool) or not isinstance(number, int)
+                or not 1 <= number <= 9007199254740991 or number in offer_numbers):
+            raise ValueError('buyer_offer_number_invalid')
+        else:
+            offer_numbers.add(number)
+        public, internal, request = (row.get(key) for key in ('public_lines', 'internal_lines', 'request_lines'))
+        if state not in {'draft', 'finalized', 'handed_off'} or any(not isinstance(value, list) for value in (public, internal, request)):
+            raise ValueError('buyer_offer_state_invalid')
+        if state == 'draft':
+            if (public or internal or request or row.get('finalized_at') or row.get('handed_off_at')
+                    or Decimal(str(row.get('total', 0))) != 0 or Decimal(str(row.get('expected_profit', 0))) != 0):
+                raise ValueError('buyer_offer_state_invalid')
+            continue
+        if (not row.get('catalog_version') or not row.get('rules_revision') or row.get('profile_revision') is None
+                or not row.get('finalized_at') or not row.get('finalize_request')
+                or (state == 'handed_off') != bool(row.get('handed_off_at'))
+                or not 1 <= len(public) <= 500 or len(internal) != len(public) or len(request) != len(public)):
+            raise ValueError('buyer_offer_state_invalid')
+        if any(not isinstance(item, dict) for items in (public, internal, request) for item in items):
+            raise ValueError('buyer_offer_lines_invalid')
+        costs = {item.get('articul'): item for item in internal}
+        inputs = {item.get('articul'): item for item in request}
+        skus = {item.get('articul') for item in public}
+        if len(skus) != len(public) or len(costs) != len(public) or len(inputs) != len(public) or skus != set(costs) or skus != set(inputs):
+            raise ValueError('buyer_offer_lines_invalid')
+        total, purchase = Decimal(0), Decimal(0)
+        for item in public:
+            sku = item.get('articul')
+            if not isinstance(sku, str) or not 1 <= len(sku) <= 100 or sku in {'__proto__', 'prototype', 'constructor'}:
+                raise ValueError('buyer_offer_lines_invalid')
+            cost, source = costs[sku], inputs[sku]
+            quantity, sale, unit_cost, amount = (Decimal(str(value)) for value in (item.get('qty'), item.get('salePrice'), cost.get('unitCost'), item.get('amount')))
+            if (not all(value.is_finite() for value in (quantity, sale, unit_cost, amount))
+                    or quantity != int(quantity) or not 1 <= quantity <= 9999
+                    or sale != int(sale) or not 1 <= sale <= Decimal('1e10')
+                    or not 0 < unit_cost <= Decimal('1e10')
+                    or Decimal(str(cost.get('qty'))) != quantity or Decimal(str(source.get('qty'))) != quantity
+                    or Decimal(str(source.get('salePrice'))) != sale
+                    or sale < (unit_cost * (1 + markup / 100)).to_integral_value(rounding=ROUND_CEILING)
+                    or amount != quantity * sale):
+                raise ValueError('buyer_offer_amount_invalid')
+            total += amount
+            purchase += quantity * unit_cost
+        saved_total, profit = Decimal(str(row.get('total'))), Decimal(str(row.get('expected_profit')))
+        if (not saved_total.is_finite() or not profit.is_finite() or total > Decimal('1e14') or saved_total != total
+                or profit != (total - purchase).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)):
+            raise ValueError('buyer_offer_amount_invalid')
+    return len(rows)
 
 
 def verify_maintenance(tables):
@@ -75,6 +164,10 @@ def verify(snapshot):
     users = {r['id'] for r in tables['users']}
     versions = {r['id'] for r in tables['versions']}
     orders = {r['id'] for r in tables['orders']}
+    try:
+        buyer_offers_verified = verify_buyer_offers(tables, users, versions)
+    except (ArithmeticError, TypeError, KeyError) as error:
+        raise ValueError('buyer_offer_amount_invalid') from error
     for key, ids in [('users', users), ('versions', versions), ('orders', orders)]:
         if len(ids) != len(tables[key]):
             raise ValueError('duplicate_identity')
@@ -120,14 +213,14 @@ def verify(snapshot):
                 raise ValueError('restore_roundtrip_mismatch')
         if db.execute('pragma integrity_check').fetchone()[0] != 'ok':
             raise ValueError('restore_integrity_failed')
-    return {'ok': True, 'scope': 'application-data-only', 'created': snapshot.get('created'), 'tables': len(tables), 'rows': sum(map(len, tables.values())), 'orderTotalsVerified': checked, 'maintenanceArchivesVerified': maintenance_verified}
+    return {'ok': True, 'scope': 'application-data-only', 'created': snapshot.get('created'), 'tables': len(tables), 'rows': sum(map(len, tables.values())), 'orderTotalsVerified': checked, 'maintenanceArchivesVerified': maintenance_verified, 'buyerOffersVerified': buyer_offers_verified}
 
 
 if __name__ == '__main__':
     try:
         result = verify(json.load(sys.stdin))
     except Exception as error:
-        safe_codes = {'invalid_manifest', 'missing_tables', 'invalid_rows', 'duplicate_identity', 'missing_price_version', 'missing_order_user', 'invalid_order_lines', 'invalid_order_amount', 'order_total_mismatch', 'missing_owner', 'missing_event_order', 'restore_roundtrip_mismatch', 'restore_integrity_failed', 'maintenance_tables_missing', 'maintenance_owner_or_freeze_invalid', 'maintenance_grants_revived', 'maintenance_duplicate_identity', 'maintenance_job_revived', 'maintenance_archive_missing', 'maintenance_lease_revived', 'maintenance_archive_text_missing', 'maintenance_archive_checksum', 'maintenance_archive_format', 'maintenance_archive_job_missing'}
+        safe_codes = {'invalid_manifest', 'missing_tables', 'invalid_rows', 'duplicate_identity', 'missing_price_version', 'missing_order_user', 'invalid_order_lines', 'invalid_order_amount', 'order_total_mismatch', 'missing_owner', 'missing_event_order', 'restore_roundtrip_mismatch', 'restore_integrity_failed', 'maintenance_tables_missing', 'maintenance_owner_or_freeze_invalid', 'maintenance_grants_revived', 'maintenance_duplicate_identity', 'maintenance_job_revived', 'maintenance_archive_missing', 'maintenance_lease_revived', 'maintenance_archive_text_missing', 'maintenance_archive_checksum', 'maintenance_archive_format', 'maintenance_archive_job_missing', 'buyer_offer_identity_invalid', 'buyer_offer_number_invalid', 'buyer_offer_contact_invalid', 'buyer_offer_state_invalid', 'buyer_offer_lines_invalid', 'buyer_offer_amount_invalid'}
         code = str(error) if isinstance(error, ValueError) and str(error) in safe_codes else 'snapshot_rehearsal_failed'
         print(json.dumps({'ok': False, 'error': code, 'errorType': type(error).__name__}))
         sys.exit(1)

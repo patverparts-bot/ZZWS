@@ -3,7 +3,7 @@
   const sections=['cart','favorites','history','preferences','draft'];
   const suffix={cart:'cart',favorites:'favs',history:'history'};
   const fields=['organizationSelect','deliveryMethodInput','deliveryDateInput','deliveryAddressInput','contactPersonInput','orderCommentInput'];
-  let owner=null,versions={},baseline={},pending={},timer=null,busy=false,ready=false,pollAt=0,suspended=false,clearedUntil=0,epoch=0,activeSession=null,inFlight=null;
+  let owner=null,versions={},baseline={},pending={},timer=null,busy=false,ready=false,pollAt=0,suspended=false,clearedUntil=0,epoch=0,activeSession=null,inFlight=null,buyerPaused=false;
   const current=(ticket=epoch,id=owner,session=activeSession)=>ticket===epoch&&id===owner&&id===serverIdentity?.id&&session===sessionStorage.getItem('zzws_session_v3');
   const copy=v=>JSON.parse(JSON.stringify(v));
   const sameValue=(a,b)=>{
@@ -92,6 +92,7 @@
     finally{if(valid()){busy=false;suspended=false;persist();}}
   }
   async function flush(){
+    if(buyerPaused)return true;
     if(inFlight)return inFlight;
     if(!ready||!current())return false;
     const work=flushWork(epoch,owner,activeSession);inFlight=work;
@@ -132,7 +133,26 @@
     try{apply('history',state.data?.history||[],true);baseline.history=read().history;}finally{suspended=false;}
     persist();
   }
-  function stop(){++epoch;ready=false;if(timer)clearInterval(timer);timer=null;owner=null;activeSession=null;inFlight=null;busy=false;suspended=false;pending={};versions={};baseline={};}
+  async function pauseForBuyerMode(){
+    if(!ready||!current())return false;
+    if(buyerPaused)return true;
+    const ticket=epoch,id=owner,session=activeSession;
+    if(timer)clearInterval(timer);timer=null;
+    const saved=await flush();
+    if(!saved||!current(ticket,id,session)){if(ready&&current()&&!timer)timer=setInterval(flush,1200);return false;}
+    buyerPaused=true;suspended=true;return true;
+  }
+  function resumeAfterBuyerMode(){
+    buyerPaused=false;suspended=false;
+    if(ready&&current()&&!timer){pollAt=0;timer=setInterval(flush,1200);}
+  }
+  async function acceptBuyerHandoff(data){
+    if(!buyerPaused||!ready||!current()||data?.actorId!==owner||!data.cart||typeof data.cart!=='object'||Array.isArray(data.cart)||!Number.isSafeInteger(data.version)||data.version<0)throw Error('Չհաջողվեց թարմացնել զամբյուղը։ Կրկին փորձեք փոխանցումը։');
+    if(data.version<(versions.cart||0))throw Error('Զամբյուղը փոխվել է։ Թարմացրեք փոխանցումը։');
+    delete pending.cart;versions.cart=data.version;apply('cart',data.cart,false);baseline.cart=read().cart;persist();
+    if(catalogLoaded){updateOrderPanel();refreshAllActions();}
+  }
+  function stop(){++epoch;ready=false;if(timer)clearInterval(timer);timer=null;owner=null;activeSession=null;inFlight=null;busy=false;suspended=false;buyerPaused=false;pending={};versions={};baseline={};}
   async function savedList(){
     const root=document.getElementById('savedCartsList');if(!root)return;
     try{const data=await ZZWS.json('me/carts');root.replaceChildren();
@@ -158,10 +178,12 @@
       input.value='';await savedList();alert(result.replaced?'Զամբյուղը պահպանվել է։ Ամենահին զամբյուղը փոխարինվել է։':'Զամբյուղը պահպանվել է սերվերում։');
     }catch(e){alert(e.data?.limit?'Զամբյուղների ցանկը փոխվել է այլ սարքում։ Թարմացրեք ցանկը և կրկնեք պահպանումը։':e.message);}
   }
-  window.ZZWS_MEMORY={start,stop,capture,flush,prepareLeave,invalidateHistory,savedList,saveNamed,restoreDraft:()=>{if(ready)apply('draft',baseline.draft,false);}};
+  window.ZZWS_MEMORY={start,stop,capture,flush,prepareLeave,pauseForBuyerMode,resumeAfterBuyerMode,invalidateHistory,savedList,saveNamed,restoreDraft:()=>{if(ready)apply('draft',baseline.draft,false);}};
+  window.ZZWS_BUYER_HANDOFF=acceptBuyerHandoff;
   window.addEventListener('zzws:account-cache-cleared',event=>{if(event.detail?.id===owner)stop();});
   document.addEventListener('visibilitychange',()=>{if(document.hidden){capture();flush();}});
   window.addEventListener('pageshow',event=>{if(event.persisted&&ready&&owner===serverIdentity?.id)resetCatalogFiltersOnOpen();});
   window.addEventListener('focus',()=>{pollAt=0;flush();});
   window.addEventListener('beforeunload',e=>{capture();if(Object.keys(pending).length){e.preventDefault();e.returnValue='';}});
 })();
+

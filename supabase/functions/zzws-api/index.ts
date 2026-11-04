@@ -2,6 +2,7 @@ import {AsyncLocalStorage} from 'node:async_hooks';
 import {apkDownloadsRoute} from './apk-downloads.mjs';
 import {warehouseRoutes,mainWarehouses,warehousePriority} from './warehouses.mjs';
 import {dealerRoutes} from './dealer.mjs';
+import {buyerOfferRoutes} from './buyer-offers.mjs';
 import {replacementRoutes} from './replacements.mjs';
 import {proposalRoutes} from './proposals.mjs';
 import {adminTemplateRoutes} from './admin-templates.mjs';
@@ -309,6 +310,7 @@ async function handleRequest(req:Request){
     const invitationResponse=await invitationEmailRoutes({path,req,user,service,table,query,body,json,fail});if(invitationResponse)return invitationResponse;
     const reportResponse=await reportRoutes({path,req,user,service,table,query,body,json,current,project,rowsFromBuffer,fail});
     if(reportResponse)return reportResponse;
+    const buyerOfferResponse=await buyerOfferRoutes({path,req,user,body,current,project,table,query,json,fail,service,headers,hash,knowledge:assistantKnowledge});if(buyerOfferResponse)return buyerOfferResponse;
     const dealerResponse=await dealerRoutes({path,req,user,body,current,project,table,query,json,fail,knowledge:assistantKnowledge});if(dealerResponse)return dealerResponse;
     const proposalResponse=await proposalRoutes({path,req,user,body,current,project,table,query,json,fail,random,digest,service});if(proposalResponse)return proposalResponse;
     const replacementResponse=await replacementRoutes({path,req,user,body,current,project,table,query,json,fail,knowledge:assistantKnowledge});if(replacementResponse)return replacementResponse;

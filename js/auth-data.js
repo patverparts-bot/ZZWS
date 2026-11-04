@@ -18,6 +18,7 @@ async function secureApi(path, options = {}) {
   catch(e) { if (e.status === 401) lockCatalog(); throw e; }
 }
 function lockCatalog() {
+  window.ZZWS_BUYER_MODE?.reset();
   window.ZZWS_PROPOSAL_CART?.reset();
   window.ZZWS_PROPOSALS?.reset();window.ZZWS_PROPOSAL_MANAGEMENT?.reset();
   window.ZZWS_STOCK_PICKER?.reset();
@@ -502,3 +503,4 @@ async function downloadFullPriceList() {
     setTimeout(()=>URL.revokeObjectURL(url), 1000);
   } catch(e) { alert(e.message); }
 }
+
