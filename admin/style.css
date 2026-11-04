@@ -193,3 +193,34 @@ html[data-manager-open=true] main{max-width:1600px}.manager-toolbar{display:flex
 
 /* Keep the navigation menu above workspace sticky navigation and action bars. */
 .admin-navigation{z-index:100;isolation:isolate}
+.organized-user-card .user-card-section-number{display:inline-block;min-width:1.6em;color:#64748b;font-variant-numeric:tabular-nums}
+.organized-user-card #userCommercialGroup>div,.organized-user-card #userCommercialGroup>fieldset,.organized-user-card #userCommercialGroup>details,.organized-user-card #userCommercialGroup>label{grid-column:1/-1}
+.organized-user-card #userAssortmentFields{margin:6px 0 0;background:#fff}
+.organized-user-card #userAssortmentFields>legend{font-size:15px}
+.organized-user-card #userRoleHelp,.organized-user-card #userLoginGroup>p,.organized-user-card .user-password-field,.organized-user-card #userLifecycleGroup>p{grid-column:1/-1}
+.organized-user-card .user-card-copy{padding:12px 14px;border:1px solid #cbd5e1;border-radius:8px;background:#fff}
+.organized-user-card .user-card-copy>summary{font-weight:650;cursor:pointer}
+.organized-user-card .user-card-copy>select{width:100%;margin-top:12px}
+.organized-user-card .user-card-copy>p{font-size:13px;color:#64748b}
+.organized-user-card .user-card-actions{position:static;flex-wrap:wrap;gap:12px;z-index:auto}
+.organized-user-card #userLifecycleGroup{border-color:#e9c6c6;background:#fffafa}
+.organized-user-card #userLifecycleGroup>button{width:auto;justify-self:start}
+@media(max-width:700px){.organized-user-card legend{font-size:16px}.organized-user-card .user-card-actions>button{flex:1;min-width:0}.organized-user-card #userLifecycleGroup>button{max-width:100%;white-space:normal;text-align:left}}
+
+/* Shared action hierarchy. Navigation, sorting and language switches keep their own styles. */
+body{--action-primary-bg:#1d4ed8;--action-primary-fg:#fff;--action-primary-border:#1d4ed8;--action-secondary-bg:#fff;--action-secondary-fg:#334155;--action-secondary-border:#cbd5e1;--action-warning-bg:#fffbeb;--action-warning-fg:#92400e;--action-warning-border:#fbbf24;--action-danger-bg:#fff1f2;--action-danger-fg:#b91c1c;--action-danger-border:#fca5a5}
+button[data-action-tone=primary]{--action-bg:var(--action-primary-bg);--action-fg:var(--action-primary-fg);--action-border:var(--action-primary-border)}
+button[data-action-tone=secondary]{--action-bg:var(--action-secondary-bg);--action-fg:var(--action-secondary-fg);--action-border:var(--action-secondary-border)}
+button[data-action-tone=warning]{--action-bg:var(--action-warning-bg);--action-fg:var(--action-warning-fg);--action-border:var(--action-warning-border)}
+button[data-action-tone=danger]{--action-bg:var(--action-danger-bg);--action-fg:var(--action-danger-fg);--action-border:var(--action-danger-border)}
+body button[data-action-tone],#confirmClientDeletion[data-action-tone],#deleteClient[data-action-tone]{background:var(--action-bg)!important;color:var(--action-fg)!important;border:1px solid var(--action-border)!important;box-shadow:none;min-height:40px;max-width:100%;font-weight:600;line-height:1.35;white-space:normal;overflow-wrap:anywhere;transition:filter .12s ease,border-color .12s ease}
+body button[data-action-tone]:not(:disabled):hover{filter:brightness(.96)}
+body button[data-action-tone]:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}
+body button[data-action-tone]:disabled{opacity:.5;cursor:not-allowed;filter:none}
+body button[data-action-tone][aria-busy=true]{cursor:progress}
+.user-card-actions,.offer-actions,.client-deletion-actions,.cleanup-actions{align-items:center;gap:10px;flex-wrap:wrap}
+.user-card-actions>button{margin:0}
+.admin-navigation button[data-tab]:not(.admin-tab-active){background:#fff;color:#334155;border:1px solid #cbd5e1}
+.admin-navigation button[data-tab].admin-tab-active{background:#1d4ed8;color:#fff;border:1px solid #1d4ed8}
+html.dark body,body.dark{--action-primary-bg:#2563eb;--action-primary-border:#3b82f6;--action-secondary-bg:#1f2937;--action-secondary-fg:#e2e8f0;--action-secondary-border:#64748b;--action-warning-bg:#422006;--action-warning-fg:#fde68a;--action-warning-border:#b45309;--action-danger-bg:#450a0a;--action-danger-fg:#fecaca;--action-danger-border:#b91c1c}
+@media(max-width:650px){body button[data-action-tone]{min-height:44px}.user-card-actions{gap:10px}}

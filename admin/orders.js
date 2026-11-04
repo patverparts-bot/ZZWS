@@ -117,7 +117,7 @@
        if(!confirm('Փոխարինե՞լ '+row.articul+' → '+fresh.articul+'։ Վերջնական քանակ՝ '+qty+' · միավորի գին՝ '+money(unitPrice)+(target?'։ Պահպանվում է առկա տողի գինը։':'')))return;
        manualRows=manualRows.filter(r=>r!==row);if(target)target.qty=qty;else manualRows.push({articul:fresh.articul,name:fresh.name,brand:fresh.brand,qty,unitPrice});dirty=true;renderManual();close();el('adminOrderStatus').textContent='Փոխարինումը կազմի նախագծում է։ Ստուգեք և պահպանեք պատվերը։';
       }catch(e){ui.message.textContent=ZZWS.message(e);}finally{choose.disabled=false;ui.close.disabled=false;}
-     });card.append(choose);section.append(card);
+     });choose.dataset.actionTone='primary';card.append(choose);section.append(card);
     }ui.content.append(section);
    }
    if(!data.candidates.length)ui.content.append(node('p','Այս հաճախորդի համար հասանելի փոխարինում չի գտնվել։'));
@@ -132,7 +132,7 @@
    ui.message.textContent=result.title+' · Վերջնական գումար՝ '+money(result.total)+'. Առկա տողերի գները պահպանվում են։ Նորերը՝ հաճախորդի ընթացիկ գներով։';
    const table=node('table'),head=table.createTHead().insertRow();for(const text of ['Մոդել','Մինչև','Հետո','Միավորի գին'])head.append(node('th',text));for(const row of result.changes){const tr=table.insertRow();for(const value of [row.articul+' · '+row.name,row.before,row.after+(row.capped?' (սահմանաչափ)':''),money(row.unitPrice)])tr.insertCell().textContent=value;}const wrap=node('div',null,'order-lines-scroll');wrap.append(table);ui.content.append(wrap);
    if(result.missing.length)ui.content.append(node('p','Չեն ավելացվի՝ '+result.missing.join(', '),'confirmation-warning'));
-   const apply=btn('Կիրառել կազմի նախագծում',async()=>{if(!valid())return;apply.disabled=true;ui.close.disabled=true;try{const latest=await request('admin/orders/template-preview',payload);if(!valid())return;if(JSON.stringify(latest)!==JSON.stringify(result))throw Error('Ձևանմուշը կամ գները փոխվել են։ Կրկին բացեք նախադիտումը։');manualRows=latest.lines;dirty=true;renderManual();close();await selectAdminTab('manager');el('adminOrderStatus').textContent='Ձևանմուշն ավելացված է կազմի նախագծին։ Վերջում պահպանեք պատվերը։';}catch(e){ui.message.textContent=ZZWS.message(e);}finally{apply.disabled=false;ui.close.disabled=false;}});apply.disabled=!result.changes.some(r=>r.added>0);ui.content.append(apply);
+   const apply=btn('Կիրառել կազմի նախագծում',async()=>{if(!valid())return;apply.disabled=true;ui.close.disabled=true;try{const latest=await request('admin/orders/template-preview',payload);if(!valid())return;if(JSON.stringify(latest)!==JSON.stringify(result))throw Error('Ձևանմուշը կամ գները փոխվել են։ Կրկին բացեք նախադիտումը։');manualRows=latest.lines;dirty=true;renderManual();close();await selectAdminTab('manager');el('adminOrderStatus').textContent='Ձևանմուշն ավելացված է կազմի նախագծին։ Վերջում պահպանեք պատվերը։';}catch(e){ui.message.textContent=ZZWS.message(e);}finally{apply.disabled=false;ui.close.disabled=false;}});apply.dataset.actionTone='primary';apply.disabled=!result.changes.some(r=>r.added>0);ui.content.append(apply);
   }catch(e){if(valid())ui.message.textContent=ZZWS.message(e);}
  }
  function renderOrderHistory(events){el('adminOrderHistory').replaceChildren(ZZWS_ORDER_TIMELINE.render(events));}

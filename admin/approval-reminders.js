@@ -31,7 +31,7 @@
   const custom=node('fieldset'),legend=node('legend','Կամայական հետաձգում'),whenLabel=node('label','Կրկին հիշեցնել՝'),when=node('input'),zone=node('small','Երևանի ժամանակով՝ UTC+4'),clientLabel=node('label'),client=node('input'),hint=node('p','Առանց նշման հաճախորդի հիշեցման ժամկետը չի փոխվի։'),apply=button('Հետաձգել մինչև ընտրված ժամը',async()=>{
    const stamp=Date.parse(when.value+':00+04:00');if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(when.value)||!Number.isFinite(stamp)||stamp<=Date.now()){status.textContent='Ընտրեք ապագա ամսաթիվ և ժամ';return;}
    await persistUntil(new Date(stamp).toISOString(),client.checked);
-  }),customButton=button('Ընտրել ամսաթիվ և ժամ',()=>{custom.hidden=!custom.hidden;if(!custom.hidden)when.focus();});let busy=false,attempt=null;
+  }),customButton=button('Ընտրել ամսաթիվ և ժամ',()=>{custom.hidden=!custom.hidden;if(!custom.hidden)when.focus();});apply.dataset.actionTone='primary';later.dataset.actionTone='secondary';let busy=false,attempt=null;
   async function persistUntil(until,includeClient){
    if(busy)return;const fingerprint=until+'|'+includeClient;if(!attempt||attempt.fingerprint!==fingerprint)attempt={fingerprint,id:crypto.randomUUID()};
    busy=true;for(const b of [later,orderButton,customButton,when,client,apply])b.disabled=true;status.textContent='Հետաձգումը պահպանվում է…';

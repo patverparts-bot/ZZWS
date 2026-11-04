@@ -2,7 +2,7 @@
  const el=id=>document.getElementById(id),node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;if(cls)n.className=cls;return n;};
  const money=n=>Number(n||0).toLocaleString('hy-AM')+' ֏',write=()=>document.documentElement.dataset.orderWrite==='true';
  let epoch=0,searchEpoch=0,lifecycle=0,customers=[],templates=[],customer=null,editing=null,lines=[],dirty=false,busy=false,requestId=null;
- const action=(text,fn)=>{const b=node('button',text);b.type='button';b.onclick=()=>safe(fn);return b;};
+ const action=(text,fn,tone='secondary')=>{const b=node('button',text);b.type='button';b.dataset.actionTone=tone;b.onclick=()=>safe(fn);return b;};
  async function safe(fn){const generation=lifecycle;try{await fn();}catch(e){if(generation!==lifecycle)return;if(e.status===401){showLogin();return;}el('templateStatus').textContent=ZZWS.message(e);}}
  const request=(path,data)=>ZZWS.json(path,{method:'POST',body:JSON.stringify(data)});
  function abandon(){return !dirty||confirm('Չեղարկե՞լ զամբյուղի չպահպանված փոփոխությունները։');}
@@ -17,7 +17,7 @@
    if(write()){
     card.append(action('Խմբագրել',()=>edit(saved)),action('Պատճենել',()=>edit({...saved,id:null,title:saved.title+' · պատճեն'})));
     const context=window.ZZWS_ADMIN_ORDERS.context();if(context?.user_id===customer?.id&&!context.received_at&&context.status!=='received')card.append(action('Ավելացնել բացված պատվերին',()=>ZZWS_ADMIN_ORDERS.previewTemplate(saved.id)));
-    const remove=action('Ջնջել',async()=>{if(busy||!abandon()||!confirm('Ջնջե՞լ «'+saved.title+'» պահպանված զամբյուղը հաճախորդի հաշվից։'))return;const target=customer.id,ticket=epoch,generation=lifecycle;busy=true;render();try{await request('admin/templates/delete',{userId:target,id:saved.id,savedAt:saved.saved_at});if(ticket!==epoch)return;close();await load(target);}finally{if(generation===lifecycle){busy=false;render();}}});remove.className='storage-danger';card.append(remove);
+    const remove=action('Ջնջել',async()=>{if(busy||!abandon()||!confirm('Ջնջե՞լ «'+saved.title+'» պահպանված զամբյուղը հաճախորդի հաշվից։'))return;const target=customer.id,ticket=epoch,generation=lifecycle;busy=true;render();try{await request('admin/templates/delete',{userId:target,id:saved.id,savedAt:saved.saved_at});if(ticket!==epoch)return;close();await load(target);}finally{if(generation===lifecycle){busy=false;render();}}},'danger');remove.className='storage-danger';card.append(remove);
    }
    root.append(card);
   }

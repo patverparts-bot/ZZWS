@@ -1,7 +1,7 @@
 (() => {
  const node=(tag,text)=>{const n=document.createElement(tag);if(text)n.textContent=text;return n;};
  window.requirePasswordSetup=user=>new Promise(resolve=>{
-  const client=user.role==='client',setup=user.needsPasswordSetup,dialog=node('dialog'),form=node('form'),message=node('p'),submit=node('button',setup?'Ակտիվացնել հաշիվը':'Պահպանել տվյալները'),cancel=node('button','Ելք'),fields={};dialog.id='passwordSetup';dialog.className='account-registration';message.setAttribute('role','alert');cancel.type='button';
+  const client=user.role==='client',setup=user.needsPasswordSetup,dialog=node('dialog'),form=node('form'),message=node('p'),submit=node('button',setup?'Ակտիվացնել հաշիվը':'Պահպանել տվյալները'),cancel=node('button','Ելք'),fields={};submit.dataset.actionTone='primary';dialog.id='passwordSetup';dialog.className='account-registration';message.setAttribute('role','alert');cancel.type='button';
   form.append(node('h2',setup?'Անձնական հաշվի գրանցում':'Լրացրեք անձնական տվյալները'));
   if(client){
    form.append(node('p',user.client),node('p','Նշեք ճիշտ անունը, ազգանունը, հեռախոսահամարը և էլ․ փոստը։ Այդ տվյալներով կկապվենք ձեզ հետ, իսկ նշված էլ․ փոստով կստանաք վաճառքի հաշվետվությունները։ Մինչև ավարտելը ստուգեք տվյալները։'));

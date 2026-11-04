@@ -12,7 +12,7 @@
   const current=node('p','Ընթացիկ տարբերակը բեռնվում է…');current.dataset.apkCurrent='';field.append(current);
   const form=node('form'),label=node('label','Նոր APK ֆայլ'),file=node('input');form.style.cssText='display:grid;gap:12px;min-width:0';label.style.cssText='display:grid;gap:6px;min-width:0';file.type='file';file.accept='.apk,application/vnd.android.package-archive';file.required=true;file.name='file';file.style.cssText='display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box';label.append(file);form.append(label);
   const notesLabel=node('label','Ինչ է փոխվել'),notes=node('textarea');notesLabel.style.cssText='display:grid;gap:6px;min-width:0';notes.name='description';notes.maxLength=4000;notes.rows=3;notes.style.cssText='display:block;width:100%;min-width:0;box-sizing:border-box;resize:vertical;padding:10px;border:1px solid #94a3b8;border-radius:8px;font:inherit';notesLabel.append(notes);form.append(notesLabel);
-  const button=node('button','Հրապարակել նոր APK-ը');button.type='submit';button.style.cssText='justify-self:start;max-width:100%;white-space:normal';form.append(button);
+  const button=node('button','Հրապարակել նոր APK-ը');button.type='submit';button.dataset.actionTone='primary';button.style.cssText='justify-self:start;max-width:100%;white-space:normal';form.append(button);
   const progress=node('progress');progress.max=100;progress.hidden=true;progress.style.width='100%';progress.setAttribute('aria-label','APK-ի բեռնման ընթացքը');form.append(progress);
   const status=node('p');status.setAttribute('role','status');status.dataset.apkUploadStatus='';form.append(status);field.append(form);panel.append(field);panel.hidden=false;
   const valid=()=>actor===who&&ticket===serial;

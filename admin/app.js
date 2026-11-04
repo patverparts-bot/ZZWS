@@ -49,7 +49,7 @@ function table(headers, rows) {
   rows.forEach(row => { const tr = body.insertRow(); row.forEach(v => { const td = tr.insertCell(); if (v instanceof Node) td.append(v); else td.textContent = String(v ?? ''); }); });
   return table;
 }
-function button(label, callback) { const b = document.createElement('button'); b.type='button'; b.textContent = label; b.onclick = () => run(callback); return b; }
+function button(label, callback, tone='secondary') { const b = document.createElement('button'); b.type='button'; b.dataset.actionTone=tone; b.textContent = label; b.onclick = () => run(callback); return b; }
 async function run(fn) { try { await fn(); } catch(e) { if(!e.staleSession)status(ZZWS.message(e), true); } }
 const adminTabs=['proposalManagement','assistantHistory','dashboard','manager','orders','templates','price','users','rules','audit','storage','email','offers','catalogControls','warehouses','operations','apkDownloads','systemDataReset','orderSettings','accountSettings','mobileApp'];
 let adminNavigationActive=false,adminHistoryPosition=0,activeAdminTab=null;
@@ -153,7 +153,7 @@ el('publish').onclick = () => run(async () => { if (!draft||!ZZWS_PRICE_REVIEW.c
 async function loadVersions() {
   const d = await api('admin/price/versions');
   el('versions').replaceChildren(table(['Ամսաթիվ','Տարբերակ','Գործողություն'],d.versions.map(v => [new Date(v.created*1000).toLocaleString((window.ZZWS_I18N?.language==='ru'?'ru-RU':'hy-AM'),{timeZone:'Asia/Yerevan'}),v.label?'№'+v.label:'Գնացուցակ · '+new Date(v.created*1000).toLocaleString((window.ZZWS_I18N?.language==='ru'?'ru-RU':'hy-AM'),{timeZone:'Asia/Yerevan'}),
-    v.id === d.active ? 'Գործող' : button('Վերականգնել', async () => { if (!confirm('Վերադարձնե՞լ գնացուցակի այս տարբերակը։')) return; await api('admin/price/rollback',{method:'POST',body:JSON.stringify({version:v.id})}); await loadVersions(); status('Տարբերակը վերականգնված է'); })])));
+    v.id === d.active ? 'Գործող' : button('Վերականգնել', async () => { if (!confirm('Վերադարձնե՞լ գնացուցակի այս տարբերակը։')) return; await api('admin/price/rollback',{method:'POST',body:JSON.stringify({version:v.id})}); await loadVersions(); status('Տարբերակը վերականգնված է'); },'warning')])));
 }
 async function loadUsers() {
   const d = await api('admin/users'); users = d.users;categoryLabels={...categoryLabels,...d.categoryLabels};categoryByGroup=d.categoryByGroup||categoryByGroup;
@@ -184,7 +184,7 @@ async function editUser(user = {}) {
   el('passwordSetupState').textContent=!user.id||user.needsPasswordSetup?(user.role==='admin'?'Առաջին մուտք՝ մուտքանունով և մեկանգամյա հրավերի կոդով։':'Հրավերով գրանցում․ օգտատերն ինքն է ընտրում անձնական մուտքանունն ու գաղտնաբառը։'):'Օգտատերն արդեն սահմանել է գաղտնաբառը։';
   el('adminOrdersRefresh').value=user.ordersRefreshSeconds??5;el('saveAdminPolling').hidden=!user.id;el('adminPollingStatus').textContent='';
   ZZWS_REPORT_EMAIL.edit(user);window.ZZWS_PHONE_CARD?.edit(user);updateClientCategory();ZZWS_CARD_LAYOUT.edit(user,users);await Promise.allSettled([window.ZZWS_CLIENT_CARD?.edit(user),ZZWS_ADMIN_RECEIPTS.loadClient(user)]);
-  el('userSavedBaskets').hidden=!user.id||user.role!=='client'||!ZZWS_ADMIN_HOME.can('templates');f.scrollIntoView({behavior:'smooth'});
+  f.scrollIntoView({behavior:'smooth'});
 }
 el('resetUserPassword').onclick=()=>run(async()=>{
   if(!editingUserId)return;
@@ -306,7 +306,7 @@ async function loadGroupRules(draftData=null){
     const access=ZZWS_RULES_UI.accessEditor(accessRoot,data.rules[group].access,catalogPairs);
     const reset=button('Վերականգնել ստանդարտը՝ '+categoryLabel(group),()=>{
       for(const [key,input]of Object.entries(stock))input.value=(data.defaults[group]||data.defaults.Dealers).stock[key];pricing.reset((data.defaults[group]||data.defaults.Dealers).pricing);access.reset((data.defaults[group]||data.defaults.Dealers).access);el('groupRulesPreview').replaceChildren();status('Ստանդարտ կանոնները վերականգնված են ձևում։ Կիրառելու համար սեղմեք «Պահպանել խմբերի կանոնները»։');
-    });
+    },'warning');
     card.append(title,name,priceTitle,priceRoot,stockRoot,accessTitle,accessRoot,reset);container.append(card);groupEditors[group]={pricing,access,name,stock};
   }
 }
@@ -365,6 +365,5 @@ el('saveAdminPolling').onclick=()=>run(async()=>{
  if(window.ZZWS_HELP_USER?.id===id)ZZWS_ADMIN_ORDERS.setRefreshSeconds(data.seconds);el('adminPollingStatus').textContent='Միջակայքը պահպանված է՝ '+data.seconds+' վայրկյան։';
 });
 
-el('userSavedBaskets').onclick=()=>run(()=>ZZWS_ADMIN_TEMPLATES.openCustomer(editingUserId));
 
 document.getElementById('allProposalsOpen').onclick=()=>ZZWS_PROPOSAL_MANAGEMENT.loadAll();

@@ -17,7 +17,8 @@ test('recipient ledger guards proofs, files, actor, leases, retries, concurrency
  try{
   const login=async name=>(await ok('login',null,{login:'zzws-test-'+name,password:'24681012'})).sessionToken;
   const owner=await login('owner'),manager=await login('manager'),client=await login('dealer');
-  const admin=await ok('me',owner),other=await ok('me',manager),me=await ok('me',client),product=(await ok('catalog',client)).products.find(p=>p.articul==='test-002');
+  const admin=await ok('me',owner),other=await ok('me',manager),me=await ok('me',client),product=(await ok('catalog',client)).products.find(p=>p.articul==='900002');
+  assert.ok(product&&Number.isFinite(product.wholesale)&&product.wholesale>0,'The isolated dealer catalogue must contain the seeded 900002 product with a valid price');
   await r.db.query("update zzws_users set profile=profile||'{\"replyToEmail\":\"owner@example.am\"}'::jsonb where id=$1",[admin.id]);await r.db.exec("update zzws_receipt_settings set mode='off'");
   await r.db.query('update zzws_users set person=$2 where id=$1',[me.id,JSON.stringify({firstName:'Test',lastName:'Buyer',phone:'+37499123456',email:'main@example.am'})]);
   const create=()=>ok('orders',client,{requestId:crypto.randomUUID(),profileRevision:me.profileRevision,deliveryVariantId:me.rowsList[0].id,delivery:{...me.rowsList[0],method:'Առաքում'},lines:[{articul:product.articul,qty:1,unitPrice:product.wholesale}]});

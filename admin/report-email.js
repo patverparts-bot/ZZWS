@@ -13,11 +13,12 @@
    const root=node('div'),error=node('p'),files=node('input'),candidate=node('select'),to=node('fieldset'),extra=node('input'),confirm=node('input'),preview=node('div'),summary=node('p'),cc=node('p'),replyInfo=node('p'),outcomes=node('div');
    files.type='file';files.multiple=true;confirm.type='checkbox';error.setAttribute('role','status');preview.className='report-email-comparison';outcomes.id='reportRecipientResults';outcomes.hidden=true;outcomes.setAttribute('aria-live','polite');
    const close=button('Փակել',()=>{if(!active)reset();}),verify=button('Ստուգել հաշվետվությունը',()=>inspect()),send=button('Ուղարկել հաշվետվությունը',()=>submit()),manualButton=button('Շարունակել ձեռքով',()=>continueManually());
+   for(const [control,tone]of [[close,'secondary'],[verify,'secondary'],[send,'primary'],[manualButton,'warning']])control.dataset.actionTone=tone;
    manualButton.hidden=true;send.disabled=true;candidate.hidden=true;
    root.append(node('h2','Ուղարկել հաշվետվություն · №'+order.number),node('p',order.customer.client+' · '+order.customer.customerCode),node('p','Կցեք բոլոր ֆայլերը։ Համեմատության համար ընտրեք վաճառքի հաշվետվությունը։ Ֆայլերը պահվում են միայն այս բաց պատուհանի հիշողությունում։'),files,summary,candidate,verify,preview,to,cc,replyInfo,outcomes);
    const extraLabel=node('label','Լրացուցիչ էլ․ փոստեր՝ ստորակետով կամ կետ-ստորակետով, ոչ պարտադիր');extraLabel.append(extra);
    const consent=node('label','Հաստատում եմ հաճախորդին և ստացողներին');consent.prepend(confirm);root.append(extraLabel,consent,error,send,manualButton,close);d.append(root);document.body.append(d);d.showModal();files.hidden=true;
-   const chooseFiles=button('Ընտրել ֆայլը',()=>files.click());files.after(chooseFiles);d.addEventListener('cancel',e=>{if(active)e.preventDefault();else reset();});
+   const chooseFiles=button('Ընտրել ֆայլը',()=>files.click());chooseFiles.dataset.actionTone='secondary';files.after(chooseFiles);d.addEventListener('cancel',e=>{if(active)e.preventDefault();else reset();});
    let options,includeDefaults=true;
    const warning=node('p');warning.id='reportDefaultsWarning';warning.setAttribute('role','status');warning.style.color='#b91c1c';
    const defaultsToggle=button('Չուղարկել',()=>{includeDefaults=!includeDefaults;renderDefaults();});defaultsToggle.id='reportDefaultsToggle';

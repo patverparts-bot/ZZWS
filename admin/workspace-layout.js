@@ -32,8 +32,9 @@
    const upload=el('apkUploadPanel');if(upload)mobile.prepend(upload);
    document.documentElement.dataset.ownerOverview=String(user.adminScope==='owner');
    for(const group of document.querySelectorAll('.admin-nav-group'))group.hidden=![...group.querySelectorAll('[data-tab]')].some(button=>!button.hidden);
+   window.ZZWS_ADMIN_MENU?.sync();
   },
-  reset(){++navigationEpoch;delete document.documentElement.dataset.ownerOverview;}
+  reset(){++navigationEpoch;delete document.documentElement.dataset.ownerOverview;window.ZZWS_ADMIN_MENU?.reset();}
  });
  window.ZZWS_OVERVIEW_NAV=Object.freeze({
   async openOrders({filter,view='orders'}={}){
