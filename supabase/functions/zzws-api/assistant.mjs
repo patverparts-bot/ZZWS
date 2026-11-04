@@ -3,6 +3,7 @@ import {wantsSimilar} from './assistant-similarity.mjs';
 import {advise, validateAdvisor} from './advisor.mjs';
 import {publicCatalogueProducts} from './public-catalog.mjs';
 import {preferenceCopy} from './assistant-preferences.mjs';
+import {normalizeAssistantQuery} from './assistant-query.mjs';
 // The same module runs in Deno and Node, so retrieval and authorization can be tested locally.
 export const normalize = value => String(value || '').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 const compact = value => normalize(value).replaceAll(' ', '');
@@ -135,31 +136,32 @@ export async function modelAnswer(message, products, {apiKey, freeTierConfirmed 
 
 export async function answerQuestion(payload, visibleProducts, knowledge, options = {}) {
   const {message, context, refresh, advisor, locale} = validateQuestion(payload);
+  let found = findProducts(message, visibleProducts, advisor ? [] : context);
+  const query=normalizeAssistantQuery(message,{brands:visibleProducts.map(p=>p.brand),protectedTerms:found.selected.flatMap(p=>normalize(p.name).split(' '))});
   if(options.learning?.avoidAnswer&&!options.learning?.expectedRequest){const lang=locale||language(message);return {name:'ԶիգԶագ',answer:lang==='ru'?'Предыдущий ответ на этот запрос отмечен как неверный. Уточните требование или ожидаемый результат — повторять отклонённый ответ не буду.':lang==='hy'?'Այս հարցի նախորդ պատասխանը նշված է որպես սխալ։ Ճշտեք պահանջը կամ սպասվող արդյունքը․ մերժված պատասխանը չի կրկնվի։':'The previous answer was marked incorrect. Please clarify the requirement or expected result; the rejected answer will not be repeated.',mode:'selection',modelUnavailable:false,advisor,products:[],choices:[],context:[],recommendations:[],publicRecommendations:[]};}
-  if(!refresh&&/^(?:привет|здравствуй(?:те)?|добрый день|hello|hi|բարև)[!.\s]*$/i.test(message)||!refresh&&/что.*(?:умеешь|можешь)|как.*(?:поможешь|пользоваться)|what can you|ինչ.*(?:կարող|գիտես)/i.test(message)){
+  if(!refresh&&/^(?:привет|здравствуй(?:те)?|добрый день|hello|hi|բարև)[!.\s]*$/i.test(query)||!refresh&&/что.*(?:умеешь|можешь)|как.*(?:поможешь|пользоваться)|what can you|ինչ.*(?:կարող|գիտես)/i.test(query)){
     const lang=locale||language(message),answer=lang==='hy'?'Բարև։ Կօգնեմ ընտրել և համեմատել տեխնիկան ըստ բյուջեի, չափի, բրենդի և հաստատված գործառույթների։ Կարող եք գրել՝ «լուռ սառնարան մինչև 300 հազար դրամ», «լվացքի մեքենա 8 կգ», «Smart TV 4K 55 դյույմ», կամ հարցնել՝ «ինչո՞ւ այս մոդելները», «ցույց տուր ավելին»։':lang==='en'?'Hello! I can help choose and compare appliances by budget, size, brand and verified features. Try “quiet fridge up to 300 thousand AMD”, “8 kg washing machine”, “55 inch Smart TV 4K”, “why these models?” or “show more”.':'Здравствуйте! Помогу подобрать и сравнить технику по бюджету, размерам, бренду и подтверждённым функциям. Например: «тихий холодильник до 300 тысяч драм», «стиральная машина 8 кг», «телевизор Smart TV 4K 55 дюймов», «почему эти модели?» или «покажи ещё».';
     return {name:'ԶիգԶագ',answer,mode:'selection',modelUnavailable:false,products:[],choices:[],context:[],advisor,quickReplies:[],recommendations:[],publicRecommendations:[]};
   }
   const visibleIds=new Set(visibleProducts.map(p=>p.articul));
   const publicProducts=publicCatalogueProducts(knowledge,options.publicCatalog).filter(p=>!visibleIds.has(p.articul));
-  let found = findProducts(message, visibleProducts, advisor ? [] : context);
   // Prior IDs are hints only; authorization and identity are checked again each turn.
   const shown=(advisor?.shown||[]).map(id=>visibleProducts.find(p=>p.articul===id)).filter(Boolean);
-  const implicitCompare=shown.length>=2&&/сравни.*(?:эти|их|первые)|compare.*(?:these|them)|համեմատ.*(?:այս|առաջին)/i.test(message);
-  const ordinal=/подробнее.*(?:перв|втор|трет)|расскажи.*(?:перв|втор|трет)|details.*(?:first|second|third)|մանրամասն.*(?:առաջին|երկրորդ|երրորդ)/i.test(message)?/втор|second|երկրորդ/i.test(message)?1:/трет|third|երրորդ/i.test(message)?2:0:null;
+  const implicitCompare=shown.length>=2&&/сравни.*(?:эти|их|первые)|compare.*(?:these|them)|համեմատ.*(?:այս|առաջին)/i.test(query);
+  const ordinal=/подробнее.*(?:перв|втор|трет)|расскажи.*(?:перв|втор|трет)|details.*(?:first|second|third)|մանրամասն.*(?:առաջին|երկրորդ|երրորդ)/i.test(query)?/втор|second|երկրորդ/i.test(query)?1:/трет|third|երրորդ/i.test(query)?2:0:null;
   if(!found.selected.length&&implicitCompare)found={selected:shown.slice(0,2),choices:[]};
   else if(!found.selected.length&&ordinal!=null&&shown[ordinal])found={selected:[shown[ordinal]],choices:[]};
-  const similar=wantsSimilar(message)||advisor?.similarTo&&!categoryIntent(message).category;
+  const similar=wantsSimilar(query)||advisor?.similarTo&&!categoryIntent(query).category;
   if(!refresh&&similar&&!implicitCompare&&ordinal==null){
     if(!found.selected.length){const publicFound=findProducts(message,publicProducts);if(publicFound.selected.length||publicFound.choices.length)found=publicFound;}
     const newSourceHint=/\b\d{4,}\b|[a-z][\w/-]*\d/i.test(message);
     const source=found.selected.length===1?found.selected[0]:!newSourceHint&&!found.choices.length&&context.length===1?visibleProducts.find(p=>p.articul===context[0]):!newSourceHint&&advisor?.similarTo?visibleProducts.find(p=>p.articul===advisor.similarTo):null;
-    if(source)return advise(message,advisor,visibleProducts,p=>knowledgeProduct(p,knowledge),locale,options.orderPriceMode==='KP'?'KP':'WS',publicProducts,{similarTo:source.articul,learning:options.learning});
+    if(source)return advise(query,advisor,visibleProducts,p=>knowledgeProduct(p,knowledge),locale,options.orderPriceMode==='KP'?'KP':'WS',publicProducts,{queryNormalized:true,similarTo:source.articul,learning:options.learning});
     const lang=locale||language(message);return {name:'ԶիգԶագ',answer:lang==='ru'?'Укажите точную исходную модель или артикул, чтобы подобрать аналог по функции, установке и близким характеристикам.':lang==='hy'?'Նշեք սկզբնական մոդելը կամ արտիկուլը՝ նույն գործառույթով, տեղադրմամբ և մոտ բնութագրերով համարժեք ընտրելու համար։':'Enter the exact source model or SKU to match its function, installation and specifications.',mode:'selection',modelUnavailable:false,products:[],context:[],advisor:null,recommendations:[],publicRecommendations:[],choices:found.choices.map(p=>knowledgeProduct(p,knowledge))};
   }
   const explicitModel = found.selected.length && (/[a-z][\w/-]*\d|\d[\w/-]*[a-z]/i.test(message) || (!advisor && visibleProducts.some(p => normalize(message) === normalize(p.articul))));
   if (!refresh && (!explicitModel||options.learning?.expectedRequest)&&!implicitCompare&&ordinal==null) {
-    const selection = advise(message, advisor, visibleProducts, p => knowledgeProduct(p, knowledge), locale, options.orderPriceMode==='KP'?'KP':'WS', publicProducts,{learning:options.learning});
+    const selection = advise(query, advisor, visibleProducts, p => knowledgeProduct(p, knowledge), locale, options.orderPriceMode==='KP'?'KP':'WS', publicProducts,{queryNormalized:true,learning:options.learning});
     if (selection) return selection;
   }
   let products = found.selected.map(p => knowledgeProduct(p, knowledge));

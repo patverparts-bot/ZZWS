@@ -1,4 +1,5 @@
 import {FAMILY_LABELS,labelFor,kindLabel,categoryIntent,queryText,classifyCategory,applianceProfile,categoryAccepts,VALID_KINDS} from './appliance-taxonomy.mjs';
+import {normalizeAssistantQuery} from './assistant-query.mjs';
 import {similaritySource,compareSimilar,similarityReasons,similarityIntro,wantsSimilar} from './assistant-similarity.mjs';
 import {matchDimensions,dimensionMode} from './size-matching.mjs';
 import {priorities,preferenceCopy,parsePreferences,priorityOptions,preferenceMatch,priorityCompare,preferenceSummary,selectionReasons,asksUnverified,isRecognizedFollowup,wantsWhy,wantsMore} from './assistant-preferences.mjs';
@@ -173,10 +174,11 @@ export function requirementSummary(state) {
 }
 
 export function advise(message, prior, visibleProducts, verifiedProduct, responseLanguage, orderPriceMode='WS', publicProducts=[],policyOptions={}) {
+  if(!policyOptions.queryNormalized)message=normalizeAssistantQuery(message,{brands:visibleProducts.map(p=>p.brand)});
   const isRequest=/нуж|подбер|ищу|посовет|хочу|need|looking for|recommend|want|փնտր|ուզում|պետք/i.test(message);
   if(!prior&&!detectCategory(message)&&!isRequest&&!policyOptions.similarTo&&!policyOptions.learning?.expectedRequest)return null;
   const parsed=parseRequirements(message,prior,[...visibleProducts,...publicProducts],responseLanguage);let state=parsed.state;const currencyError=parsed.currencyError;
-  if(policyOptions.learning?.expectedRequest){const correction=parseRequirements(policyOptions.learning.expectedRequest,null,[...visibleProducts,...publicProducts],responseLanguage).state;if(correction.category&&correction.category!==state.category)state=Object.fromEntries(Object.entries(state).filter(([key])=>['language','budgetMax','budgetSkipped','cheap','brand'].includes(key)));state={...state,...Object.fromEntries(Object.entries(correction).filter(([key])=>!['page','shown','pending','language'].includes(key)))};}
+  if(policyOptions.learning?.expectedRequest){const correction=parseRequirements(normalizeAssistantQuery(policyOptions.learning.expectedRequest,{brands:visibleProducts.map(p=>p.brand)}),null,[...visibleProducts,...publicProducts],responseLanguage).state;if(correction.category&&correction.category!==state.category)state=Object.fromEntries(Object.entries(state).filter(([key])=>['language','budgetMax','budgetSkipped','cheap','brand'].includes(key)));state={...state,...Object.fromEntries(Object.entries(correction).filter(([key])=>!['page','shown','pending','language'].includes(key)))};}
   const t=labels[state.language],extra=preferenceCopy[state.language];
   const reply=(answer,pending=null,replies=[],recommendations=[],publicRecommendations=[])=>{
     if(pending)state.pending=pending;
