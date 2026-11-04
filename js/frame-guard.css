@@ -1,0 +1,2 @@
+/* Fail closed until the first blocking script confirms a top-level window. */
+html[hidden],html[data-zzws-frame-guard="pending"],html[data-zzws-frame-guard="blocked"]{display:none!important}

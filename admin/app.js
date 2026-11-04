@@ -328,7 +328,7 @@ const setupToken = new URLSearchParams(location.hash.slice(1)).get('setup');
 if (setupToken) {
   history.replaceState(null, '', location.pathname);
   finishSessionLoading();el('login').hidden = true; el('setup').hidden = false;
-} else {
+} else if (window.top === window.self) {
   run(async () => { try { await enter(); } catch(e) { if(e.staleSession)return;if(sessionStorage.getItem('zzws_session_v3')&&e.status!==403)sessionLoadFailed(e.message);else{showLogin();if (!e.message.includes('Մուտք գործեք'))status(e.message,true);} } });
 }
 el('setupForm').onsubmit = e => { e.preventDefault(); run(async () => {

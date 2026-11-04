@@ -1,0 +1,14 @@
+{
+  "status": "SOURCE_EXAMPLE_ONLY_NOT_ACTIVE_ON_GITHUB_PAGES",
+  "purpose": "Activate true browser anti-framing enforcement on a future hosting/proxy configuration that supports response headers.",
+  "scope": ["/", "/index.html", "/admin/", "/admin/index.html", "/offer.html", "/help/admin-guide.html", "/help/user-guide.html"],
+  "responseHeaders": {
+    "Content-Security-Policy": "frame-ancestors 'none'",
+    "X-Frame-Options": "DENY"
+  },
+  "integration": "Send these as actual HTTP response headers. Preserve the existing restrictive page CSP; multiple CSP policies are intersected. Do not replace the full application policy with a broad allow policy.",
+  "currentMitigation": "Early top-level window guard plus default-hidden HTML and runtime deny-all CSP in frames. Native top-level WebView remains supported.",
+  "remainingLimitation": "GitHub Pages response headers were not configured. Client-side mitigation does not replace HTTP frame-ancestors/X-Frame-Options and the header finding is not fully closed.",
+  "hostingChangesPerformed": false,
+  "cloudflareChangesPerformed": false
+}

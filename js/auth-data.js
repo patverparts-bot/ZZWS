@@ -1,4 +1,5 @@
 // Authentication and permissions are issued by the server, never restored from localStorage.
+if(window.top!==window.self)throw new Error('Framed application initialization is blocked');
 let serverIdentity = null; window.ZZWS_HELP_USER=null;
 function beginSessionLoading(){
   const text=document.getElementById('sessionLoadingText');text.dataset.loadingKey='catalog';text.textContent=window.ZZWS_I18N.t(window.ZZWS_LOADING_SCENES.keys.catalog);
@@ -47,6 +48,8 @@ function lockCatalog() {
   document.getElementById('authScreen').classList.remove('hidden');
   document.getElementById('tableBody').replaceChildren();
   document.getElementById('mobileCardsContainer').replaceChildren();
+  for(const id of ['cabinetHistoryList','savedCartsList','orderNotificationList','modalItemsList','cabinetUserSubtitle'])document.getElementById(id)?.replaceChildren();
+  for(const id of ['organizationSelect','deliveryMethodInput','deliveryDateInput','deliveryAddressInput','contactPersonInput','orderCommentInput']){const field=document.getElementById(id);if(field)field.value='';}
   for (const id of ['orderModal','cabinetModal','bulkAddModal']) document.getElementById(id)?.classList.add('hidden');
 }
 async function acceptIdentity(user) {
@@ -234,8 +237,7 @@ function startBackgroundPricePolling() {
 }
 
 async function logout() {
-  await window.ZZWS_MEMORY?.flush();
-  try { await secureApi("logout", {method:"POST"}); } catch(e) { lockCatalog(); return; }
+  try { await secureApi("logout", {method:"POST"}); } catch(e) { if(!e.logoutCancelled)lockCatalog();return; }
   lockCatalog();
   if (backgroundPollTimer) clearTimeout(backgroundPollTimer);
   if (authorizedClient) {

@@ -1,5 +1,5 @@
 import {readFile,writeFile,mkdir,access} from 'node:fs/promises';import {randomUUID,randomBytes} from 'node:crypto';
-import {registerHooks} from 'node:module';import {fileURLToPath} from 'node:url';import path from 'node:path';
+import {registerHooks} from 'node:module';import {fileURLToPath,pathToFileURL} from 'node:url';import path from 'node:path';
 import {hashPassword} from './supabase-client.mjs';
 let pgModule;try{pgModule=await import('@electric-sql/pglite');}catch(e){if(e.code!=='ERR_MODULE_NOT_FOUND')throw e;pgModule=await import(new URL('../../work/admin-notifications-stage1/supabase/tests/node_modules/@electric-sql/pglite/dist/index.js',import.meta.url).href);}const {PGlite}=pgModule;
 export const root=path.resolve(fileURLToPath(new URL('../../',import.meta.url)));
@@ -12,7 +12,7 @@ const testVaultSchema=`create schema vault;create table vault.secrets(id uuid pr
 create function vault.create_secret(new_secret text,new_name text default null,new_description text default null) returns uuid language plpgsql as $$declare result uuid;begin insert into vault.secrets(secret,name) values(new_secret,new_name) returning id into result;return result;end $$;
 create function vault.update_secret(secret_id uuid,new_secret text default null) returns void language sql as $$update vault.secrets set secret=new_secret where id=secret_id$$;`;
 export const DEMO_PASSWORD='24681012';
-export async function createRuntime({dataDir=path.join(root,'work/isolated-api'),memory=true,debug=false,origin='http://127.0.0.1:8080',sourceRoot=process.env.ZZWS_API_SOURCE_ROOT,beforeSchemaFile}={}){
+export async function createRuntime({dataDir=path.join(root,'work/isolated-api'),memory=true,debug=false,origin='http://127.0.0.1:8080',sourceRoot=process.env.ZZWS_API_SOURCE_ROOT,schemaRoot=process.env.ZZWS_SCHEMA_ROOT||root,beforeSchemaFile}={}){
  if(globalThis.__ZZWS_OFFLINE__)throw Error('Only one offline runtime per process');
  if(!memory)await mkdir(dataDir,{recursive:true});
  const db=new PGlite(memory?undefined:path.join(dataDir,'postgres'));
@@ -20,8 +20,8 @@ export async function createRuntime({dataDir=path.join(root,'work/isolated-api')
  if(fresh){
   await db.exec(authSchema);
   await db.exec(testVaultSchema);
-  const manifest=await import('../../scripts/unified-schema.mjs');
-  for(const file of manifest.schemaFiles||manifest.cleanSchemaFiles||manifest.cleanStagingPlan){await beforeSchemaFile?.(file,db);await db.exec(await readFile(path.join(root,file),'utf8'));}
+  const manifest=await import(pathToFileURL(path.resolve(schemaRoot,'scripts/unified-schema.mjs')).href);
+  for(const file of manifest.schemaFiles||manifest.cleanSchemaFiles||manifest.cleanStagingPlan){await beforeSchemaFile?.(file,db);await db.exec(await readFile(path.join(schemaRoot,file),'utf8'));}
  }
  const r={offline:true,db,debug,authSessions:new Map(),challenges:new Map(),telegramMessages:[],pushMessages:[],oneCDocuments:new Map(),lastEvents:new Map()};globalThis.__ZZWS_OFFLINE__=r;
  const reportAccepted=new Map();r.reportEmailOutcomes=[];r.reportEmails=[];r.reportEmailSend=async(job,message)=>{if(reportAccepted.has(job.id))return reportAccepted.get(job.id);const result=r.reportEmailOutcomes.shift()||'accepted';if(result==='accepted'||result==='lost'){const accepted={result:'accepted',id:randomUUID()};reportAccepted.set(job.id,accepted);r.reportEmails.push({subject:message.subject,text:message.text,jobId:job.id,to:message.to,cc:message.cc,bcc:message.bcc||[],envelopeTo:message.envelopeTo||[...(message.to||[]),...(message.cc||[]),...(message.bcc||[])],replyTo:message.reply_to,files:await Promise.all(message.attachments.map(async a=>({name:a.filename,hash:await (await import('../../supabase/functions/zzws-api/report-routes.mjs')).sha(Uint8Array.from(Buffer.from(a.content,'base64')))})))});if(result==='lost')throw Error('Simulated lost acknowledgement');return accepted;}return {result};};

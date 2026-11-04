@@ -3,7 +3,8 @@
   const sections=['cart','favorites','history','preferences','draft'];
   const suffix={cart:'cart',favorites:'favs',history:'history'};
   const fields=['organizationSelect','deliveryMethodInput','deliveryDateInput','deliveryAddressInput','contactPersonInput','orderCommentInput'];
-  let owner=null,versions={},baseline={},pending={},timer=null,busy=false,ready=false,pollAt=0,suspended=false,clearedUntil=0;
+  let owner=null,versions={},baseline={},pending={},timer=null,busy=false,ready=false,pollAt=0,suspended=false,clearedUntil=0,epoch=0,activeSession=null,inFlight=null;
+  const current=(ticket=epoch,id=owner,session=activeSession)=>ticket===epoch&&id===owner&&id===serverIdentity?.id&&session===sessionStorage.getItem('zzws_session_v3');
   const copy=v=>JSON.parse(JSON.stringify(v));
   const sameValue=(a,b)=>{
     if(a===b)return true;
@@ -13,7 +14,7 @@
   const key=()=>`zzws_pending_${owner}`;
   const cache=(section,fallback)=>{try{return JSON.parse(localStorage.getItem('zigzag_'+suffix[section]+'_'+userStorageId())||JSON.stringify(fallback));}catch{return fallback;}};
   const banner=(message,error=false)=>{let box=document.getElementById('memoryStatus');if(!box){box=document.createElement('p');box.id='memoryStatus';box.setAttribute('role','status');document.getElementById('welcomeMsg').after(box);}box.textContent=message;box.classList.toggle('sync-error',error);};
-  const persist=()=>{if(!owner)return;try{localStorage.setItem(key(),JSON.stringify(pending));}catch{banner('Չհաջողվեց պահպանել տեղային պատճենը։ Մի փակեք էջը մինչև համաժամացումը։',true);}};
+  const persist=()=>{if(!owner||!current())return;try{if(Object.keys(pending).length)localStorage.setItem(key(),JSON.stringify(pending));else localStorage.removeItem(key());}catch{banner('Չհաջողվեց պահպանել տեղային պատճենը։ Մի փակեք էջը մինչև համաժամացումը։',true);}};
   function read(){
     const draft={};for(const id of fields)draft[id]=document.getElementById(id)?.value||'';
     return {cart:copy(cart),favorites:[...favoritesSet],history:cache('history',[]),preferences:{theme:localStorage.getItem('zigzag_theme')||'light',filtersOpen:localStorage.getItem('zigzag_filters_open_'+userStorageId())||'false',priceMode:adminOrderPriceMode,hiddenColumns:JSON.parse(localStorage.getItem('zigzag_columns_'+userStorageId())||'[]'),dealerOffers:JSON.parse(localStorage.getItem('zigzag_dealer_offers_'+userStorageId())||'[]')},draft};
@@ -38,7 +39,7 @@
     }const row=selectedOrderContact();el.value=Object.hasOwn(value,id)?value[id]:id==='deliveryMethodInput'?'Առաքում':id==='deliveryAddressInput'?row?.address||'':id==='contactPersonInput'?row?.contact||'':'';}handleDeliveryMethodChange();checkDeliveryBadge();}
   }
   function capture(){
-    if(!ready||suspended||!serverIdentity||owner!==serverIdentity.id)return;
+    if(!ready||suspended||!current())return;
     const values=read();
     for(const section of sections){
       if(JSON.stringify(values[section])===JSON.stringify(baseline[section]))continue;
@@ -51,19 +52,20 @@
     if(sameValue(pending[section]?.value,item.value))delete pending[section];
     else if(pending[section])pending[section].version=version;
   }
-  async function flush(){
-    if(busy||!ready||!serverIdentity||owner!==serverIdentity.id)return;
-    capture();busy=true;const activeOwner=owner;
+  async function flushWork(ticket,activeOwner,session){
+    const valid=()=>current(ticket,activeOwner,session)&&ready;
+    if(!valid())return false;
+    capture();busy=true;
     try{
       for(const section of sections){
         if(!pending[section])continue;
         const item=copy(pending[section]);
         try{
-          const result=await ZZWS.json('me/state',{method:'POST',body:JSON.stringify({section,value:item.value,version:item.version})});
-          if(owner!==activeOwner)return;
+          const result=await ZZWS.json('me/state',{method:'POST',timeoutMs:15000,body:JSON.stringify({section,value:item.value,version:item.version})});
+          if(!valid())return false;
           acknowledge(section,item,result.version);
         }catch(e){
-          if(owner!==activeOwner)return;
+          if(!valid())return false;
           if(e.status===409){
             if(e.data.cleared){delete pending[section];versions[section]=e.data.version;suspended=true;apply(section,e.data.value);baseline[section]=read()[section];suspended=false;clearedUntil=Date.now()+30000;persist();continue;}
             // An earlier request may have committed before reload or a lost response.
@@ -79,18 +81,36 @@
       }
       banner(Object.keys(pending).length?'Փոփոխությունները համաժամացվում են…':clearedUntil>Date.now()?'Ադմինիստրատորը մաքրել է տվյալները։ Դրանք թարմացվել են այս սարքում':'Տվյալները պահպանվել են սերվերում');
       if(!Object.keys(pending).length&&Date.now()-pollAt>15000&&!document.hidden){
-        pollAt=Date.now();const state=await ZZWS.json('me/state');capture();
-        if(owner!==activeOwner)return;
+        pollAt=Date.now();const state=await ZZWS.json('me/state',{timeoutMs:15000});
+        if(!valid())return false;capture();
         suspended=true;
         for(const section of sections){if(!pending[section]&&(state.versions[section]||0)!==(versions[section]||0)){apply(section,state.data[section]);versions[section]=state.versions[section]||0;baseline[section]=read()[section];}}
         suspended=false;
       }
-    }catch(e){banner('Փոփոխությունները սպասում են սերվեր ուղարկելուն՝ '+e.message,true);}
-    finally{busy=false;suspended=false;if(owner===activeOwner)persist();}
+      return !Object.keys(pending).length;
+    }catch(e){if(valid())banner('Փոփոխությունները սպասում են սերվեր ուղարկելուն՝ '+e.message,true);return false;}
+    finally{if(valid()){busy=false;suspended=false;persist();}}
+  }
+  async function flush(){
+    if(inFlight)return inFlight;
+    if(!ready||!current())return false;
+    const work=flushWork(epoch,owner,activeSession);inFlight=work;
+    try{return await work;}finally{if(inFlight===work)inFlight=null;}
+  }
+  async function prepareLeave(){
+    if(!owner||!ready||!current()){
+      const id=window.ZZWS_ACCOUNT_CACHE?.owner();let journal={};try{journal=JSON.parse(localStorage.getItem('zzws_pending_'+id)||'{}');}catch{}
+      return !Object.keys(journal).length||confirm(window.ZZWS_I18N?.language==='ru'?'Не удалось сохранить изменения. Выйти без сохранения?':'Չհաջողվեց պահպանել փոփոխությունները։ Դո՞ւրս գալ առանց պահպանելու։');
+    }
+    const ticket=epoch,id=owner,session=activeSession;capture();await flush();
+    if(!current(ticket,id,session))return owner===id&&epoch===ticket&&(!Object.keys(pending).length||confirm(window.ZZWS_I18N?.language==='ru'?'Не удалось сохранить изменения. Выйти без сохранения?':'Չհաջողվեց պահպանել փոփոխությունները։ Դո՞ւրս գալ առանց պահպանելու։'));
+    capture();if(Object.keys(pending).length)await flush();
+    if(!current(ticket,id,session))return owner===id&&epoch===ticket&&(!Object.keys(pending).length||confirm(window.ZZWS_I18N?.language==='ru'?'Не удалось сохранить изменения. Выйти без сохранения?':'Չհաջողվեց պահպանել փոփոխությունները։ Դո՞ւրս գալ առանց պահպանելու։'));
+    return !Object.keys(pending).length||confirm(window.ZZWS_I18N?.language==='ru'?'Не удалось сохранить изменения. Выйти без сохранения?':'Չհաջողվեց պահպանել փոփոխությունները։ Դո՞ւրս գալ առանց պահպանելու։');
   }
   async function start(user){
-    stop();owner=user.id;
-    const state=await ZZWS.json('me/state');versions=state.versions||{};
+    stop();owner=user.id;activeSession=sessionStorage.getItem('zzws_session_v3');window.ZZWS_ACCOUNT_CACHE?.record(user.id);const ticket=epoch,session=activeSession;
+    let state;try{state=await ZZWS.json('me/state');}catch(error){if(!current(ticket,user.id,session))return;throw error;}if(!current(ticket,user.id,session))return;versions=state.versions||{};
     try{pending=JSON.parse(localStorage.getItem(key())||'{}');}catch{pending={};}
     // A reset/restore tombstone supersedes only older local section journals.
     for(const section of sections)if(pending[section]&&(Number(state.cleared?.[section]||0)>Number(pending[section].version||0)||Number(ZZWS.generations?.().workspace||1)>Number(pending[section].workspaceGeneration||1)))delete pending[section];
@@ -106,13 +126,13 @@
     baseline=read();ready=true;pollAt=Date.now();timer=setInterval(flush,1200);persist();
   }
   async function invalidateHistory(){
-    const who=owner;if(!who||!ready)return;const state=await ZZWS.json('me/state');if(owner!==who||!ready)return;
+    const who=owner,ticket=epoch,session=activeSession;if(!who||!ready)return;const state=await ZZWS.json('me/state');if(!current(ticket,who,session)||!ready)return;
     const cleared=Number(state.cleared?.history||0);if(pending.history&&Number(pending.history.version||0)>=cleared)return;
     delete pending.history;versions.history=state.versions?.history||0;suspended=true;
     try{apply('history',state.data?.history||[],true);baseline.history=read().history;}finally{suspended=false;}
     persist();
   }
-  function stop(){ready=false;if(timer)clearInterval(timer);timer=null;owner=null;pending={};versions={};baseline={};}
+  function stop(){++epoch;ready=false;if(timer)clearInterval(timer);timer=null;owner=null;activeSession=null;inFlight=null;busy=false;suspended=false;pending={};versions={};baseline={};}
   async function savedList(){
     const root=document.getElementById('savedCartsList');if(!root)return;
     try{const data=await ZZWS.json('me/carts');root.replaceChildren();
@@ -138,7 +158,8 @@
       input.value='';await savedList();alert(result.replaced?'Զամբյուղը պահպանվել է։ Ամենահին զամբյուղը փոխարինվել է։':'Զամբյուղը պահպանվել է սերվերում։');
     }catch(e){alert(e.data?.limit?'Զամբյուղների ցանկը փոխվել է այլ սարքում։ Թարմացրեք ցանկը և կրկնեք պահպանումը։':e.message);}
   }
-  window.ZZWS_MEMORY={start,stop,capture,flush,invalidateHistory,savedList,saveNamed,restoreDraft:()=>{if(ready)apply('draft',baseline.draft,false);}};
+  window.ZZWS_MEMORY={start,stop,capture,flush,prepareLeave,invalidateHistory,savedList,saveNamed,restoreDraft:()=>{if(ready)apply('draft',baseline.draft,false);}};
+  window.addEventListener('zzws:account-cache-cleared',event=>{if(event.detail?.id===owner)stop();});
   document.addEventListener('visibilitychange',()=>{if(document.hidden){capture();flush();}});
   window.addEventListener('pageshow',event=>{if(event.persisted&&ready&&owner===serverIdentity?.id)resetCatalogFiltersOnOpen();});
   window.addEventListener('focus',()=>{pollAt=0;flush();});

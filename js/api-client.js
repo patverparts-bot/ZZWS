@@ -1,4 +1,5 @@
 (() => {
+  if(window.top!==window.self)return;
   const config=window.ZZWS_CONFIG;
   const key='zzws_session_v3';
   const responseSessions=new WeakMap(),responseGenerations=new WeakMap();
@@ -45,11 +46,19 @@
     return response;
   }
   async function json(path,options={},retried=false){
+    if(path==='logout'&&!retried){
+      if(window.ZZWS_ACCOUNT_CACHE&&!await ZZWS_ACCOUNT_CACHE.prepareLeave())throw Object.assign(Error('Ելքը չեղարկված է։ Փոփոխությունները պահպանված չեն։'),{logoutCancelled:true});
+      const token=sessionStorage.getItem(key),owner=window.ZZWS_ACCOUNT_CACHE?.owner();
+      try{return await json(path,options,true);}finally{
+        if(sessionStorage.getItem(key)===token||sessionStorage.getItem(key)===null){window.ZZWS_ACCOUNT_CACHE?.clear(owner);sessionStorage.removeItem(key);window.ZZWS_SERVER_PROGRESS?.reset();}
+      }
+    }
     const response=await request(path,options);let data;try{data=await response.json();}catch(error){if(error.staleOrders||error.staleSession)throw error;throw new Error('Սերվերը վերադարձրել է սխալ պատասխան։');}
     if(sessionStorage.getItem(key)!==responseSessions.get(response))throw staleSession();
     if(response.status===428&&data.reauthRequired&&!retried&&window.requireReauthentication){await window.requireReauthentication();return json(path,options,true);}
     if(!response.ok){const missing=response.status===404&&data.error==='Չի գտնվել'&&/^(admin\/orders\/(customers|customer-|create|report-)|admin\/users\/channels|admin\/email-settings|admin\/offers|orders\/quote|catalog\/contract)/.test(path);const error=new Error(missing?'Այս հնարավորությունը դեռ հասանելի չէ գործող սերվերում։ Անհրաժեշտ է ZZWS սերվերի համաձայնեցված թարմացում։':data.error||'Հարցման սխալ');error.status=response.status;error.data=data;throw error;}
-    if(['login','login/mfa','account/password','invitation/open'].includes(path)&&data.sessionToken){window.ZZWS_SERVER_PROGRESS?.reset();sessionStorage.setItem(key,data.sessionToken);delete data.sessionToken;}
+    if(['login','login/mfa','account/password','invitation/open'].includes(path)&&data.sessionToken){const transition=await window.ZZWS_ACCOUNT_CACHE?.beforeSession(data.id);if(sessionStorage.getItem(key)!==(transition?transition.token:responseSessions.get(response)))throw staleSession();window.ZZWS_SERVER_PROGRESS?.reset();sessionStorage.setItem(key,data.sessionToken);window.ZZWS_ACCOUNT_CACHE?.record(data.id);delete data.sessionToken;}
+    if(path==='me')window.ZZWS_ACCOUNT_CACHE?.record(data.id);
     if(path==='logout'){sessionStorage.removeItem(key);window.ZZWS_SERVER_PROGRESS?.reset();}
     return data;
   }
