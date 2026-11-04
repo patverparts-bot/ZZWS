@@ -11,7 +11,7 @@
   {key:'system',heading:'admin-nav-system',hy:'Համակարգ',ru:'Система',tabs:['operations','assistantHistory','audit','storage','systemDataReset']},
   {key:'account',heading:'admin-nav-account',hy:'Իմ հաշիվը',ru:'Мой аккаунт',tabs:['accountSettings']}
  ];
- const rows=[];let mounted=false,selected=null,frame=0;
+ const rows=[];let mounted=false,selected=null,frame=0,sectionCaption=null;
  const ru=()=>window.ZZWS_I18N?.language==='ru';
  const title=row=>ru()?row.ru:row.hy;
  function available(row){return row.buttons.some(button=>!button.hidden);}
@@ -21,7 +21,9 @@
   const rect=menu.querySelector('summary').getBoundingClientRect(),width=Math.max(0,Math.min(560,vw-gap*2));
   const below=Math.max(0,offsetY+vh-rect.bottom-gap*2),above=Math.max(0,rect.top-offsetY-gap*2),flip=below<Math.min(host.scrollHeight||360,360)&&above>below;
   let height=Math.max(0,Math.min(flip?above:below,vh-gap*2));
-  const overlay=height<Math.min(244,vh-gap*2);if(overlay)height=Math.max(0,vh-gap*2);
+  const picker=host.querySelector('.admin-menu-section-picker'),minimum=(picker?.getBoundingClientRect().height||204)+(vh<=420?44:56)+64;
+  const overlay=height<Math.min(minimum,vh-gap*2);if(overlay)height=Math.max(0,vh-gap*2);
+  host.dataset.menuSticky=String(height>=minimum&&vw>=300);
   host.style.width=width+'px';host.style.maxHeight=height+'px';
   host.style.left=Math.max(offsetX+gap,Math.min(rect.right-width,offsetX+vw-width-gap))+'px';
   host.style.top=(overlay?offsetY+gap:flip?Math.max(offsetY+gap,rect.top-gap-Math.min(host.scrollHeight,height)):Math.max(offsetY+gap,rect.bottom+gap))+'px';
@@ -30,18 +32,20 @@
  function schedule(){if(!frame)frame=requestAnimationFrame(resize);}
  function paint(){
   const permitted=rows.filter(available);if(!permitted.some(row=>row.key===selected))selected=permitted[0]?.key||null;
+  if(sectionCaption)sectionCaption.textContent=ru()?'Разделы':'Բաժիններ';
   for(const row of rows){const visible=available(row),active=visible&&row.key===selected;
-   row.section.hidden=!visible;row.category.hidden=!visible;row.category.textContent=title(row);row.heading.textContent=title(row);
+   row.section.hidden=!visible;row.category.hidden=!visible;row.category.textContent=title(row);row.heading.textContent=(ru()?'Подразделы · ':'Ենթաբաժիններ · ')+title(row);row.heading.hidden=!active;
    row.category.setAttribute('aria-selected',String(active));row.category.tabIndex=active?0:-1;row.panel.hidden=!active;
    const shown=row.buttons.filter(button=>!button.hidden);for(const button of row.buttons)button.classList.toggle('admin-menu-destination-wide',shown.length%2===1&&shown.at(-1)===button);
   }
   const offers=document.querySelector('[data-tab="offers"]');if(offers){offers.dataset.i18nSkip='true';offers.textContent=ru()?'Специальные предложения':'Հատուկ առաջարկներ';}
   schedule();
  }
- function choose(key,{focus=false}={}){const row=rows.find(item=>item.key===key);if(!row||!available(row))return;selected=key;paint();if(focus)row.category.focus();}
+ function choose(key,{focus=false}={}){const row=rows.find(item=>item.key===key);if(!row||!available(row))return;selected=key;paint();host.scrollTop=0;if(focus)row.category.focus();}
  function mount(){
   if(mounted)return;mounted=true;menu.classList.add('admin-category-menu');host.classList.add('admin-category-panel');
-  const categories=document.createElement('div');categories.className='admin-menu-categories';categories.setAttribute('role','tablist');categories.dataset.i18nSkip='true';host.prepend(categories);
+  const picker=document.createElement('div');picker.className='admin-menu-section-picker';sectionCaption=document.createElement('p');sectionCaption.className='admin-menu-caption';sectionCaption.dataset.i18nSkip='true';
+  const categories=document.createElement('div');categories.className='admin-menu-categories';categories.setAttribute('role','tablist');categories.dataset.i18nSkip='true';picker.append(sectionCaption,categories);host.prepend(picker);
   for(const definition of definitions){
    let heading=document.getElementById(definition.heading),section=heading?.closest('.admin-nav-group');
    if(!section){section=document.createElement('section');section.className='admin-nav-group';heading=document.createElement('h3');heading.id=definition.heading;section.append(heading);host.append(section);}

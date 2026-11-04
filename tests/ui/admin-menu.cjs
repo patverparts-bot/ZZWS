@@ -46,7 +46,7 @@ const menuSelector='#adminMoreMenu',panelSelector='#adminMoreMenu > .admin-more-
   return geometry;
  }
  async function categoryGeometry(page,label,expectedCount){
-  const tiles=await page.locator('.admin-menu-category').evaluateAll(nodes=>nodes.filter(node=>!node.hidden).map(node=>{const r=node.getBoundingClientRect();return {key:node.dataset.menuCategory,width:r.width,height:r.height,top:r.top,left:r.left,clientWidth:node.clientWidth,scrollWidth:node.scrollWidth,clientHeight:node.clientHeight,scrollHeight:node.scrollHeight,tone:node.dataset.actionTone||null,text:node.textContent.trim()};}));
+  const tiles=await page.locator('.admin-menu-category').evaluateAll(nodes=>nodes.filter(node=>!node.hidden).map(node=>{const r=node.getBoundingClientRect();return {key:node.dataset.menuCategory,width:r.width,height:r.height,top:r.top,left:r.left,right:r.right,clientWidth:node.clientWidth,scrollWidth:node.scrollWidth,clientHeight:node.clientHeight,scrollHeight:node.scrollHeight,tone:node.dataset.actionTone||null,text:node.textContent.trim()};}));
   assert.equal(tiles.length,expectedCount,label+': permitted category count');
   const widths=tiles.map(tile=>tile.width),heights=tiles.map(tile=>tile.height);
   assert.ok(Math.max(...widths)-Math.min(...widths)<=1,label+': category widths are equal');assert.ok(Math.max(...heights)-Math.min(...heights)<=1,label+': category heights are equal');
@@ -64,12 +64,20 @@ const menuSelector='#adminMoreMenu',panelSelector='#adminMoreMenu > .admin-more-
   assert.deepEqual(await panel.locator(':scope > [data-tab]').evaluateAll(nodes=>nodes.filter(node=>!node.hidden).map(node=>node.dataset.tab)),expected,label+': semantic destinations '+key);
   const sizes=await panel.evaluate(node=>{const s=getComputedStyle(node);return {inner:node.clientWidth-parseFloat(s.paddingLeft)-parseFloat(s.paddingRight),clientHeight:node.clientHeight,scrollHeight:node.scrollHeight,overflowY:s.overflowY};});
   if(sizes.scrollHeight>sizes.clientHeight+1)assert.ok(['auto','scroll'].includes(sizes.overflowY),label+': overflow remains scrollable');
+  const alignment=await panel.evaluate(node=>{const categories=document.querySelector('.admin-menu-categories').getBoundingClientRect(),rows=[...node.querySelectorAll(':scope>[data-tab]:not([hidden])')].map(button=>{const r=button.getBoundingClientRect();return {left:r.left,right:r.right,width:r.width,height:r.height,wide:button.classList.contains('admin-menu-destination-wide')};}),top=[...document.querySelectorAll('.admin-menu-category:not([hidden])')].map(button=>{const r=button.getBoundingClientRect();return {left:r.left,right:r.right,width:r.width,height:r.height};});return {left:categories.left,right:categories.right,top,rows,caption:document.querySelector('.admin-menu-caption').textContent,heading:node.previousElementSibling.textContent};});
+  assert.ok(alignment.caption&&alignment.heading,label+': sections and selected subsections have separate captions');
+  for(const [index,tile]of alignment.rows.entries()){
+   const top=alignment.top[index%2]||alignment.top[0];
+   assert.ok(Math.abs(tile.left-(tile.wide?alignment.left:top.left))<=1,label+': subsection left frame aligns with section grid');
+   assert.ok(Math.abs(tile.right-(tile.wide?alignment.right:top.right))<=1,label+': subsection right frame aligns with section grid');
+   assert.ok(tile.height>=44,label+': subsection remains a touch target');
+  }
   const last=panel.locator(':scope > [data-tab]:not([hidden])').last();
   if(expected.length%2===1){assert.equal(await last.evaluate(node=>node.classList.contains('admin-menu-destination-wide')),true,label+': last odd destination spans grid');const box=await last.boundingBox();assert.ok(Math.abs(box.width-sizes.inner)<=1,label+': last odd destination is full width');}
   else assert.equal(await panel.locator(':scope > .admin-menu-destination-wide:not([hidden])').count(),0,label+': even destination count has no special wide row');
   await last.scrollIntoViewIfNeeded();await frames(page);
-  const clipping=await last.evaluate(node=>{const p=node.parentElement.getBoundingClientRect(),r=node.getBoundingClientRect();return {horizontal:node.scrollWidth>node.clientWidth+1,text:node.scrollHeight>node.clientHeight+1,reachable:r.top>=p.top-1&&r.bottom<=p.bottom+1};});
-  assert.equal(clipping.horizontal,false,label+': destination text does not overflow horizontally');assert.equal(clipping.text,false,label+': destination text fits its button');assert.equal(clipping.reachable,true,label+': last destination can be reached within scroll panel');
+  const clipping=await last.evaluate(node=>{const p=node.closest('.admin-category-panel').getBoundingClientRect(),r=node.getBoundingClientRect(),header=document.querySelector('.admin-menu-section-picker').getBoundingClientRect();return {horizontal:node.scrollWidth>node.clientWidth+1,text:node.scrollHeight>node.clientHeight+1,reachable:r.top>=Math.max(p.top,header.bottom)-1&&r.bottom<=p.bottom+1,top:r.top,bottom:r.bottom,panelTop:p.top,panelBottom:p.bottom,headerBottom:header.bottom};});
+  assert.equal(clipping.horizontal,false,label+': destination text does not overflow horizontally');assert.equal(clipping.text,false,label+': destination text fits its button');assert.equal(clipping.reachable,true,label+': last destination can be reached within scroll panel '+JSON.stringify(clipping));
   await bounds(page,label);return expected;
  }
  try{
@@ -102,7 +110,7 @@ const menuSelector='#adminMoreMenu',panelSelector='#adminMoreMenu > .admin-more-
   const owner=sessions.owner.page;
   for(const embedded of [false,true]){
    if(embedded){await owner.addStyleTag({content:fs.readFileSync(path.join(root,'android/assets/partner-admin.css'),'utf8')});await owner.evaluate(()=>document.body.classList.add('zzws-partner-admin'));}
-   for(const language of ['hy','ru'])for(const viewport of [{width:1440,height:1000},{width:390,height:844},{width:320,height:640}]){
+   for(const language of ['hy','ru'])for(const viewport of [{width:1440,height:1000},{width:390,height:844},{width:320,height:640},{width:240,height:640},{width:844,height:390}]){
     await owner.setViewportSize(viewport);await owner.evaluate(value=>ZZWS_I18N.setLanguage(value),language);await open(owner);
     const label=(embedded?'embedded':'web')+' '+language+' '+viewport.width+'x'+viewport.height;
     await categoryGeometry(owner,label,6);for(const key of Object.keys(groups))await groupPanel(owner,key,'owner',label+' '+key);
