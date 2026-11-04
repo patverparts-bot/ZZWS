@@ -13,13 +13,14 @@ import {storefrontSettings,storefrontDTO,storefrontRanking} from './storefront.m
 import {assistantRoutes} from './assistant-routes.mjs';
 import {assistantHistoryRoutes} from './assistant-history.mjs';
 import assistantKnowledge from './assistant-knowledge.json' with {type:'json'};
+import {productSpecificationRoutes,getKnowledgeOverrides} from './product-specification-refresh.mjs';
 import assistantPublicCatalog from './assistant-public-catalog.json' with {type:'json'};
 import {invitationEmailRoutes} from './invitation-email.mjs';
 import {bulletinRoutes} from './bulletin-routes.mjs';
 import {currentOffer,offerStamp,offerDTO} from './special-offers.mjs';
 import {reportRoutes} from './report-routes.mjs';
 import {mobileRoutes} from './mobile-routes.mjs';
-import {userTemplate,parseUserSheet} from './user-sheet.mjs';
+import {userTemplate,parseUserSheet,categoryChoices} from './user-sheet.mjs';
 import {workbookColumns,catalogMetadataMerge,priceVersionLabel} from './workbook-layout.mjs';
 import {pricePreview} from './price-preview.mjs';
 import {handleStartWebhook,startReplyTransport} from './telegram-start.mjs';
@@ -305,15 +306,17 @@ async function handleRequest(req:Request){
     const warehouseResponse=await warehouseRoutes({path,req,user,table,query,body,json,fail,audit});if(warehouseResponse)return warehouseResponse;
     const controlResponse=await catalogControlRoutes({path,req,user,table,query,body,json,fail,audit,service,current});if(controlResponse)return controlResponse;
     const historyResponse=await assistantHistoryRoutes({path,req,user,body,table,query,json,fail,audit,service});if(historyResponse)return historyResponse;
-    const assistantResponse=await assistantRoutes({path,req,user,body,current,project,json,fail,table,query,knowledge:assistantKnowledge,publicCatalog:assistantPublicCatalog,options:{apiKey:Deno.env.get('ZZWS_ASSISTANT_GEMINI_KEY'),freeTierConfirmed:Deno.env.get('ZZWS_ASSISTANT_GEMINI_FREE_TIER')==='true'}});if(assistantResponse)return assistantResponse;
+    const specificationResponse=await productSpecificationRoutes({path,req,user,body:()=>body(req),table,query,json,fail,current,project,service,baseline:assistantKnowledge});if(specificationResponse)return specificationResponse;
+    const knowledgeSnapshot=(['assistant/chat','dealer/facts','dealer/details','dealer/bundles','catalog/stock-replacements','admin/orders/replacements','orders/replacements'].includes(path)||path.startsWith('dealer/buyer-offers/'))?await getKnowledgeOverrides({table,query,baseline:assistantKnowledge}):assistantKnowledge;
+    const assistantResponse=await assistantRoutes({path,req,user,body,current,project,json,fail,table,query,knowledge:knowledgeSnapshot,publicCatalog:assistantPublicCatalog,options:{apiKey:Deno.env.get('ZZWS_ASSISTANT_GEMINI_KEY'),freeTierConfirmed:Deno.env.get('ZZWS_ASSISTANT_GEMINI_FREE_TIER')==='true'}});if(assistantResponse)return assistantResponse;
     const receiptResponse=await receiptRoutes({path,req,user,service,table,query,body,json,fail});if(receiptResponse)return receiptResponse;
     const invitationResponse=await invitationEmailRoutes({path,req,user,service,table,query,body,json,fail});if(invitationResponse)return invitationResponse;
     const reportResponse=await reportRoutes({path,req,user,service,table,query,body,json,current,project,rowsFromBuffer,fail});
     if(reportResponse)return reportResponse;
-    const buyerOfferResponse=await buyerOfferRoutes({path,req,user,body,current,project,table,query,json,fail,service,headers,hash,knowledge:assistantKnowledge});if(buyerOfferResponse)return buyerOfferResponse;
-    const dealerResponse=await dealerRoutes({path,req,user,body,current,project,table,query,json,fail,knowledge:assistantKnowledge});if(dealerResponse)return dealerResponse;
+    const buyerOfferResponse=await buyerOfferRoutes({path,req,user,body,current,project,table,query,json,fail,service,headers,hash,knowledge:knowledgeSnapshot});if(buyerOfferResponse)return buyerOfferResponse;
+    const dealerResponse=await dealerRoutes({path,req,user,body,current,project,table,query,json,fail,knowledge:knowledgeSnapshot});if(dealerResponse)return dealerResponse;
     const proposalResponse=await proposalRoutes({path,req,user,body,current,project,table,query,json,fail,random,digest,service});if(proposalResponse)return proposalResponse;
-    const replacementResponse=await replacementRoutes({path,req,user,body,current,project,table,query,json,fail,knowledge:assistantKnowledge});if(replacementResponse)return replacementResponse;
+    const replacementResponse=await replacementRoutes({path,req,user,body,current,project,table,query,json,fail,knowledge:knowledgeSnapshot});if(replacementResponse)return replacementResponse;
     const templateResponse=await adminTemplateRoutes({path,req,user,body,current,project,table,query,json,fail,service,audit});if(templateResponse)return templateResponse;
     const orderResponse=await orderRoutes({path,req,user,service,table,query,body,json,file,current,project,rowsFromBuffer,draft,fail});
     if(orderResponse)return orderResponse;
@@ -355,7 +358,7 @@ async function handleRequest(req:Request){
       if(path==='catalog'){
         const rules=popularityRules(settings.catalog_controls);
         const [rows,banners]=await Promise.all([controls.popular||controls.personalPopular?query(service.rpc('zzws_catalog_popularity',{p_user:user.id,p_days:rules.days})):Promise.resolve([]),storefrontRanking(service,query,products,settings.catalog_controls,user.id,rules.days)]);
-        return json({products,version,updated,controls,account:user,...(user.role==='admin'?{warehousePolicy:{mainWarehouses:v.mainWarehouses,priority:v.warehousePriority,revision:v.warehouseRevision}}:{}),storefront:storefrontDTO(products,banners,settings.catalog_controls),specialOffer:controls.promo?offerDTO(offer,products,user.role==='admin'):null,popularityRules:rules,popularity:visiblePopularity(rows,products,controls,settings.catalog_controls,user.id)});
+        return json({products,version,updated,controls,account:user,...(user.role==='admin'?{priceCategories:categoryChoices(v.rules),warehousePolicy:{mainWarehouses:v.mainWarehouses,priority:v.warehousePriority,revision:v.warehouseRevision}}:{}),storefront:storefrontDTO(products,banners,settings.catalog_controls),specialOffer:controls.promo?offerDTO(offer,products,user.role==='admin'):null,popularityRules:rules,popularity:visiblePopularity(rows,products,controls,settings.catalog_controls,user.id)});
       }
       const rows=[['Ստացող',user.client,'Տարբերակ',priceVersionLabel(v.created)],['Արտիկուլ','Բրենդ','Կատեգորիա','Անվանում','Մանրածախ','Ձեր գինը','Առկայություն',...(user.role==='admin'?['KP']:[])],
         ...products.map((p:any)=>[p.articul,p.brand,p.category,p.name,p.retail,p.wholesale,p.stockStatus,...(user.role==='admin'?[p.kpPrice]:[])])];

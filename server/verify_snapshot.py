@@ -12,6 +12,8 @@ import re
 import sqlite3
 import sys
 from decimal import Decimal, ROUND_CEILING, ROUND_HALF_UP
+from datetime import datetime
+from uuid import UUID
 
 
 def verify_buyer_offers(tables, users, versions):
@@ -152,6 +154,89 @@ def verify_maintenance(tables):
     return len(archives)
 
 
+def verify_proposals(tables, users):
+    names = {'proposals', 'proposal_cart', 'proposal_reads'}
+    if not names.intersection(tables):
+        return 0  # Older application snapshots did not include these tables.
+    if not names.issubset(tables):
+        raise ValueError('proposal_tables_missing')
+    offers = {row.get('token_hash'): row for row in tables['proposals']}
+    if len(offers) != len(tables['proposals']) or any(not isinstance(key, str) or not key for key in offers):
+        raise ValueError('proposal_duplicate_identity')
+    accounts = {row['id']: row for row in tables['users']}
+    for offer in offers.values():
+        if offer.get('owner_id') not in users:
+            raise ValueError('missing_proposal_owner')
+        if offer.get('customer_id') and offer['customer_id'] not in users:
+            raise ValueError('missing_proposal_customer')
+    for name in ['proposal_cart', 'proposal_reads']:
+        identities = set()
+        for row in tables[name]:
+            user = row.get('user_id')
+            if user not in users:
+                raise ValueError('missing_owner')
+            offer = offers.get(row.get('token_hash'))
+            if offer is None:
+                raise ValueError('missing_proposal')
+            receiver = accounts[user].get('customer_id') or user
+            if offer.get('customer_id') and offer['customer_id'] != receiver:
+                raise ValueError('proposal_receiver_mismatch')
+            key = (user, row.get('articul') if name == 'proposal_cart' else row.get('token_hash'))
+            if key in identities:
+                raise ValueError('proposal_duplicate_identity')
+            identities.add(key)
+    return len(offers)
+
+
+def verify_product_specifications(tables):
+    names = {'product_specifications', 'specification_refresh_jobs'}
+    if not names.intersection(tables):
+        return 0, 0
+    if not names.issubset(tables):
+        raise ValueError('specification_tables_missing')
+    identities = set()
+    for row in tables['product_specifications']:
+        sku = row.get('articul')
+        if (not isinstance(sku, str) or not 1 <= len(sku) <= 100
+                or sku in {'__proto__', 'constructor', 'prototype'} or sku in identities):
+            raise ValueError('specification_identity_invalid')
+        identities.add(sku)
+        if (not isinstance(row.get('name'), str) or not 1 <= len(row['name']) <= 500
+                or not isinstance(row.get('source_url'), str) or not 1 <= len(row['source_url']) <= 2048
+                or not isinstance(row.get('provider'), str) or not re.fullmatch(r'[a-z][a-z0-9_-]{0,31}', row['provider'])
+                or not isinstance(row.get('specifications'), list) or not 1 <= len(row['specifications']) <= 200):
+            raise ValueError('specification_content_invalid')
+        try:
+            datetime.fromisoformat(row['checked_at'])
+        except (KeyError, ValueError, TypeError):
+            raise ValueError('specification_content_invalid')
+    identities = set()
+    for row in tables['specification_refresh_jobs']:
+        try:
+            UUID(row['id'])
+            UUID(row['owner'])
+        except (KeyError, ValueError, TypeError, AttributeError):
+            raise ValueError('specification_refresh_identity_invalid')
+        if row['id'] in identities:
+            raise ValueError('specification_refresh_identity_invalid')
+        identities.add(row['id'])
+        # owner is an audit UUID without an FK; historical deleted users are valid.
+        if (row.get('state') not in {'completed', 'cancelled'}
+                or row.get('lease') is not None or row.get('lease_until') is not None):
+            raise ValueError('specification_refresh_revived')
+        counts = [row.get(key) for key in ('total', 'processed', 'cursor', 'refreshed', 'retained')]
+        if any(not isinstance(value, int) or isinstance(value, bool) for value in counts):
+            raise ValueError('specification_refresh_progress_invalid')
+        total, processed, cursor, refreshed, retained = counts
+        if (not 1 <= total <= 100000 or min(processed, cursor, refreshed, retained) < 0
+                or processed != cursor or processed != refreshed + retained or processed > total
+                or not isinstance(row.get('queue'), list) or len(row['queue']) != total
+                or not isinstance(row.get('errors'), list) or len(row['errors']) > 30
+                or not isinstance(row.get('provider'), str) or not re.fullmatch(r'[a-z][a-z0-9_-]{0,31}', row['provider'])):
+            raise ValueError('specification_refresh_progress_invalid')
+    return len(tables['product_specifications']), len(tables['specification_refresh_jobs'])
+
+
 def verify(snapshot):
     if not isinstance(snapshot, dict) or snapshot.get('format') != 'zzws-application-backup-v1':
         raise ValueError('invalid_manifest')
@@ -171,6 +256,11 @@ def verify(snapshot):
     for key, ids in [('users', users), ('versions', versions), ('orders', orders)]:
         if len(ids) != len(tables[key]):
             raise ValueError('duplicate_identity')
+    for row in tables['users']:
+        if row.get('customer_id') and row['customer_id'] not in users:
+            raise ValueError('missing_company')
+    proposals_verified = verify_proposals(tables, users)
+    specifications_verified, specification_jobs_verified = verify_product_specifications(tables)
     for row in tables['state']:
         if row.get('version') and row['version'] not in versions:
             raise ValueError('missing_price_version')
@@ -213,14 +303,14 @@ def verify(snapshot):
                 raise ValueError('restore_roundtrip_mismatch')
         if db.execute('pragma integrity_check').fetchone()[0] != 'ok':
             raise ValueError('restore_integrity_failed')
-    return {'ok': True, 'scope': 'application-data-only', 'created': snapshot.get('created'), 'tables': len(tables), 'rows': sum(map(len, tables.values())), 'orderTotalsVerified': checked, 'maintenanceArchivesVerified': maintenance_verified, 'buyerOffersVerified': buyer_offers_verified}
+    return {'ok': True, 'scope': 'application-data-only', 'created': snapshot.get('created'), 'tables': len(tables), 'rows': sum(map(len, tables.values())), 'orderTotalsVerified': checked, 'maintenanceArchivesVerified': maintenance_verified, 'buyerOffersVerified': buyer_offers_verified, 'proposalRowsVerified': proposals_verified, 'productSpecificationsVerified': specifications_verified, 'specificationRefreshJobsVerified': specification_jobs_verified}
 
 
 if __name__ == '__main__':
     try:
         result = verify(json.load(sys.stdin))
     except Exception as error:
-        safe_codes = {'invalid_manifest', 'missing_tables', 'invalid_rows', 'duplicate_identity', 'missing_price_version', 'missing_order_user', 'invalid_order_lines', 'invalid_order_amount', 'order_total_mismatch', 'missing_owner', 'missing_event_order', 'restore_roundtrip_mismatch', 'restore_integrity_failed', 'maintenance_tables_missing', 'maintenance_owner_or_freeze_invalid', 'maintenance_grants_revived', 'maintenance_duplicate_identity', 'maintenance_job_revived', 'maintenance_archive_missing', 'maintenance_lease_revived', 'maintenance_archive_text_missing', 'maintenance_archive_checksum', 'maintenance_archive_format', 'maintenance_archive_job_missing', 'buyer_offer_identity_invalid', 'buyer_offer_number_invalid', 'buyer_offer_contact_invalid', 'buyer_offer_state_invalid', 'buyer_offer_lines_invalid', 'buyer_offer_amount_invalid'}
+        safe_codes = {'invalid_manifest', 'missing_tables', 'invalid_rows', 'duplicate_identity', 'missing_price_version', 'missing_order_user', 'invalid_order_lines', 'invalid_order_amount', 'order_total_mismatch', 'missing_owner', 'missing_event_order', 'restore_roundtrip_mismatch', 'restore_integrity_failed', 'maintenance_tables_missing', 'maintenance_owner_or_freeze_invalid', 'maintenance_grants_revived', 'maintenance_duplicate_identity', 'maintenance_job_revived', 'maintenance_archive_missing', 'maintenance_lease_revived', 'maintenance_archive_text_missing', 'maintenance_archive_checksum', 'maintenance_archive_format', 'maintenance_archive_job_missing', 'buyer_offer_identity_invalid', 'buyer_offer_contact_invalid', 'buyer_offer_state_invalid', 'buyer_offer_lines_invalid', 'buyer_offer_amount_invalid', 'missing_company', 'proposal_tables_missing', 'proposal_duplicate_identity', 'missing_proposal_owner', 'missing_proposal_customer', 'missing_proposal', 'proposal_receiver_mismatch', 'specification_tables_missing', 'specification_identity_invalid', 'specification_content_invalid', 'specification_refresh_identity_invalid', 'specification_refresh_revived', 'specification_refresh_progress_invalid', 'buyer_offer_number_invalid'}
         code = str(error) if isinstance(error, ValueError) and str(error) in safe_codes else 'snapshot_rehearsal_failed'
         print(json.dumps({'ok': False, 'error': code, 'errorType': type(error).__name__}))
         sys.exit(1)

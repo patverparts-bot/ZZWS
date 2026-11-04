@@ -224,6 +224,81 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
   object-fit: contain;
   border-radius: 0;
 }
+/* Warranty ink seal: card photos and enlarged photos only, never list thumbnails. */
+.product-warranty-stamp {
+  --warranty-size: 82px;
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: var(--warranty-size);
+  height: var(--warranty-size);
+  box-sizing: border-box;
+  padding: 9px 5px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .94);
+  color: #245780;
+  font-family: 'Inter', sans-serif;
+  text-align: center;
+  line-height: 1;
+  transform: rotate(-10deg);
+  pointer-events: none;
+}
+.product-warranty-stamp::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px dashed currentColor;
+  border-radius: inherit;
+  opacity: .65;
+}
+.product-warranty-label {
+  font-size: calc(var(--warranty-size) * .105);
+  font-weight: 750;
+  letter-spacing: .025em;
+  text-transform: uppercase;
+}
+.product-warranty-value {
+  margin-block: 3px 2px;
+  font-size: calc(var(--warranty-size) * .38);
+  font-weight: 800;
+  letter-spacing: -.04em;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.product-warranty-unit {
+  font-size: calc(var(--warranty-size) * .115);
+  font-weight: 650;
+}
+#catalogTable .product-warranty-stamp { display: none; }
+.desktop-photo-preview .product-warranty-stamp {
+  --warranty-size: 112px;
+  right: 24px;
+  bottom: 24px;
+}
+.product-technical-photo { position: relative; }
+.product-technical-photo .product-warranty-stamp {
+  --warranty-size: 100px;
+  right: 20px;
+  bottom: 20px;
+}
+@media (max-width: 767px) {
+  .sf-product-photo .product-warranty-stamp {
+    --warranty-size: 64px;
+    right: 7px;
+    bottom: 7px;
+    padding: 8px 4px;
+  }
+  .product-technical-photo .product-warranty-stamp {
+    --warranty-size: 82px;
+    right: 12px;
+    bottom: 12px;
+  }
+}
 @media (min-width: 768px) and (hover: hover) {
   .product-img-container:hover .product-img.image-loaded {
     transform: none;

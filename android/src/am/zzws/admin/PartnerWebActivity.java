@@ -19,7 +19,7 @@ import java.util.concurrent.Executors;
 
 /** Authenticated, origin-pinned tools. There is deliberately no JavaScript interface. */
 public class PartnerWebActivity extends ComponentActivity {
- private static final String SITE="https://patverparts-bot.github.io/ZZWS/";
+ private static final String SITE=PartnerPolicyKt.PARTNER_SITE;
  private final Handler main=new Handler();
  private final java.util.concurrent.ExecutorService io=Executors.newSingleThreadExecutor();
  private WebView web;private TextView status;private ProgressBar progress;private boolean destroyed,ready,leaving,backPending;
@@ -41,14 +41,13 @@ public class PartnerWebActivity extends ComponentActivity {
   progress=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);root.addView(progress,new LinearLayout.LayoutParams(-1,5));
   status=new TextView(this);status.setPadding(16,8,16,8);status.setText(L10n.t("Տվյալները բեռնվում են…"));root.addView(status);
   web=createWebView();root.addView(web,new LinearLayout.LayoutParams(-1,0,1));setContentView(root);
-  WebSettings settings=web.getSettings();settings.setJavaScriptEnabled(true);settings.setDomStorageEnabled(true);settings.setAllowFileAccess(false);settings.setAllowContentAccess(true);settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);settings.setSupportMultipleWindows(false);settings.setJavaScriptCanOpenWindowsAutomatically(false);settings.setGeolocationEnabled(false);settings.setSafeBrowsingEnabled(true);settings.setSaveFormData(false);settings.setUserAgentString(settings.getUserAgentString()+" ZZWS/7.1.10");
+  WebSettings settings=web.getSettings();settings.setJavaScriptEnabled(true);settings.setDomStorageEnabled(true);settings.setAllowFileAccess(false);settings.setAllowContentAccess(true);settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);settings.setSupportMultipleWindows(false);settings.setJavaScriptCanOpenWindowsAutomatically(false);settings.setGeolocationEnabled(false);settings.setSafeBrowsingEnabled(true);settings.setSaveFormData(false);settings.setUserAgentString(settings.getUserAgentString()+" ZZWS/"+BuildConfig.VERSION_NAME);
   CookieManager.getInstance().setAcceptThirdPartyCookies(web,false);
   web.setWebViewClient(new WebViewClient(){
    @Override public WebResourceResponse shouldInterceptRequest(WebView view,WebResourceRequest request){
     // Ship this tool's fix with the APK, independently of the site's publication schedule.
-    String assetPath=request.getUrl().getPath();
-    if("GET".equals(request.getMethod())&&PartnerPolicyKt.trustedPartnerPage(request.getUrl().toString())&&("/ZZWS/js/dealer-tools.js".equals(assetPath)||"/ZZWS/js/bundle-policy.js".equals(assetPath))){
-     String asset=assetPath.substring(assetPath.lastIndexOf('/')+1);
+    String asset=PartnerPolicyKt.partnerBundledAsset(request.getUrl().toString());
+    if("GET".equals(request.getMethod())&&asset!=null){
      try{return new WebResourceResponse("application/javascript","UTF-8",getAssets().open(asset));}catch(IOException ignored){}
     }
     return null;
@@ -61,10 +60,10 @@ public class PartnerWebActivity extends ComponentActivity {
    @Override public void onPageStarted(WebView view,String url,android.graphics.Bitmap favicon){if(destroyed||leaving)return;if(!PartnerPolicyKt.trustedPartnerPage(url)){view.stopLoading();status.setText(L10n.t("Հասցեն թույլատրված չէ"));return;}progress.setVisibility(View.VISIBLE);}
    @Override public void onPageFinished(WebView view,String url){
     if(!PartnerPolicyKt.trustedPartnerPage(url)||destroyed||leaving)return;
-    if(!ready&&!Uri.parse(url).getPath().startsWith("/ZZWS/admin/")&&Uri.parse(url).getQueryParameter("partner")==null)return;
+    if(!ready&&!PartnerPolicyKt.partnerAdminPage(url)&&Uri.parse(url).getQueryParameter("partner")==null)return;
     ready=true;progress.setVisibility(View.GONE);status.setVisibility(View.GONE);
     injectNavigation(view);
-    if(Uri.parse(url).getPath().startsWith("/ZZWS/admin/")){applyAdminStyle(view);applyAdminLabels(view);}
+    if(PartnerPolicyKt.partnerAdminPage(url)){applyAdminStyle(view);applyAdminLabels(view);}
     String requestedStatus=getIntent().getStringExtra("zzws_status");
     if(feature==PartnerFeature.ORDERS&&!orderStatusApplied&&NativeNavigationKt.validOrderStatus(requestedStatus==null?"":requestedStatus)){
      orderStatusApplied=true;
@@ -120,7 +119,7 @@ public class PartnerWebActivity extends ComponentActivity {
   if(!PartnerPolicyKt.trustedPartnerPage(target))return false;
   // Authentication HTML uses the catalogue origin; it is never a tool destination.
   Uri destination=Uri.parse(target);
-  return current!=null&&!Uri.parse(current).getPath().startsWith("/ZZWS/admin/")&&(destination.getQueryParameter("partner")!=null||destination.getPath().startsWith("/ZZWS/admin/"));
+  return current!=null&&!PartnerPolicyKt.partnerAdminPage(current)&&(destination.getQueryParameter("partner")!=null||PartnerPolicyKt.partnerAdminPage(target));
  }
  private void navigateBack(){
   if(destroyed||leaving||backPending)return;
@@ -142,7 +141,7 @@ public class PartnerWebActivity extends ComponentActivity {
  private void print(){if(destroyed||leaving||web==null||!ready||!PartnerPolicyKt.trustedPartnerPage(web.getUrl()))return;((PrintManager)getSystemService(PRINT_SERVICE)).print("ZZWS",web.createPrintDocumentAdapter("ZZWS"),null);}
  private void download(String url,String disposition,String mime){
   if(destroyed||leaving||web==null||downloadBusy||!PartnerPolicyKt.trustedPartnerPage(web.getUrl()))return;
-  if(url.startsWith("blob:https://patverparts-bot.github.io/")){
+  if(PartnerPolicyKt.trustedPartnerBlob(url)){
    downloadUrl=url;downloadMime=mime==null?"application/octet-stream":mime;downloadName=URLUtil.guessFileName("export",disposition,downloadMime);chooseDestination();
   }else if(url.startsWith("https://"))external(url);
  }

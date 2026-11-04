@@ -1,7 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import XLSX from '../supabase/functions/zzws-api/vendor/xlsx.mjs';
-import {buyerPriceFloor,buyerDetails,buyerInputLines,buyerOfferWorkbook,buyerPublicDetails} from '../supabase/functions/zzws-api/buyer-offers.mjs';
+import {buyerPriceFloor,buyerDetails,buyerInputLines,buyerOfferWorkbook,buyerPublicDetails,buyerPublicRetail} from '../supabase/functions/zzws-api/buyer-offers.mjs';
+
+test('buyer retail promotion comes only from bounded public retail, never procurement promotions',()=>{
+ assert.deepEqual(buyerPublicRetail({retail:120000},{base:150000,ws:100000,kpPromo:80000}),{retail:120000,retailPromotion:{previousRetail:150000}});
+ assert.deepEqual(buyerPublicRetail({retail:120000,isWholesalePromo:true,kpIsPromo:true},{base:120000,ws:100000,kpPromo:80000}),{retail:120000,retailPromotion:null});
+ for(const base of [0,-1,120000,110000,Infinity,1e10+1,'150000'])assert.equal(buyerPublicRetail({retail:120000},{base}).retailPromotion,null);
+ for(const retail of [0,-1,Infinity,1e10+1,'120000'])assert.deepEqual(buyerPublicRetail({retail},{base:150000}),{retail:null,retailPromotion:null});
+ assert.deepEqual(buyerPublicRetail({retail:120000},{base:150000,privateNotes:'internal',isWholesalePromo:true}),{retail:120000,retailPromotion:{previousRetail:150000}});
+});
 
 test('buyer floor is markup on cost, rounds up whole AMD, and avoids floating-point underpricing',()=>{
  assert.equal(buyerPriceFloor(100000,15),115000);

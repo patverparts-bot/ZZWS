@@ -58,6 +58,12 @@ function chosenCategory(user,requested,rules){
  if(typeof id!=='string'||!Object.hasOwn(rules,id)||user.role!=='admin'&&requested!=null&&(requested==='WS'?'Dealers':requested)!==id)throw invalid('Գնային կատեգորիան հասանելի չէ։ Թարմացրեք կատալոգը։');
  return id;
 }
+export function buyerPublicRetail(product,source){
+ const retail=Number.isFinite(product.retail)&&product.retail>0&&product.retail<=1e10?product.retail:null;
+ // The source base column is regular public retail. KP/ws promotions are procurement terms.
+ const previous=source?.base;
+ return {retail,retailPromotion:retail!==null&&Number.isFinite(previous)&&previous>retail&&previous<=1e10?{previousRetail:previous}:null};
+}
 function productsFor(c,catalog,offer){
  // Current account access is always reevaluated; setup never grants a broader catalogue.
  const projected=c.project(catalog.products,c.user,catalog.rules,{forOrder:true,mainWarehouses:catalog.mainWarehouses});
@@ -68,8 +74,12 @@ function productsFor(c,catalog,offer){
   if(!Number.isFinite(cost)||cost<=0||cost>1e10||c.user.role==='admin'&&policy.hideAboveRetail&&source.retail>0&&cost>source.retail)return [];
   const minimum=buyerPriceFloor(cost,Number(offer.markup_percent));
   if(minimum>1e10)return [];
-  return [{product:p,cost,minimum}];
+  return [{product:p,cost,minimum,publicRetail:buyerPublicRetail(p,source)}];
  });
+}
+function publicBuyerCatalog(c,catalog,offer){
+ const products=productsFor(c,catalog,offer).map(({product:p,minimum,publicRetail})=>({articul:p.articul,name:p.name,brand:p.brand,category:p.category,...publicRetail,salePrice:Math.max(Math.ceil(publicRetail.retail||0),minimum),stockAvailable:p.stockAvailable===true}));
+ return {id:offer.id,buyer:{name:offer.buyer_name,phone:offer.buyer_phone},version:catalog.id+':'+catalog.rulesRevision,products};
 }
 function quoteFor(c,catalog,offer,input){
  const bySku=new Map(productsFor(c,catalog,offer).map(p=>[p.product.articul,p]));
@@ -81,7 +91,7 @@ function quoteFor(c,catalog,offer,input){
   const value=costParts(entry.cost);if(value.d>costDenominator){costTotal*=value.d/costDenominator;costDenominator=value.d;}
   costTotal+=value.n*BigInt(row.qty)*(costDenominator/value.d);
   internal.push({articul:row.articul,qty:row.qty,unitCost:entry.cost});
-  return {articul:row.articul,name:entry.product.name,brand:entry.product.brand,category:entry.product.category,qty:row.qty,salePrice:row.salePrice,amount};
+  return {articul:row.articul,name:entry.product.name,brand:entry.product.brand,category:entry.product.category,...entry.publicRetail,qty:row.qty,salePrice:row.salePrice,amount};
  });
  if(saleTotal>10000000000000000n)throw invalid('Առաջարկի գումարը չափազանց մեծ է։');
  const profitCents=saleTotal*costDenominator-costTotal*100n;
@@ -92,8 +102,10 @@ export async function buyerOfferRoutes(c){
  const {req,user,query,table,body,json,fail,current,service}=c;
  if(!user||!['admin','client'].includes(user.role)||user.needsPasswordSetup||user.needsProfileSetup||user.role==='admin'&&!user.permissions?.includes('orders:write'))fail(403,'Հասանելիությունն արգելված է');
  if(req.method!=='POST')fail(405,'Չթույլատրված գործողություն');
- const action=c.path.slice(prefix.length);if(!['options','start','catalog','details','quote','finalize','export','handoff'].includes(action))fail(404,'Բաժինը չի գտնվել');
+ const action=c.path.slice(prefix.length);if(!['options','start','resume','catalog','details','quote','finalize','export','handoff'].includes(action))fail(404,'Բաժինը չի գտնվել');
  const input=await body(req);if(!input||typeof input!=='object'||Array.isArray(input))fail(400,'Ստուգեք առաջարկի տվյալները։');
+ const ownedOffer=async id=>{if(!UUID.test(id||''))fail(404,'Առաջարկը չի գտնվել');const row=await query(table('buyer_offers').select('*').eq('id',id).eq('actor_id',user.id).maybeSingle());if(!row)fail(404,'Առաջարկը չի գտնվել');return row;};
+ const requireUnexpired=offer=>{if(Date.parse(offer.expires_at)<=Date.now())fail(409,'Աշխատանքային շրջանն ավարտված է։ Կրկին բացեք գնորդի ռեժիմը։');};
  const rpc=async(name,args)=>{const r=await service.rpc(name,args);if(r.error){if(r.error.code==='PT403')fail(403,'Հասանելիությունն արգելված է');if(r.error.code==='PT404')fail(404,'Առաջարկը չի գտնվել');if(r.error.code==='PT409'||r.error.code==='PT412'||r.error.code==='23505')fail(409,'Տվյալները փոխվել են։ Թարմացրեք առաջարկը և կրկին ստուգեք։');fail(400,'Չհաջողվեց պահպանել առաջարկը։ Ստուգեք տվյալները։');}return r.data;};
  try{
   if(action==='options'){
@@ -101,18 +113,30 @@ export async function buyerOfferRoutes(c){
    return json({priceCategories:user.role==='admin'?choices:choices.filter(row=>row.id===id),defaultPriceCategory:id});
   }
   if(action==='start'){
-   const buyer=buyerDetails(input),v=await current(),priceCategory=chosenCategory(user,input.priceCategory,effectiveRules(v.rules));
-   const source=input.source??'catalog';if(!['catalog','cart','selection','product','bundle'].includes(source))throw invalid('Ընտրեք առաջարկի ապրանքների աղբյուրը։');
+   let setup=input;
+   if(Object.hasOwn(input,'fromOfferId')){
+    const prior=await ownedOffer(input.fromOfferId);requireUnexpired(prior);
+    if(prior.state==='handed_off')fail(409,'Առաջարկն արդեն փոխանցված է աշխատանքային զամբյուղ։');
+    // Private setup stays on the server; browser recovery stores only opaque IDs and public selections.
+    setup={buyerName:prior.buyer_name,buyerPhone:prior.buyer_phone,markupPercent:Number(prior.markup_percent),priceCategory:prior.price_category,source:prior.source};
+   }
+   const buyer=buyerDetails(setup),v=await current(),priceCategory=chosenCategory(user,setup.priceCategory,effectiveRules(v.rules));
+   const source=setup.source??'catalog';if(!['catalog','cart','selection','product','bundle'].includes(source))throw invalid('Ընտրեք առաջարկի ապրանքների աղբյուրը։');
    const baseCart=Object.create(null);
    if(source==='cart'){
     const saved=await query(table('user_memory').select('data').eq('user_id',user.id).maybeSingle());
     for(const [sku,row] of Object.entries(saved?.data?.cart||{}))if(!BAD_SKU.has(sku)&&sku.length>=1&&sku.length<=100&&Number.isSafeInteger(row?.qty)&&row.qty>0&&row.qty<=1000000)baseCart[sku]={qty:row.qty};
    }
-   const row=await query(table('buyer_offers').insert({actor_id:user.id,buyer_name:buyer.name,buyer_phone:buyer.phone,markup_percent:input.markupPercent,price_category:priceCategory,source,base_cart:baseCart}).select('id,buyer_name,buyer_phone').single());
+   const row=await query(table('buyer_offers').insert({actor_id:user.id,buyer_name:buyer.name,buyer_phone:buyer.phone,markup_percent:setup.markupPercent,price_category:priceCategory,source,base_cart:baseCart}).select('id,buyer_name,buyer_phone').single());
    return json({id:row.id,buyer});
   }
-  if(!UUID.test(input.id||''))fail(404,'Առաջարկը չի գտնվել');
-  const offer=await query(table('buyer_offers').select('*').eq('id',input.id).eq('actor_id',user.id).maybeSingle());if(!offer)fail(404,'Առաջարկը չի գտնվել');
+  const offer=await ownedOffer(input.id);
+  if(action==='resume'){
+   requireUnexpired(offer);
+   const common={id:offer.id,buyer:{name:offer.buyer_name,phone:offer.buyer_phone},source:offer.source,transferred:offer.state==='handed_off'};
+   if(offer.state!=='draft')return json({...common,phase:'final',offer:publicOffer(offer)});
+   return json({...publicBuyerCatalog(c,await current(),offer),...common,phase:'browse'});
+  }
   if(action==='export'){
    if(offer.state==='draft')fail(409,'Նախ կազմեք առաջարկը։');
    return new Response(buyerOfferWorkbook(publicOffer(offer)),{headers:{...c.headers,'Content-Type':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','Content-Disposition':'attachment; filename="ZIGZAG-Offer-'+readableNumber(offer)+'.xlsx"','Cache-Control':'no-store'}});
@@ -136,8 +160,7 @@ export async function buyerOfferRoutes(c){
    return json({items});
   }
   if(action==='catalog'){
-   const products=productsFor(c,v,offer).map(({product:p,minimum})=>{const retail=Number.isFinite(p.retail)&&p.retail>0&&p.retail<=1e10?p.retail:null;return {articul:p.articul,name:p.name,brand:p.brand,category:p.category,retail,salePrice:Math.max(Math.ceil(retail||0),minimum),stockAvailable:p.stockAvailable===true};});
-   return json({id:offer.id,buyer:{name:offer.buyer_name,phone:offer.buyer_phone},version:v.id+':'+v.rulesRevision,products});
+   return json(publicBuyerCatalog(c,v,offer));
   }
   const rows=buyerInputLines(input.lines),quote=quoteFor(c,v,offer,rows);
   if(action==='quote')return json({id:offer.id,lines:quote.lines,total:quote.total});

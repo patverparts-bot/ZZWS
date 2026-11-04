@@ -1,0 +1,32 @@
+/* Partner's embedded administration shares the native catalogue's type, cards and palette. */
+body.zzws-partner-admin {background:#F6F6F6;color:#0F172A;font:15px/1.5 system-ui,sans-serif;--primary:#1D4ED8;--accent:#2563EB}
+/* The native 48dp toolbar already supplies branding and Back. Keep the web viewport useful. */
+body.zzws-partner-admin>header,.zzws-partner-admin .admin-section-trail {display:none}
+.zzws-partner-admin>.zzws-language-bar {padding:4px 12px;min-height:0;position:static}
+.zzws-partner-admin header {background:white;color:#0F172A;border-bottom:1px solid #E2E8F0;padding:14px 16px;gap:12px;flex-wrap:wrap}
+.zzws-partner-admin header a {color:#1D4ED8;font-size:22px}
+.zzws-partner-admin main {margin:8px auto;padding:0 12px;max-width:1100px}
+.zzws-partner-admin section {border:1px solid #E2E8F0;border-radius:16px;padding:18px;margin:14px 0;background:white;box-shadow:0 2px 8px #0F172A04;min-width:0}
+.zzws-partner-admin h1 {font-size:25px;line-height:1.25}
+.zzws-partner-admin h2 {font-size:21px}
+.zzws-partner-admin h3 {font-size:17px}
+.zzws-partner-admin button {border-radius:11px;background:#1D4ED8;color:white;min-height:44px;font-size:14px;line-height:1.35;padding:11px 14px}
+.zzws-partner-admin button:disabled {opacity:.45}
+.zzws-partner-admin input:not([type=checkbox]):not([type=radio]),.zzws-partner-admin select,.zzws-partner-admin textarea {border:1px solid #CBD5E1;border-radius:11px;padding:12px;min-height:46px;font-size:16px;background:white;color:#0F172A;max-width:100%;box-sizing:border-box}
+.zzws-partner-admin input:focus-visible,.zzws-partner-admin select:focus-visible,.zzws-partner-admin textarea:focus-visible,.zzws-partner-admin button:focus-visible {outline:2px solid #2563EB;outline-offset:3px}
+.zzws-partner-admin label {font-size:13px;color:#475569}
+.zzws-partner-admin fieldset {border:1px solid #E2E8F0;border-radius:14px;background:#F8FAFC;padding:14px}
+.zzws-partner-admin .admin-navigation {gap:6px;padding:6px;background:white;border:1px solid #E2E8F0;border-radius:12px;position:static}
+.zzws-partner-admin .admin-navigation button {background:#EFF6FF;color:#1D4ED8;border:1px solid transparent;margin:0}
+.zzws-partner-admin .admin-navigation .admin-tab-active {background:#1D4ED8;color:white}
+.zzws-partner-admin .admin-active-section {font-size:22px;font-weight:700;color:#0F172A}
+.zzws-partner-admin .pair-row,.zzws-partner-admin .delivery-variant {border-color:#E2E8F0;border-radius:12px}
+.zzws-partner-admin #passwordSetup {border-radius:18px;max-width:calc(100vw - 28px)}
+@media(max-width:650px){
+ .zzws-partner-admin section {padding:14px}
+ .zzws-partner-admin .admin-navigation {flex-wrap:nowrap}
+ .zzws-partner-admin .admin-navigation>button {flex:1 1 0;min-width:0;padding:8px 4px;font-size:11px;line-height:1.2;min-height:44px}
+ .zzws-partner-admin .admin-navigation>details {flex:0 0 auto}
+ .zzws-partner-admin header span {font-size:13px}
+ .zzws-partner-admin table {font-size:13px}
+}

@@ -1,6 +1,6 @@
 import {DEFAULT_MAIN_WAREHOUSES} from './warehouses.mjs';
 import {newProductFlags} from './storefront.mjs';
-import {customerCode} from './client-accounts.mjs';
+import {customerCode,customerCodeKey,findCustomerByCode} from './client-accounts.mjs';
 import {email,emailRows} from './report-email.mjs';
 import {phoneNumber,phoneNumbers} from './phones.mjs';
 import {personContacts,contactEmailRows} from './contacts.mjs';
@@ -69,7 +69,7 @@ export function project(products,user,storedRules,{forOrder=false,mainWarehouses
       marginVal:margin(wholesale),stockAvailable:base>=group.stock.availableFrom,stockStatus:admin?entries.filter(([,q])=>q>0).map(([n,q])=>`${n}: ${q}`).join(', '):(base>=group.stock.availableFrom?'Առկա է':'Ճշտել'),hasMainStock:base>0};
     Object.assign(item,newProductFlags(p,newDays,now));
     if(admin){
-      const stockPickerPrices=Object.fromEntries(['KP','Dealers'].map(id=>{const rule=categoryRules[id]?.pricing,price=rule?selectPrice(p,rule).price:0;return [id,price>0&&!(rule.hideAboveRetail&&retail>0&&price>retail)?price:null];}));
+      const stockPickerPrices=Object.fromEntries(Object.keys(categoryRules).map(id=>{const rule=categoryRules[id].pricing,price=selectPrice(p,rule).price;return [id,price>0&&!(rule.hideAboveRetail&&retail>0&&price>retail)?price:null];}));
       Object.assign(item,{kpPrice,kpIsPromo:!!p.kpPromo,kpMarginVal:margin(kpPrice),targetWarehousesStock:base,stockPickerPrices});
     }
     if(admin||user.allowResale)item.resaleWholesale=p.ws;
@@ -111,9 +111,9 @@ export function parseUsers(rows,existing=[]){
     p.brands=(p.brands||'').split(',').map(v=>v.trim()).filter(Boolean);p.allBrands=['true','1','yes'].includes(String(p.allBrands||'').toLowerCase());
     p.rowsList=[1,2,3].map(i=>{const suffix=i===1?'':String(i);return {organization:p['organization'+suffix]||'',address:p['address'+suffix]||'',contact:p['contact'+suffix]||''};});
     if(!p.customerCode&&!/^[0-9]+$/.test(p.login||''))throw Error('Հաճախորդի ներմուծման համար լրացրեք հաճախորդի կոդը');
-    p.customerCode=p.customerCode||p.login;const old=existing.find(u=>!u.customer_id&&u.profile.role==='client'&&u.profile.customerCode===p.customerCode);p.login=old?.login||'pending.'+crypto.randomUUID();
+    p.customerCode=p.customerCode||p.login;const old=findCustomerByCode(existing,p.customerCode);p.login=old?.login||'pending.'+crypto.randomUUID();
     const user=validateProfile(p);user.preserveExtraContacts=!rows[0].some(h=>['organization2','address2','contact2','organization3','address3','contact3'].includes(h));
-    if(seen.has(user.profile.customerCode))throw Error('Կրկնվող հաճախորդի կոդ՝ '+user.profile.customerCode);seen.add(user.profile.customerCode);result.push(user);
+    const codeKey=customerCodeKey(user.profile.customerCode);if(seen.has(codeKey))throw Error('Կրկնվող հաճախորդի կոդ՝ '+user.profile.customerCode);seen.add(codeKey);result.push(user);
   }
   if(!result.length||result.length>1000)throw Error('Թույլատրվում է 1-ից 1000 օգտատեր');
   return result;

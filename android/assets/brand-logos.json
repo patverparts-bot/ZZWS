@@ -1,0 +1,224 @@
+{
+  "schemaVersion": 1,
+  "websiteSource": "js/core.js#getBrandLogoHtml",
+  "domains": {
+    "wanbo": "wanbo.cn",
+    "epson": "epson.com",
+    "blaupunkt": "blaupunkt.com",
+    "apple": "apple.com",
+    "samsung": "samsung.com",
+    "sony": "sony.com",
+    "lg": "lg.com",
+    "xiaomi": "mi.com",
+    "jbl": "jbl.com",
+    "marshall": "marshallheadphones.com",
+    "haier": "haier.com",
+    "philips": "philips.com",
+    "bosch": "bosch.com",
+    "dyson": "dyson.com",
+    "midea": "midea.com",
+    "tefal": "tefal.com",
+    "moulinex": "moulinex.com",
+    "delonghi": "delonghi.com",
+    "braun": "braun.com",
+    "canon": "canon.com",
+    "nikon": "nikon.com",
+    "asus": "asus.com",
+    "acer": "acer.com",
+    "lenovo": "lenovo.com",
+    "hp": "hp.com",
+    "dell": "dell.com",
+    "huawei": "huawei.com",
+    "babyliss": "babyliss.com",
+    "elica": "elica.com",
+    "indesit": "indesit.com"
+  },
+  "bundled": {
+    "acer": {
+      "domain": "acer.com",
+      "file": "brand-logos/acer.png",
+      "source": "https://www.google.com/s2/favicons?domain=acer.com&sz=64",
+      "sha256": "0fc4a59ad7f34aa96b2aa39742fc000967876867055b7eafa99e607698287935"
+    },
+    "apple": {
+      "domain": "apple.com",
+      "file": "brand-logos/apple.png",
+      "source": "https://www.google.com/s2/favicons?domain=apple.com&sz=64",
+      "sha256": "eb7f4b32c3d7492e9a0f47a27743924428009dc41d3605a0c59a98a154fc52ad"
+    },
+    "asus": {
+      "domain": "asus.com",
+      "file": "brand-logos/asus.png",
+      "source": "https://www.google.com/s2/favicons?domain=asus.com&sz=64",
+      "sha256": "e1877ee4d3cde54743ba157940b19870d3233370d5980f78637a8ad42f6fe5da"
+    },
+    "babyliss": {
+      "domain": "babyliss.com",
+      "file": "brand-logos/babyliss.png",
+      "source": "https://www.google.com/s2/favicons?domain=babyliss.com&sz=64",
+      "sha256": "dea30a429e6e7773718ef6301d5d8d86b0deec716d67b743a6bcd5e6d71ec252"
+    },
+    "blaupunkt": {
+      "domain": "blaupunkt.com",
+      "file": "brand-logos/blaupunkt.png",
+      "source": "https://www.google.com/s2/favicons?domain=blaupunkt.com&sz=64",
+      "sha256": "4def532c929a84e27d060cec8d560e607d62bfcbe07e77f8186f9d82a5c6be5c"
+    },
+    "bosch": {
+      "domain": "bosch.com",
+      "file": "brand-logos/bosch.png",
+      "source": "https://www.google.com/s2/favicons?domain=bosch.com&sz=64",
+      "sha256": "511c378743e1eec910630db38a3de5ea4283e959644ec1479cca1eb8b33112a5"
+    },
+    "braun": {
+      "domain": "braun.com",
+      "file": "brand-logos/braun.png",
+      "source": "https://www.google.com/s2/favicons?domain=braun.com&sz=64",
+      "sha256": "aace34d0615c69d74b0ff44138608777daf6c0e48522d68ff1eef1a73debbe82"
+    },
+    "canon": {
+      "domain": "canon.com",
+      "file": "brand-logos/canon.png",
+      "source": "https://www.google.com/s2/favicons?domain=canon.com&sz=64",
+      "sha256": "507d05c72b6066b99090e98469228254c602d45a0fd6bed077dec3b8a134f6ac"
+    },
+    "dell": {
+      "domain": "dell.com",
+      "file": "brand-logos/dell.png",
+      "source": "https://www.google.com/s2/favicons?domain=dell.com&sz=64",
+      "sha256": "cd0171d04e2cc3af3320f96c78f6516e09a6757b67f417345e69ca82c24ac1b6"
+    },
+    "delonghi": {
+      "domain": "delonghi.com",
+      "file": "brand-logos/delonghi.png",
+      "source": "https://www.google.com/s2/favicons?domain=delonghi.com&sz=64",
+      "sha256": "93e25e65889e8dae31547da5cd64e0e9451cc97fc4f85b0c21de84b4beef381b"
+    },
+    "dyson": {
+      "domain": "dyson.com",
+      "file": "brand-logos/dyson.png",
+      "source": "https://www.google.com/s2/favicons?domain=dyson.com&sz=64",
+      "sha256": "062cfa817a97a8674e22adfeb8c4ad40a447355650f9ebad30d786a401252de6"
+    },
+    "elica": {
+      "domain": "elica.com",
+      "file": "brand-logos/elica.png",
+      "source": "https://www.google.com/s2/favicons?domain=elica.com&sz=64",
+      "sha256": "933ba2a65caef456bb9024e15c3f01bc6e4ff12b7f4a92daf9d6e029d1922e92"
+    },
+    "epson": {
+      "domain": "epson.com",
+      "file": "brand-logos/epson.png",
+      "source": "https://www.google.com/s2/favicons?domain=epson.com&sz=64",
+      "sha256": "9e3cdb08a53e6dd0c0d13c3faf8abdb67113301d85b0d7e4d02309f3aeb030f8"
+    },
+    "haier": {
+      "domain": "haier.com",
+      "file": "brand-logos/haier.png",
+      "source": "https://www.google.com/s2/favicons?domain=haier.com&sz=64",
+      "sha256": "c3e56867ed1807dedfd1d690e7e2831f50dacc35fac3aa9d4e95226c89b4d2a3"
+    },
+    "hp": {
+      "domain": "hp.com",
+      "file": "brand-logos/hp.png",
+      "source": "https://www.google.com/s2/favicons?domain=hp.com&sz=64",
+      "sha256": "62ca988466f98f0b28c2483ac46448b36ea10e1d939c5baedef1b77345ed5258"
+    },
+    "huawei": {
+      "domain": "huawei.com",
+      "file": "brand-logos/huawei.png",
+      "source": "https://www.google.com/s2/favicons?domain=huawei.com&sz=64",
+      "sha256": "8ff9d0e2d6c0bead3b1271ad28080dc08bd468ac182aa3a43598db20c7f47687"
+    },
+    "indesit": {
+      "domain": "indesit.com",
+      "file": "brand-logos/indesit.png",
+      "source": "https://www.google.com/s2/favicons?domain=indesit.com&sz=64",
+      "sha256": "029f7511b6e2f2d9c70c9fb0c804b7a825263d40dfde5698cd7b3d38c99d058e"
+    },
+    "jbl": {
+      "domain": "jbl.com",
+      "file": "brand-logos/jbl.png",
+      "source": "https://www.google.com/s2/favicons?domain=jbl.com&sz=64",
+      "sha256": "94503ca01d95b9d643bdce9a4b9c0548ca07f68c8d05c239463162db8ce27939"
+    },
+    "lenovo": {
+      "domain": "lenovo.com",
+      "file": "brand-logos/lenovo.png",
+      "source": "https://www.google.com/s2/favicons?domain=lenovo.com&sz=64",
+      "sha256": "8ce85e358fad00b46a11848e91ac7ce3f90c0fad5c4811168b86469675a2b9f8"
+    },
+    "lg": {
+      "domain": "lg.com",
+      "file": "brand-logos/lg.png",
+      "source": "https://www.google.com/s2/favicons?domain=lg.com&sz=64",
+      "sha256": "6375e4509a1e89832fb15adb4e700fbda963c4ec2aba4cc712164f794fd8ab1b"
+    },
+    "marshall": {
+      "domain": "marshallheadphones.com",
+      "file": "brand-logos/marshall.png",
+      "source": "https://www.google.com/s2/favicons?domain=marshallheadphones.com&sz=64",
+      "sha256": "3c8ee2d8f4f708e6b6ebe1a2298df1e0a777ac8b570c72c33d5882f06df7d73f"
+    },
+    "midea": {
+      "domain": "midea.com",
+      "file": "brand-logos/midea.png",
+      "source": "https://www.google.com/s2/favicons?domain=midea.com&sz=64",
+      "sha256": "d8c319ad1d5653d5574dbe85982c5a72782422cd8061a76b0b916cb409c3c124"
+    },
+    "moulinex": {
+      "domain": "moulinex.com",
+      "file": "brand-logos/moulinex.png",
+      "source": "https://www.google.com/s2/favicons?domain=moulinex.com&sz=64",
+      "sha256": "c65c83edfa564b2469039f604d087c01c8330ac27d5649d440f40f72289996be"
+    },
+    "nikon": {
+      "domain": "nikon.com",
+      "file": "brand-logos/nikon.png",
+      "source": "https://www.google.com/s2/favicons?domain=nikon.com&sz=64",
+      "sha256": "2a584f2ed0641ae815a78a45e7a3bac3a1fe852ff74ac25f61ca6d09d3b688e5"
+    },
+    "philips": {
+      "domain": "philips.com",
+      "file": "brand-logos/philips.png",
+      "source": "https://www.google.com/s2/favicons?domain=philips.com&sz=64",
+      "sha256": "0eba7b4a74d864d568219fe1da743590c9ce02819a19ca6995008ec263e9666d"
+    },
+    "roborock": {
+      "domain": "roborock.com",
+      "file": "brand-logos/roborock.png",
+      "source": "https://www.google.com/s2/favicons?domain=roborock.com&sz=64",
+      "sha256": "6c7f2221704a3b8222c91923bacc73289f2d1c8b251459db8754b2b70466432c"
+    },
+    "samsung": {
+      "domain": "samsung.com",
+      "file": "brand-logos/samsung.png",
+      "source": "https://www.google.com/s2/favicons?domain=samsung.com&sz=64",
+      "sha256": "c0e55ccce2e6288020e0086a95ef5f4391f38f4f2531eae3688818ed07bfc5c7"
+    },
+    "sony": {
+      "domain": "sony.com",
+      "file": "brand-logos/sony.png",
+      "source": "https://www.google.com/s2/favicons?domain=sony.com&sz=64",
+      "sha256": "68dd94c6700af78d0abc4a7dabe90fb1ed427269fd616e6c8ad1df6bf0fb1ced"
+    },
+    "tefal": {
+      "domain": "tefal.com",
+      "file": "brand-logos/tefal.png",
+      "source": "https://www.google.com/s2/favicons?domain=tefal.com&sz=64",
+      "sha256": "393a57a081f72193b798ba837774d55e433dd6f7ccc954cc90cadeaa4eaaf9f6"
+    },
+    "wanbo": {
+      "domain": "wanbo.cn",
+      "file": "brand-logos/wanbo.png",
+      "source": "https://www.google.com/s2/favicons?domain=wanbo.cn&sz=64",
+      "sha256": "a174e57f62fd9147c57b6591215daf8cb04ebf2189bc7ab90c783a88da514415"
+    },
+    "xiaomi": {
+      "domain": "mi.com",
+      "file": "brand-logos/xiaomi.png",
+      "source": "https://www.google.com/s2/favicons?domain=mi.com&sz=64",
+      "sha256": "77d793114d8ec08eab9ab43dc9226e1da12c203beb02f89beed14fe419050b1b"
+    }
+  }
+}

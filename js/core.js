@@ -406,12 +406,14 @@ function handleImageError(imgElement) {
     imgElement.dataset.step = String(step);
     imgElement.src = next;
   } else {
+    const warranty = container.querySelector('.product-warranty-stamp');
     container.innerHTML = `
       <div class="w-full h-full bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg flex flex-col items-center justify-center text-center p-0.5" title="Նկարը բացակայում է">
         <span class="text-[10px]">📦</span>
         <span class="text-[8px] font-bold text-gray-500 dark:text-gray-400">Նկար չկա</span>
       </div>`;
     container.insertAdjacentHTML('beforeend',window.ZZWS_STOREFRONT?.ribbons(getProduct(cleanArt))||'');
+    if (warranty) container.append(warranty);
   }
 }
 function getProductImageHtml(articul, productName) {

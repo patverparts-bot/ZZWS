@@ -27,7 +27,7 @@ public class ManagementNavigationRegressionTest {
   @Override protected void authenticateAndLoad(){/* No account or network needed to test navigation/lifecycle. */}
  }
  public static class RecordingWebView extends WebView {
-  WebViewClient client;String response="\"root\"",pageUrl="https://patverparts-bot.github.io/ZZWS/admin/";int backRequests,historyBacks;boolean disposed,holdCallback;ValueCallback<String> pending;
+  WebViewClient client;String response="\"root\"",pageUrl="https://zzws-1z2.pages.dev/admin/";int backRequests,historyBacks;boolean disposed,holdCallback;ValueCallback<String> pending;
   RecordingWebView(android.content.Context context){super(context);}
   @Override public void setWebViewClient(WebViewClient value){client=value;super.setWebViewClient(value);}
   @Override public void evaluateJavascript(String script,ValueCallback<String> callback){if(callback!=null){backRequests++;if(holdCallback)pending=callback;else callback.onReceiveValue(response);}}
@@ -37,7 +37,7 @@ public class ManagementNavigationRegressionTest {
   @Override public void loadUrl(String url){assertNotEquals("Do not navigate to bootstrap/blank during teardown","about:blank",url);super.loadUrl(url);}
  }
  private ActivityController<Tool> screen(){Intent intent=new Intent(org.robolectric.RuntimeEnvironment.getApplication(),Tool.class).putExtra("feature","ADMIN");return Robolectric.buildActivity(Tool.class,intent).setup().visible();}
- private void loaded(Tool tool){tool.browser.client.onPageFinished(tool.browser,"https://patverparts-bot.github.io/ZZWS/admin/#tab=users");}
+ private void loaded(Tool tool){tool.browser.client.onPageFinished(tool.browser,"https://zzws-1z2.pages.dev/admin/#tab=users");}
  private Button find(View view,String text){if(view instanceof Button&&((Button)view).getText().toString().equals(text))return (Button)view;if(view instanceof ViewGroup)for(int i=0;i<((ViewGroup)view).getChildCount();i++){Button result=find(((ViewGroup)view).getChildAt(i),text);if(result!=null)return result;}return null;}
  @Test public void hardwareBackInsideSectionDoesNotFinishTheTool(){try(ActivityController<Tool> controller=screen()){Tool tool=controller.get();loaded(tool);tool.browser.response="\"handled\"";tool.getOnBackPressedDispatcher().onBackPressed();assertFalse(tool.isFinishing());assertEquals(1,tool.browser.backRequests);assertEquals(0,tool.browser.historyBacks);}}
  @Test public void toolbarBackUsesExactlyTheSameSectionNavigation(){try(ActivityController<Tool> controller=screen()){Tool tool=controller.get();loaded(tool);tool.browser.response="\"handled\"";find(tool.getWindow().getDecorView(),"‹").performClick();assertFalse(tool.isFinishing());assertEquals(1,tool.browser.backRequests);}}
@@ -50,15 +50,15 @@ public class ManagementNavigationRegressionTest {
  }
  @Test public void closingWhileLoadingDoesNotWaitForAuthentication(){try(ActivityController<Tool> controller=screen()){Tool tool=controller.get();tool.getOnBackPressedDispatcher().onBackPressed();assertTrue(tool.isFinishing());assertEquals(0,tool.browser.backRequests);}}
  @Test public void rapidBackAndLateJavascriptAfterCloseAreIgnored(){try(ActivityController<Tool> controller=screen()){Tool tool=controller.get();loaded(tool);tool.browser.holdCallback=true;tool.getOnBackPressedDispatcher().onBackPressed();tool.getOnBackPressedDispatcher().onBackPressed();assertEquals(1,tool.browser.backRequests);find(tool.getWindow().getDecorView(),"×").performClick();tool.browser.pending.onReceiveValue("\"handled\"");assertTrue(tool.isFinishing());assertEquals(0,tool.browser.historyBacks);}}
- @Test public void bootstrapIsNotTreatedAsAReadyTool(){try(ActivityController<Tool> controller=screen()){Tool tool=controller.get();tool.browser.client.onPageFinished(tool.browser,"https://patverparts-bot.github.io/ZZWS/");tool.getOnBackPressedDispatcher().onBackPressed();assertTrue(tool.isFinishing());assertEquals(0,tool.browser.backRequests);}}
+ @Test public void bootstrapIsNotTreatedAsAReadyTool(){try(ActivityController<Tool> controller=screen()){Tool tool=controller.get();tool.browser.client.onPageFinished(tool.browser,"https://zzws-1z2.pages.dev/");tool.getOnBackPressedDispatcher().onBackPressed();assertTrue(tool.isFinishing());assertEquals(0,tool.browser.backRequests);}}
  @Test public void toolsCanBeOpenedAndClosedRepeatedly(){for(int i=0;i<5;i++){ActivityController<Tool> controller=screen();Tool tool=controller.get();loaded(tool);RecordingWebView browser=tool.browser;find(tool.getWindow().getDecorView(),"×").performClick();controller.pause().stop().destroy();assertTrue(browser.disposed);}}
  @Test public void rendererFailureReturnsToHubWithoutKillingTheApplication(){try(ActivityController<Tool> controller=screen()){Tool tool=controller.get();loaded(tool);RecordingWebView browser=tool.browser;assertTrue(browser.client.onRenderProcessGone(browser,null));assertTrue(tool.isFinishing());assertTrue(browser.disposed);}}
  @Test public void kitchenFixIsBundledOnlyForTheExactTrustedDealerScript()throws Exception{
   try(ActivityController<Tool> controller=screen()){
-   Tool tool=controller.get();android.webkit.WebResourceResponse response=tool.browser.client.shouldInterceptRequest(tool.browser,request("https://patverparts-bot.github.io/ZZWS/js/dealer-tools.js?v=old"));
+   Tool tool=controller.get();android.webkit.WebResourceResponse response=tool.browser.client.shouldInterceptRequest(tool.browser,request("https://zzws-1z2.pages.dev/js/dealer-tools.js?v=old"));
    assertNotNull(response);assertEquals("application/javascript",response.getMimeType());
    try(java.io.InputStream in=response.getData()){java.io.ByteArrayOutputStream out=new java.io.ByteArrayOutputStream();byte[] buffer=new byte[4096];int n;while((n=in.read(buffer))!=-1)out.write(buffer,0,n);assertTrue(out.toString("UTF-8").contains("function bundleType"));}
-   for(String url:new String[]{"https://example.com/ZZWS/js/dealer-tools.js","https://patverparts-bot.github.io/OTHER/js/dealer-tools.js","https://patverparts-bot.github.io/ZZWS/js/api.js"})assertNull(tool.browser.client.shouldInterceptRequest(tool.browser,request(url)));
+   for(String url:new String[]{"https://example.com/ZZWS/js/dealer-tools.js","https://patverparts-bot.github.io/OTHER/js/dealer-tools.js","https://zzws-1z2.pages.dev/js/api.js"})assertNull(tool.browser.client.shouldInterceptRequest(tool.browser,request(url)));
   }
  }
  @Test public void viberShareRequiresTrustedPageTopFrameAndUserGesture(){

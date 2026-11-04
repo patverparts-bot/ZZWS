@@ -4,7 +4,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URI
 
-internal const val PARTNER_SITE="https://patverparts-bot.github.io/ZZWS/"
+internal const val PARTNER_SITE="https://zzws-1z2.pages.dev/"
+internal const val LEGACY_PARTNER_SITE="https://patverparts-bot.github.io/ZZWS/"
 internal enum class PartnerFeature(val title:String,val path:String,val permission:String?=null){
  ASSISTANT("ԶիգԶագն AI", "?partner=assistant"),
  SAVED_CARTS("Պահպանված զամբյուղներ", "?partner=saved-carts"),
@@ -27,7 +28,25 @@ internal fun canOpenFeature(feature:PartnerFeature,user:JSONObject?):Boolean{
 private fun JSONArray?.objectsOrStrings()=if(this==null)emptyList()else(0 until length()).map{optString(it)}.filter{it.isNotBlank()}
 internal fun trustedPartnerPage(url:String?):Boolean=try{
  val uri=URI(url?:"")
- uri.scheme=="https"&&uri.host=="patverparts-bot.github.io"&&(uri.port==-1||uri.port==443)&&uri.userInfo==null&&uri.path.startsWith("/ZZWS/")&&!uri.path.contains("..")&&!uri.rawPath.contains('%')
+ val path=uri.rawPath.orEmpty()
+ uri.scheme=="https"&&(uri.port==-1||uri.port==443)&&uri.userInfo==null&&path.startsWith("/")&&!path.contains("..")&&!path.contains('%')&&
+  (uri.host=="zzws-1z2.pages.dev"||uri.host=="patverparts-bot.github.io"&&path.startsWith("/ZZWS/"))
+}catch(_:Exception){false}
+// Legacy URLs remain narrowly pinned for an intentional transition; all new
+// bootstrap/external/facts URLs use the canonical Cloudflare origin.
+internal fun partnerPagePath(url:String?):String?=try{
+ if(!trustedPartnerPage(url))null else URI(url).let{if(it.host=="patverparts-bot.github.io")it.path.removePrefix("/ZZWS")else it.path}
+}catch(_:Exception){null}
+internal fun partnerAdminPage(url:String?):Boolean=partnerPagePath(url)?.let{it=="/admin"||it.startsWith("/admin/")}?:false
+internal fun partnerBundledAsset(url:String?):String?=when(partnerPagePath(url)){
+ "/js/dealer-tools.js"->"dealer-tools.js"
+ "/js/bundle-policy.js"->"bundle-policy.js"
+ else->null
+}
+internal fun trustedPartnerBlob(url:String):Boolean=try{
+ if(!url.startsWith("blob:"))false else URI(url.removePrefix("blob:")).let{
+  it.scheme=="https"&&(it.port==-1||it.port==443)&&it.userInfo==null&&it.host in listOf("zzws-1z2.pages.dev","patverparts-bot.github.io")&&it.path.startsWith("/")
+ }
 }catch(_:Exception){false}
 // Only the documented share action; it never selects a personal recipient.
 internal fun viberShareLink(url:String):Boolean=try{

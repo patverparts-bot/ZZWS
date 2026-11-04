@@ -74,7 +74,7 @@ internal object PartnerLibrary {
  }}
 @Composable private fun QuickTile(title:String,icon:String,modifier:Modifier,onClick:()->Unit){Surface(onClick=onClick,color=BrandBlue,shape=RoundedCornerShape(10.dp),modifier=modifier.height(92.dp)){Column(Modifier.padding(12.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.Center){CompositionLocalProvider(LocalContentColor provides Color.White){AppIcon(icon)};Spacer(Modifier.height(9.dp));LocalizedText(title,fontSize=11.sp,color=Color.White,maxLines=1,overflow=TextOverflow.Ellipsis)}}}
 private fun categoryIcon(category:String):String{val x=category.lowercase();return when{x.contains("հեռուստ")||x.contains("телев")->"tv";x.contains("սմարթ")||x.contains("телефон")->"phone";x.contains("համակարգ")||x.contains("компьют")->"laptop";x.contains("խոհան")||x.contains("кухон")->"kitchen";x.contains("աուդ")||x.contains("ауди")->"audio";else->"appliance"}}
-@Composable internal fun RetailCatalog(model:UnifiedModel,onProduct:(Product)->Unit,onBuyer:()->Unit,favorites:Boolean=false){
+@Composable internal fun RetailCatalog(model:UnifiedModel,onProduct:(Product)->Unit,onBuyer:()->Unit,favorites:Boolean=false,onFilters:()->Unit={}){
  val sections=!favorites&&model.catalogSections&&model.control("category")
  val noveltyLifecycle=androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
  LaunchedEffect(model.noveltyCollection,favorites,model.products,noveltyLifecycle){
@@ -98,6 +98,10 @@ private fun categoryIcon(category:String):String{val x=category.lowercase();retu
    Column(Modifier.fillMaxWidth().testTag("catalog-scroll-header"),verticalArrangement=Arrangement.spacedBy(4.dp)){
     Row(verticalAlignment=Alignment.CenterVertically){
      LocalizedText(title,fontWeight=FontWeight.Bold,fontSize=20.sp,maxLines=2,modifier=Modifier.weight(1f))
+     val active=CatalogFilters(model.brands.toSet(),model.categories.toSet(),model.onlyAvailable,model.onlyPromo,model.sort,model.onlyWholesale&&model.user?.text("role")=="admin"&&model.control("wholesale")).activeCount
+     OutlinedButton(onClick=onFilters,modifier=Modifier.testTag("catalog-filters-button"),contentPadding=PaddingValues(horizontal=10.dp)){
+      AppIcon("filter");Spacer(Modifier.width(5.dp));LocalizedText(if(active>0)"Զտիչներ · $active"else"Զտիչներ",fontSize=11.sp)
+     }
      if(!favorites&&!sections&&(model.noveltyCollection||model.offerCollection||model.brands.isNotEmpty()||model.categories.isNotEmpty()||model.onlyPromo||model.onlyAvailable||model.query.isNotBlank()))TextButton(onClick={model.showAllProducts()}){LocalizedText("Բոլոր ապրանքները",fontSize=10.sp)}
     }
     LocalizedText(if(sections)"${model.products.size} ապրանք"else if(favorites)"${rows.size} ապրանք"else"Ցուցադրված՝ ${rows.size} / ${model.products.size}",fontSize=11.sp,color=ShopMuted)

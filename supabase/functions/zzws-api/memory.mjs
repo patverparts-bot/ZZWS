@@ -1,3 +1,4 @@
+import {validPriceCategory} from './price-categories.mjs';
 const object=v=>v&&typeof v==='object'&&!Array.isArray(v);
 export function validateMemory(section,value){
  if(!['cart','favorites','history','filters','preferences','draft'].includes(section))throw new Error('Անհայտ բաժին');
@@ -24,7 +25,7 @@ export function validateMemory(section,value){
   const result=Object.create(null);
   for(const [key,row] of Object.entries(value)){
    if(!object(row)||key.length>100||['__proto__','constructor','prototype'].includes(key)||!Number.isInteger(row.qty)||row.qty<1||row.qty>1000000)throw new Error('Զամբյուղի սխալ դիրք');
-   result[key]={articul:String(row.articul||key).slice(0,100),qty:row.qty,addedPrice:Math.max(0,Number(row.addedPrice)||0),addedPriceMode:row.addedPriceMode==='KP'?'KP':'WS',...(/^[a-f0-9]{64}$/.test(row.proposalHash||'')?{proposalHash:row.proposalHash}:{})};
+   result[key]={articul:String(row.articul||key).slice(0,100),qty:row.qty,addedPrice:Math.max(0,Number(row.addedPrice)||0),addedPriceMode:validPriceCategory(row.addedPriceMode)?row.addedPriceMode:'WS',...(/^[a-f0-9]{64}$/.test(row.proposalHash||'')?{proposalHash:row.proposalHash}:{})};
   }return result;
  }
  if(section==='preferences'){
@@ -40,7 +41,7 @@ export function validateMemory(section,value){
    if(o.bundleSale!=null&&(typeof o.bundleSale!=='number'||!Number.isFinite(o.bundleSale)||o.bundleSale<=0||o.bundleSale>1e9))throw Error('Հավաքածուի սխալ վաճառքի գին։');
    return {id:o.id,title:o.title.trim(),created:String(o.created||'').slice(0,50),items,bundleSale:o.bundleSale??null};
   });
-  return {theme:value.theme==='dark'?'dark':'light',filtersOpen:value.filtersOpen==='1'?'1':'0',priceMode:value.priceMode==='KP'?'KP':'WS',hiddenColumns:Array.isArray(value.hiddenColumns)?[...new Set(value.hiddenColumns.filter(k=>['brand','stockStatus','retail','marginVal','kpPrice','kpMarginVal','resaleWholesale'].includes(k)))]:[],dealerOffers:offers};
+  return {theme:value.theme==='dark'?'dark':'light',filtersOpen:value.filtersOpen==='1'?'1':'0',priceMode:validPriceCategory(value.priceMode)?value.priceMode:'WS',hiddenColumns:Array.isArray(value.hiddenColumns)?[...new Set(value.hiddenColumns.filter(k=>['brand','stockStatus','retail','marginVal','kpPrice','kpMarginVal','resaleWholesale'].includes(k)))]:[],dealerOffers:offers};
  }
  if(section==='draft'){
   const out={};for(const name of ['organizationSelect','deliveryMethodInput','deliveryDateInput','deliveryAddressInput','contactPersonInput','orderCommentInput'])if(Object.hasOwn(value,name))out[name]=String(value[name]).slice(0,3000);return out;

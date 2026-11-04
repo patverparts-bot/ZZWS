@@ -95,8 +95,8 @@ class UnifiedActivity:ComponentActivity(){
     notificationOptions(model.user).forEach{(key,label)->Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){LocalizedText(label,Modifier.weight(1f).padding(top=12.dp));Switch(checked=model.subscriptions?.optBoolean(key)==true,onCheckedChange={model.subscribe(key,it,context)},enabled=!model.busy)}}
    }
    "home"->RetailHome(model,{filters=true},{product=it},{compareDialog=true},{catalogSearch=true})
-   "catalog"->RetailCatalog(model,{product=it},{buyerDialog=true})
-   "favorites"->RetailCatalog(model,{product=it},{buyerDialog=true},favorites=true)
+   "catalog"->RetailCatalog(model,{product=it},{buyerDialog=true},onFilters={filters=true})
+   "favorites"->RetailCatalog(model,{product=it},{buyerDialog=true},favorites=true,onFilters={filters=true})
    "profile"->RetailProfile(model,{confirmLogout=true},{buyerDialog=true})
    "management"->PartnerManagement(model){model.showAllProducts();buyerDialog=true}
    "cart"->PartnerCheckout(model,{buyerDialog=true})
@@ -131,7 +131,7 @@ class UnifiedActivity:ComponentActivity(){
    }}
   }
  }
- ServerOperationProgress(model.busy,Modifier.align(Alignment.TopCenter))
+ if(!model.authorizationLoading)ServerOperationProgress(model.busy,Modifier.align(Alignment.TopCenter))
  }}
  if(catalogSearch)CatalogSearchSheet(model.query,onSearch={query->model.showAllProducts();model.searchCatalog(query);catalogSearch=false},onDismiss={catalogSearch=false})
  if(!appMenu&&!confirmLogout&&!filters&&!catalogSearch&&product==null&&!buyerDialog&&!confirmSend&&!confirmReloadCart&&!compareDialog&&model.successOrder==null&&model.errorDialog.isBlank()&&model.receiptConfirmation==null&&model.screen!="cart"&&!(model.screen=="order"&&model.order?.optJSONObject("approval")?.text("state")=="pending"))model.approvalReminder?.let{ApprovalReminderDialog(model,it)}
@@ -185,7 +185,10 @@ class UnifiedActivity:ComponentActivity(){
 
  if(confirmReloadCart)AlertDialog(onDismissRequest={confirmReloadCart=false},title={LocalizedText("Բեռնե՞լ սերվերի զամբյուղը")},text={LocalizedText("Այս սարքի զամբյուղը կփոխարինվի կայքում պահպանված տարբերակով։")},confirmButton={Button(onClick={confirmReloadCart=false;model.reloadServerCart()}){LocalizedText("Բեռնել")}},dismissButton={TextButton(onClick={confirmReloadCart=false}){LocalizedText("Չեղարկել")}})
  if(model.errorDialog.isNotBlank())AlertDialog(onDismissRequest={model.errorDialog=""},title={LocalizedText("Գործողությունը չի ավարտվել")},text={Column(Modifier.heightIn(max=360.dp).verticalScroll(rememberScrollState()).testTag("error-dialog-content")){LocalizedText(model.errorDialog)}},confirmButton={TextButton(onClick={model.errorDialog=""}){LocalizedText("Փակել")}})
- model.successOrder?.let{number->AlertDialog(onDismissRequest={model.successOrder=null},title={LocalizedText(if(model.demo)"Դեմո պատվեր №$number"else"Պատվեր №$number ուղարկված է")},text={LocalizedText(if(model.demo)"Դեմո պատվերը պահպանվել է միայն հավելվածի ընթացիկ ցուցադրման մեջ։ Իրական պատվեր չի ուղարկվել։"else"Պատվերը պահպանվել է սերվերում և հասանելի է ադմինիստրատորին։ Սպասեք պատասխանատուի հաստատմանը։")},confirmButton={TextButton(onClick={model.successOrder=null}){LocalizedText("Դիտել պատվերը")}})}
+ model.successOrder?.let{number->
+  var sceneCompleted by rememberSaveable(model.user?.text("id"),number){mutableStateOf(model.demo)}
+  if(!sceneCompleted)OrderPreparationScene(onComplete={sceneCompleted=true})
+  else AlertDialog(onDismissRequest={model.successOrder=null},title={LocalizedText(if(model.demo)"Դեմո պատվեր №$number"else"Պատվեր №$number ուղարկված է")},text={LocalizedText(if(model.demo)"Դեմո պատվերը պահպանվել է միայն հավելվածի ընթացիկ ցուցադրման մեջ։ Իրական պատվեր չի ուղարկվել։"else"Պատվերը պահպանվել է սերվերում և հասանելի է ադմինիստրատորին։ Սպասեք պատասխանատուի հաստատմանը։")},confirmButton={TextButton(onClick={model.successOrder=null}){LocalizedText("Դիտել պատվերը")}})}
  if(filters)CatalogFiltersDialog(allowWholesale=model.user?.text("role")=="admin"&&model.control("wholesale"),enabled={model.control(it)},isPromotion={model.promotion(it)!=null},products=model.catalogProducts,query=model.query,initial=CatalogFilters(model.brands.toSet(),model.categories.toSet(),model.onlyAvailable,model.onlyPromo,model.sort,model.onlyWholesale&&model.user?.text("role")=="admin"&&model.control("wholesale")),onDismiss={filters=false},onApply={draft->
   model.brands.clear();model.brands.addAll(draft.brands);model.categories.clear();model.categories.addAll(draft.categories)
   model.onlyAvailable=draft.onlyAvailable;model.onlyPromo=draft.onlyPromo;model.changeOnlyWholesale(draft.onlyWholesale);model.sort=draft.sort;model.applyCatalogFilters();filters=false
@@ -194,6 +197,10 @@ class UnifiedActivity:ComponentActivity(){
  if(compareDialog)RetailComparison(model){compareDialog=false}
  if(buyerDialog)BuyerDialog(model,{buyerDialog=false})
  if(confirmSend)AlertDialog(onDismissRequest={confirmSend=false},title={LocalizedText("Ուղարկե՞լ պատվերը")},text={LocalizedText("Ընդամենը՝ "+money(model.total)+"։ Ստուգեք կազմն ու առաքման տվյալները։")},confirmButton={Button(onClick={confirmSend=false;model.submit()}){LocalizedText("Ուղարկել")}},dismissButton={TextButton(onClick={confirmSend=false}){LocalizedText("Հետ")}})
+ // The full-screen data scene belongs only to authorization. Other work keeps the original progress UI.
+ if(model.authorizationLoading)androidx.compose.ui.window.Dialog(onDismissRequest={},properties=androidx.compose.ui.window.DialogProperties(dismissOnBackPress=false,dismissOnClickOutside=false,usePlatformDefaultWidth=false,decorFitsSystemWindows=false)){
+  SessionRestoringScreen()
+ }
 }
 @Composable private fun Login(model:UnifiedModel){
  var login by remember{mutableStateOf("")};var password by remember{mutableStateOf("")};var otp by remember{mutableStateOf("")}
@@ -252,7 +259,7 @@ internal fun notificationOptions(user:JSONObject?):List<Pair<String,String>>{
 @Composable private fun OrderTotal(order:JSONObject){val initial=order.optJSONArray("original_lines").objects().sumOf{it.optDouble("unitPrice")*it.optInt("qty")};val total=order.optDouble("total");if(initial>0&&kotlin.math.abs(initial-total)>.005)LocalizedText(money(initial),textDecoration=TextDecoration.LineThrough,color=MaterialTheme.colorScheme.outline);LocalizedText(money(total),style=MaterialTheme.typography.headlineSmall)}
 private fun yerevanTime(value:String)=try{java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").withZone(java.time.ZoneId.of("Asia/Yerevan")).format(java.time.Instant.parse(value))+" · Երևան"}catch(_:Exception){value}
 
-internal fun openWebsite(context:Context,admin:Boolean){context.startActivity(Intent(Intent.ACTION_VIEW,android.net.Uri.parse("https://patverparts-bot.github.io/ZZWS/"+if(admin)"admin/" else "")))}
+internal fun openWebsite(context:Context,admin:Boolean){context.startActivity(Intent(Intent.ACTION_VIEW,android.net.Uri.parse(PARTNER_SITE+if(admin)"admin/" else "")))}
 @Composable private fun OrderLines(order:JSONObject){
  orderLineViews(order).forEach{line->Card(Modifier.fillMaxWidth()){Column(Modifier.padding(12.dp)){
   LocalizedText(line.name,textDecoration=if(line.removed)TextDecoration.LineThrough else null);LocalizedText(line.code)

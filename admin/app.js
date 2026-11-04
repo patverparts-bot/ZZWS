@@ -115,7 +115,7 @@ async function selectAdminTab(name,options={}){
   if(name==='apkDownloads')await ZZWS_APK_DOWNLOADS.load();
   if(name==='systemDataReset')await ZZWS_SYSTEM_DATA_RESET.load();
   if(name==='warehouses')await ZZWS_ADMIN_WAREHOUSES.load();
-  if(name==='offers')await ZZWS_OFFERS.load();if(name==='proposalManagement')ZZWS_PROPOSAL_MANAGEMENT.loadAll();
+  if(name==='offers')await ZZWS_OFFERS.load();if(name==='proposalManagement')await ZZWS_PROPOSAL_MANAGEMENT.loadAll();
   if(name==='email')await ZZWS_REPORT_EMAIL.loadSettings();
   await window.ZZWS_ADMIN_VIEW_STATE?.loaded(name);
 }

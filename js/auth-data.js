@@ -18,6 +18,7 @@ async function secureApi(path, options = {}) {
   catch(e) { if (e.status === 401) lockCatalog(); throw e; }
 }
 function lockCatalog() {
+  window.ZZWS_PAGE_CONTINUITY?.clearBuyerResume();
   window.ZZWS_BUYER_MODE?.reset();
   window.ZZWS_PROPOSAL_CART?.reset();
   window.ZZWS_PROPOSALS?.reset();window.ZZWS_PROPOSAL_MANAGEMENT?.reset();
@@ -25,6 +26,7 @@ function lockCatalog() {
   window.ZZWS_LOADING_SCENES?.cancelOrder();
   window.ZZWS_PAGE_STATE?.stop();
   window.ZZWS_STOREFRONT?.reset();
+  window.ZZWS_PRODUCT_SPECIFICATIONS_LIVE?.reset();
   window.ZZWS_PRODUCT_TECHNICAL?.reset();
   window.ZZWS_CHECKOUT?.reset();
   window.ZZWS_DEALER?.reset();
@@ -57,6 +59,7 @@ function lockCatalog() {
 async function acceptIdentity(user) {
   if(user.needsPasswordSetup||user.needsProfileSetup){user=await requirePasswordSetup(user);if(!user){finishSessionLoading();return;}}
   beginSessionLoading();
+  window.ZZWS_PAGE_CONTINUITY?.acceptIdentity(user);
   window.ZZWS_ASSISTED?.start(user);
   window.ZZWS_STOCK_PICKER?.start(user);
   window.ZZWS_PROPOSALS?.start(user);window.ZZWS_PROPOSAL_MANAGEMENT?.start(user);
@@ -65,17 +68,20 @@ async function acceptIdentity(user) {
   window.ZZWS_ENTRY?.navigation(user);
   serverIdentity = user;window.ZZWS_HELP_USER=user; authorizedClient = user.client; userSheetType = user.sheet; clientRowsData = user.rowsList;
   window.ZZWS_PAGE_STATE?.start(user);
+  window.ZZWS_PAGE_STATE?.prepareContext();
   window.ZZWS_STOREFRONT?.start();
   window.ZZWS_BULLETINS?.start(user);
   window.ZZWS_ADMIN_RESOURCES?.start(user);window.ZZWS_TEAM?.start(user);
   configureSortPrices();
-  // Start the current, authorized catalogue while account state is restored.
-  // Rendering still waits for that state, so a restored basket is never replaced.
-  const initialCatalog={owner:user.id,session:sessionStorage.getItem('zzws_session_v3'),context:window.ZZWS_CATALOG_VIEW?.key()||'',promise:requestCatalog()};
-  initialCatalog.promise.catch(()=>{}); // The error is handled by loadPriceData after state restoration.
+  // Restore the account basket before a customer-catalog rejection can trigger its own safe fallback.
+  const initialSession=sessionStorage.getItem('zzws_session_v3');
   await ZZWS_MEMORY.start(user);
-  if(serverIdentity?.id!==user.id||sessionStorage.getItem('zzws_session_v3')!==initialCatalog.session)return;
+  if(serverIdentity?.id!==user.id||sessionStorage.getItem('zzws_session_v3')!==initialSession)return;
+  await window.ZZWS_PAGE_STATE?.restoreContext();
+  if(serverIdentity?.id!==user.id||sessionStorage.getItem('zzws_session_v3')!==initialSession)return;
   window.ZZWS_PAGE_STATE?.restoreFilters();
+  const initialCatalog={owner:user.id,session:initialSession,context:window.ZZWS_CATALOG_VIEW?.key()||'',promise:requestCatalog()};
+  initialCatalog.promise.catch(()=>{}); // The error is handled by loadPriceData after state restoration.
   ZZWS_ORDERS.start(user);
   document.getElementById('authScreen').classList.add('hidden');
   document.getElementById('passwordInput').value = '';
@@ -208,7 +214,7 @@ async function reloadIfPriceChanged() {
   if (fp === loadedPriceFingerprint) return false;
   loadedPriceFingerprint = fp;
   applyPriceDate(result.dateText);
-  parseExcelRows(result.rows, true);
+  await parseExcelRows(result.rows, true);
   try { localStorage.setItem('zigzag_seen_price_' + userStorageId(), cachedPriceDateText); } catch (e) {}
   showPriceUpdatePopupAndStart(true);
   return true;
@@ -425,6 +431,7 @@ function requestCatalog(){return window.ZZWS_CATALOG_VIEW?.active()?ZZWS_CATALOG
 async function fetchPriceRows(initialCatalog = null) {
   const identity=serverIdentity?.id,session=sessionStorage.getItem('zzws_session_v3'),context=window.ZZWS_CATALOG_VIEW?.key()||'';
   const data=await (initialCatalog&&initialCatalog.owner===identity&&initialCatalog.session===session&&initialCatalog.context===context?initialCatalog.promise:requestCatalog());if(identity!==serverIdentity?.id||session!==sessionStorage.getItem('zzws_session_v3')||context!==(window.ZZWS_CATALOG_VIEW?.key()||''))throw {staleCatalog:true};
+  if(initialCatalog&&window.ZZWS_CATALOG_VIEW?.active()&&data.customer?.id===window.ZZWS_CATALOG_VIEW.identity()?.id){await window.ZZWS_ASSISTED?.selectBuyer?.(data.customer);if(identity!==serverIdentity?.id||session!==sessionStorage.getItem('zzws_session_v3')||context!==(window.ZZWS_CATALOG_VIEW?.key()||''))throw {staleCatalog:true};}
   if(data.account?.id===identity){serverIdentity=data.account;window.ZZWS_HELP_USER=data.account;authorizedClient=data.account.client;userSheetType=data.account.sheet;clientRowsData=data.account.rowsList;}if(isAdminUser()&&data.priceCategories)window.ZZWS_PRICE_CATEGORIES?.configure(data.priceCategories);window.ZZWS_STOREFRONT?.configure(data);window.ZZWS_CATALOG_CONTROLS?.apply(data);return {rows:data.products, dateText:data.updated};
 }
 
@@ -447,12 +454,12 @@ async function loadPriceData(initialCatalog = null) {
     const result = await fetchPriceRows(initialCatalog);
     loadedPriceFingerprint = fingerprintRows(result.rows);
     applyPriceDate(result.dateText);
-    parseExcelRows(result.rows);
+    await parseExcelRows(result.rows);
     notifyIfPriceChanged();
     fetchPriceStamp().then(st => { lastPriceStamp = st; });
   } catch (error) {
     if(error.staleCatalog)return;
-    finishSessionLoading();
+    if(window.ZZWS_PAGE_CONTINUITY?.buyerPending(serverIdentity))sessionLoadFailed(error.message);else finishSessionLoading();
     console.error(error);
     skeleton.classList.add('hidden');
     errorBox.classList.remove('hidden');
@@ -465,7 +472,7 @@ async function loadPriceDataSilent() {
   try {
     const result = await fetchPriceRows();
     applyPriceDate(result.dateText);
-    parseExcelRows(result.rows, true);
+    await parseExcelRows(result.rows, true);
   } catch (e) {}finally{finishSessionLoading();}
 }
 
@@ -473,6 +480,7 @@ function finalizeDataLoad() {
   productIndex = new Map();
   allProducts.forEach(p => { if (!productIndex.has(p.articul)) productIndex.set(p.articul, p); });
   catalogLoaded = true;
+  window.ZZWS_PRODUCT_SPECIFICATIONS_LIVE?.loaded();
   reconcileCart();
 
   initFilters();
@@ -484,14 +492,19 @@ function finalizeDataLoad() {
   document.getElementById('catalogContent').classList.remove('opacity-40');
 }
 
-function parseExcelRows(products, isSilent = false) {
+async function parseExcelRows(products, isSilent = false) {
+  const owner=serverIdentity?.id,session=sessionStorage.getItem('zzws_session_v3');
   allProducts = products.filter(p => /^[0-9]/.test(String(p.articul ?? '').trim()));
   finalizeDataLoad();
   window.ZZWS_PROPOSAL_CART?.loaded();
   const dealerReady=window.ZZWS_DEALER?.refresh();
   window.ZZWS_STOREFRONT?.refresh();
-  finishSessionLoading();
-  Promise.resolve(dealerReady).then(()=>window.ZZWS_PAGE_STATE?.loaded());
+  await Promise.resolve(dealerReady);
+  if(serverIdentity?.id!==owner||sessionStorage.getItem('zzws_session_v3')!==session)return;
+  const resumed=await window.ZZWS_BUYER_MODE?.resume?.(serverIdentity);
+  if(serverIdentity?.id!==owner||sessionStorage.getItem('zzws_session_v3')!==session)return;
+  await window.ZZWS_PAGE_STATE?.loaded({privateOverlays:!resumed});
+  if(serverIdentity?.id===owner&&sessionStorage.getItem('zzws_session_v3')===session)finishSessionLoading();
   if (isSilent && !document.getElementById('orderModal').classList.contains('hidden')) renderModalItems();
 }
 

@@ -1,0 +1,23 @@
+.product-specifications-panel{margin-top:28px;padding:22px;border:1px solid #d5e0e8;border-radius:14px;background:#f8fafc;max-width:960px;color:#17324b}
+.product-specifications-panel h2{margin:0 0 5px;font-size:21px;line-height:1.35}
+.product-specifications-panel>p{max-width:78ch;line-height:1.6;margin:10px 0;font-size:14px}
+.product-specifications-panel .product-specifications-source{margin-top:0;font-size:12px;color:#587086}
+.product-specifications-panel .product-specifications-last{font-size:12px;color:#587086}
+.product-specifications-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:18px 0}
+.product-specifications-actions button{margin:0;min-height:44px;max-width:100%;white-space:normal;line-height:1.4}
+.product-specifications-panel progress{display:block;width:100%;height:12px;margin:18px 0;accent-color:#17688e;border:0;border-radius:6px;overflow:hidden;background:#dfe8ee}
+.product-specifications-panel progress::-webkit-progress-bar{background:#dfe8ee;border-radius:6px}
+.product-specifications-panel progress::-webkit-progress-value{background:#17688e;border-radius:6px}
+.product-specifications-counts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}
+.product-specifications-counts>div{padding:13px;border:1px solid #dbe4eb;border-radius:9px;background:#fff;min-width:0}
+.product-specifications-counts dt{font-size:12px;line-height:1.4;color:#587086;overflow-wrap:anywhere}
+.product-specifications-counts dd{margin:6px 0 0;font-size:24px;line-height:1.2;font-weight:750;font-variant-numeric:tabular-nums}
+.product-specifications-status{font-weight:650;overflow-wrap:anywhere}
+.product-specifications-status[data-error=true]{color:#a62a20}
+.product-specifications-panel .product-specifications-note{font-size:12px;color:#587086}
+.product-specifications-errors{padding:12px 14px;border:1px solid #e5d4b7;border-radius:9px;background:#fffaf1;margin-top:14px;font-size:13px}
+.product-specifications-errors summary{font-weight:650;cursor:pointer;line-height:1.5}
+.product-specifications-errors ul{padding-left:20px;margin:10px 0 0;max-height:240px;overflow-y:auto}
+.product-specifications-errors li{padding:4px 0;line-height:1.5;overflow-wrap:anywhere}
+.product-specifications-panel[hidden],.product-specifications-panel [hidden]{display:none!important}
+@media(max-width:600px){.product-specifications-panel{padding:16px;margin-top:22px;border-radius:11px}.product-specifications-panel h2{font-size:19px}.product-specifications-panel>p{font-size:13px}.product-specifications-counts{grid-template-columns:repeat(2,minmax(0,1fr))}.product-specifications-actions{align-items:stretch}.product-specifications-actions button{flex:1 1 100%;font-size:13px}.product-specifications-counts dd{font-size:22px}}

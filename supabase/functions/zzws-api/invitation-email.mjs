@@ -18,7 +18,7 @@ export async function invitationEmailRoutes(c){
  const settings=await query(table('report_email_settings').select('from_email').eq('id',true).single()),{env}=await mailConnection(c,settings,{withPassword:true});
  if(!mailReady(env))fail(503,'Էլ․ փոստի ծառայությունը դեռ կարգավորված չէ։ Կարող եք պատճենել հրավերի հղումը։');
  const from=senderAddress(settings,env,{invitation:true});
- const base=new URL(env('ZZWS_PUBLIC_SITE_URL')||'https://patverparts-bot.github.io/ZZWS/');
+ const base=new URL(env('ZZWS_PUBLIC_SITE_URL')||'https://zzws-1z2.pages.dev/');
  if(base.protocol!=='https:'||base.username||base.password||base.hash||base.search)fail(503,'Կայքի հասցեն սխալ է կարգավորված');
  const to=[...new Set(p.selectedRows.flatMap(i=>emailList(rows[i])))].sort();if(to.length>50)fail(400,'Ստացողների քանակը չափազանց մեծ է');
  const hash=await sha(p.code),fingerprint=await sha(JSON.stringify({to,from,site:base.href,login:target.login,language:p.language==='ru'?'ru':'hy'})),key=await sha(hash+':'+fingerprint);

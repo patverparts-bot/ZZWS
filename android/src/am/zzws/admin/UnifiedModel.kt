@@ -38,6 +38,9 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
  var successOrder by mutableStateOf<Long?>(null)
  var busy by mutableStateOf(false);private set
  var restoringSession by mutableStateOf(true);private set
+ private var authorizationLoadCount by mutableIntStateOf(0)
+ val authorizationLoading get()=authorizationLoadCount>0
+ private suspend fun <T> withAuthorizationLoading(work:suspend ()->T):T{authorizationLoadCount++;try{return work()}finally{authorizationLoadCount--}}
  var challenge by mutableStateOf("");private set
  var screen by mutableStateOf("home")
  var orderSearch by mutableStateOf("");var orderFrom by mutableStateOf("");var orderTo by mutableStateOf("")
@@ -182,16 +185,16 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
   return pending
  }
  private fun reset(){draftWorkspaceGeneration="";buyerValidationNeeded=false;buyerValidationRunning=false;++buyerValidationTicket;++draftEpoch;draftReady=false;draftDirty=false;draftVersion=0;draftConflict=false;draftSync="";deliveryIndex=0;method="Առաքում";approvalRequests.clear();approvalDefers.clear();approvalReminder=null;approvalLastShown=null;approvalPolling=false;catalogVersion="";catalogLoadedAt=0;department="";catalogSections=true;offerCollection=false;noveltyCollection=false;publishedOffer=null;demo=false;orderSearch="";orderFrom="";orderTo="";appliedOrderFilter=Triple("","","");cartSelection.clear();checkoutStep=1;checkoutProof="";webHandoff=false;PartnerLibrary.clear();catalogControls=JSONObject();popularity=JSONObject();++cartEpoch;cartDirty=false;cartVersion=0;cartConflict=false;cartSync="";PushHooks.detach(AppContext.value,AppSession.api);NotificationBridge.clear(AppContext.value);user=null;products=emptyList();orders=emptyList();order=null;buyer=null;catalogBuyer=null;quotedProducts=emptyMap();customers=emptyList();cart.clear();brands.clear();categories.clear();query="";onlyAvailable=false;onlyPromo=false;onlyWholesale=false;sort=0;challenge="";screen="home";frozenRequest=null;requestId=null;checkoutReady=false;address="";contact="";date="";comment="";priceMode="WS";subscriptions=null;management=null;successOrder=null;receiptConfirmation=null;errorDialog=""}
- fun login(login:String,password:String)=run{
+ fun login(login:String,password:String)=run{withAuthorizationLoading{
   reset();AppSession.clear()
   withContext(Dispatchers.IO){AppSession.api.configure(EndpointConfiguration.API,EndpointConfiguration.PUBLIC_KEY)}
   val response=call("login",JSONObject().put("login",login.trim()).put("password",password))
   if(response.optBoolean("mfaRequired"))challenge=response.text("challengeToken") else completeLogin()
- }
+ }}
  fun mfa(code:String)=run{call("login/mfa",JSONObject().put("challengeToken",challenge).put("code",code));completeLogin()}
  fun cancelAccountProfile()=run{try{call("logout",JSONObject())}finally{AppSession.clear();reset()}}
  fun saveAccountPerson(firstName:String,lastName:String,phone:String,email:String)=run{call("account/profile",JSONObject().put("firstName",firstName).put("lastName",lastName).put("phone",phone).put("email",email));completeLogin()}
- private suspend fun completeLogin(){val me=call("me");if(me.optBoolean("needsProfileSetup")&&!me.optBoolean("needsPasswordSetup")){user=me;AppSession.user=me;return};if(me.optBoolean("needsPasswordSetup")){AppSession.clear();throw Exception("Նախ կայքում բացեք հրավերի հղումը և սահմանեք նոր գաղտնաբառը։")};try{call("me/mobile/session",JSONObject())}catch(e:ApiClient.ApiError){if(e.status!=404)throw e};withContext(Dispatchers.IO){AppSession.remember()};user=me;AppSession.user=me;onlyWholesale=CatalogWholesalePreference.read(AppContext.value,EndpointConfiguration.API,user);challenge=""
+ private suspend fun completeLogin():Unit=withAuthorizationLoading{val me=call("me");if(me.optBoolean("needsProfileSetup")&&!me.optBoolean("needsPasswordSetup")){user=me;AppSession.user=me;return@withAuthorizationLoading};if(me.optBoolean("needsPasswordSetup")){AppSession.clear();throw Exception("Նախ կայքում բացեք հրավերի հղումը և սահմանեք նոր գաղտնաբառը։")};try{call("me/mobile/session",JSONObject())}catch(e:ApiClient.ApiError){if(e.status!=404)throw e};withContext(Dispatchers.IO){AppSession.remember()};user=me;AppSession.user=me;onlyWholesale=CatalogWholesalePreference.read(AppContext.value,EndpointConfiguration.API,user);challenge=""
   val account=me.text("id");val token=AppSession.api.sessionToken();val customer=catalogBuyer?.text("id")
   // Hold the normal request gate for the complete batch so writes remain serialized.
   val startup=gate.withLock{readStartupData(catalogPath(customer)){path->withContext(Dispatchers.IO){
@@ -287,7 +290,7 @@ internal class UnifiedModel(private val trialBackend:TrialDemoBackend=TrialDemoB
  fun resume() {if(user?.optBoolean("needsProfileSetup")==true)return;if(user==null){if(!busy)restoreSession();return};run{val me=call("me");try{call("me/mobile/session",JSONObject())}catch(e:ApiClient.ApiError){if(e.status!=404)throw e};user=me;AppSession.user=me;subscriptions=call("me/mobile/preferences");val reload=canReloadCatalog(screen,pendingSubmission);if(reload)loadCatalog();if(webHandoff&&buyer==null&&catalogBuyer==null&&!pendingSubmission){if(!reload)loadCatalog();loadServerCart(true);webHandoff=false}}}
  fun logout()=run{if(demo){reset();return@run};persistDraft();check(!draftDirty||buyer!=null||catalogBuyer!=null){"Նախ պահպանեք կամ բեռնեք պատվերի տվյալները։"};persistCart();check(!cartDirty||buyer!=null){"Զամբյուղը դեռ չի համաժամացվել։ Նախ պահպանեք կամ բեռնեք սերվերի տարբերակը։"};withContext(Dispatchers.IO){PushHooks.revoke(AppContext.value,AppSession.api)};try{call("logout",JSONObject())}finally{AppSession.clear();reset()}}
  fun setQty(code:String,qty:Int){if(busy||frozenRequest!=null)return;if(qty>9999){notice="Քանակը՝ 1-ից 9999";return};if(qty<=0)cart.remove(code) else cart[code]=qty;checkoutReady=false;requestId=null;if(buyer==null&&catalogBuyer==null)cartChanged()}
- fun clearCart(){if(!busy&&frozenRequest==null){cart.clear();checkoutReady=false;requestId=null;if(buyer==null&&catalogBuyer==null)cartChanged()}}
+ fun clearCart(){if(!busy&&frozenRequest==null){cart.clear();cartSelection.clear();checkoutStep=1;checkoutProof="";checkoutReady=false;requestId=null;if(buyer==null&&catalogBuyer==null)cartChanged()}}
  fun changePriceMode(mode:String){if(busy||frozenRequest!=null)return;priceMode=if(mode=="KP")"KP"else"WS";checkoutReady=false}
  fun searchCustomers(text:String)=run{check(canSelectCustomer(user));customers=call("admin/orders/customers?search="+URLEncoder.encode(text,"UTF-8")).optJSONArray("customers").objects()}
  fun chooseBuyer(value:JSONObject?,preview:Boolean=true,onSelected:()->Unit={})=run{

@@ -1,3 +1,4 @@
+import {projectedCategoryPrice} from './price-categories.mjs';
 import {FAMILY_LABELS,labelFor,kindLabel,categoryIntent,queryText,classifyCategory,applianceProfile,categoryAccepts,VALID_KINDS} from './appliance-taxonomy.mjs';
 import {normalizeAssistantQuery} from './assistant-query.mjs';
 import {similaritySource,compareSimilar,similarityReasons,similarityIntro,wantsSimilar} from './assistant-similarity.mjs';
@@ -149,7 +150,7 @@ export function dimensions(specifications) {
 
 const quantity = (specs,pattern) => {const value=specs.find(s=>pattern.test(s.name))?.value;if(value==null)return null;const parsed=Number(String(value).replace(',','.').match(/\d+(?:\.\d+)?/)?.[0]);return Number.isFinite(parsed)?parsed:null;};
 const customerPrice = (p,mode) => {
-  const price=mode==='KP'?p.kpPrice:p.wholesale;
+  const price=projectedCategoryPrice(p,mode);
   return typeof price==='number'&&Number.isFinite(price)&&price>0 ? {amount:price,kind:'customer',currency:'AMD'} : typeof p.retail==='number'&&Number.isFinite(p.retail)&&p.retail>0 ? {amount:p.retail,kind:'retail',currency:'AMD'} : null;
 };
 const categoryMatches = (p,category) => (p._taxonomy?.family||classifyCategory(p.category).family)===category;

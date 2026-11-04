@@ -1,4 +1,5 @@
 // Clean local installer; importing opens no connection. Do not replay this on an existing database.
+// Dependency order is explicit: snapshot export01 precedes buyer wrappers; flat49 repair precedes guarded02 and buyer-aware05.
 export const cleanSchemaFiles=[
   "supabase/schema.sql",
   "supabase/proposals.sql",
@@ -64,8 +65,15 @@ export const cleanSchemaFiles=[
   "supabase/migrations/20261102140000_maintenance_disk_report.sql",
   "supabase/proposal-recipients.sql",
   "supabase/migrations/20261103142753_editable_proposal_management.sql",
+  "supabase/migrations/20261104115439_dynamic_price_categories_release.sql",
+  "supabase/migrations/20261104110246_maintenance_proposal_backup_export.sql",
   "supabase/migrations/20261104100634_buyer_presentation_offers.sql",
   "supabase/migrations/20261104100750_buyer_offer_lifecycle_coverage.sql",
-  "supabase/migrations/20261104111845_buyer_offer_catalog_version_index.sql"
+  "supabase/migrations/20261104112008_buyer_offer_catalog_version_index.sql",
+  "supabase/migrations/20261104113910_maintenance_flat_current_snapshot.sql",
+  "supabase/migrations/20261104115345_customer_code_prefix_guarded_release.sql",
+  "supabase/migrations/20261104115346_maintenance_buyer_preserving_proposal_coverage.sql",
+  "supabase/migrations/20261104124356_manual_product_specification_refresh.sql",
+  "supabase/migrations/20261104130112_specification_refresh_maintenance_coverage.sql"
 ];
 export const schemaVersion="zzws-unified-4.1.0-optimized";

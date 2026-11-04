@@ -30,6 +30,10 @@
     preview.style.top = top + 'px';
     preview.firstElementChild.src = image.currentSrc || image.src;
     preview.firstElementChild.alt = image.alt;
+    preview.dataset.productTechnical = container.dataset.productTechnical || image.dataset.articul;
+    preview.dataset.productName = container.dataset.productName || image.alt;
+    preview.querySelector('.product-warranty-stamp')?.remove();
+    preview.insertAdjacentHTML('beforeend', window.ZZWS_PRODUCT_WARRANTY?.html(container.dataset.productTechnical || image.dataset.articul, container.dataset.productName || image.alt) || '');
     preview.classList.add('is-visible');
   });
 

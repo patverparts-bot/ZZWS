@@ -102,7 +102,7 @@ public class MainActivity extends ComponentActivity {
 
   LinearLayout total=card(content);label(total,"Պատվերի գումար",16,false);label(total,amount(o.optDouble("total")),26,true);if(!o.optString("comment").isEmpty())label(total,"Մեկնաբանություն՝ "+o.optString("comment"),15,false);
   if(write&&editableStatus(o))button("Փոխել կարգավիճակը",this::statusEditor);else label(content,"received".equals(o.optString("status"))?"Ստացված պատվերը չի խմբագրվում։":"Ձեր իրավունքները թույլ են տալիս միայն դիտել։",14,false);
-  button("Բացել կայքի ամբողջական կառավարումը",()->startActivity(new Intent(Intent.ACTION_VIEW,android.net.Uri.parse("https://patverparts-bot.github.io/ZZWS/admin/"))));button("Իրադարձությունների պատմություն",()->history(o.optString("id")));button("Թարմացնել պատվերը",()->open(o.optString("id")));button("Դեպի ցանկ",this::list);
+  button("Բացել կայքի ամբողջական կառավարումը",()->startActivity(new Intent(Intent.ACTION_VIEW,android.net.Uri.parse(PartnerPolicyKt.PARTNER_SITE+"admin/"))));button("Իրադարձությունների պատմություն",()->history(o.optString("id")));button("Թարմացնել պատվերը",()->open(o.optString("id")));button("Դեպի ցանկ",this::list);
  }
  private boolean editableStatus(JSONObject o){return o.optString("received_at").isEmpty()&&!java.util.Arrays.asList("received","completed","rejected").contains(o.optString("status"));}
  private void renderOrderLines(JSONObject o)throws Exception{

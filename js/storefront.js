@@ -43,7 +43,7 @@
  }
  function card(p){
   const root=node('article',null,'sf-product');root.dataset.storefrontSku=p.articul;
-  const photo=node('div',null,'sf-product-photo');photo.innerHTML=getProductImageHtml(p.articul,p.name);root.append(photo);
+  const photo=node('div',null,'sf-product-photo');photo.innerHTML=getProductImageHtml(p.articul,p.name);photo.querySelector('.product-img-container')?.insertAdjacentHTML('beforeend',window.ZZWS_PRODUCT_WARRANTY?.html(p.articul,p.name)||'');root.append(photo);
   const favorite=button(favoritesSet.has(p.articul)?'★':'♡',()=>toggleFavorite(p.articul),'star-btn sf-favorite');favorite.dataset.art=p.articul;favorite.setAttribute('aria-label','Ավելացնել ընտրվածներում');root.append(favorite);
   root.append(node('p',p.category,'sf-product-category'));
   const title=node('h4'),copy=button(p.name,()=>copyModel(p.name),'sf-product-title'),details=button('ⓘ',()=>ZZWS_DEALER.openProduct(p.articul),'sf-product-details');copy.title='Պատճենել մոդելը';details.dataset.dealerDetails=p.articul;details.setAttribute('aria-label','Ապրանքի քարտ՝ '+p.name);details.title='Ապրանքի քարտ';title.classList.add('sf-product-name-actions');title.append(copy,details);root.append(title);

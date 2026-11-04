@@ -1,8 +1,10 @@
+import {checkedPriceCategory} from './price-categories.mjs';
 import {orderExportData} from './order-export.mjs';
 import {boundedMultipart} from './body-reader.mjs';
 import {proposalCartProducts} from './proposal-cart.mjs';
 import {clientOrderExportRoute} from './client-order-export.mjs';
 import {viberContacts} from './contacts.mjs';
+import {customerCodeKey} from './client-accounts.mjs';
 import {priceVersionLabel} from './workbook-layout.mjs';
 import {orderPublic} from './order-public.mjs';
 import {projectOrderHistory} from './order-history.mjs';
@@ -55,7 +57,7 @@ export async function orderRoutes(c){
   const existing=await query(table('orders').select('*').eq('user_id',user.id).eq('request_id',p.requestId).maybeSingle());if(existing)return json(existing);
   const owned=ownedDeliverySnapshot(user,{...p.delivery,variantId:p.deliveryVariantId},p.profileRevision);
   return json(await checked(async()=>{
-   const v=await current(),priceMode=user.role==='admin'&&p.priceMode==='KP'?'KP':'WS',ordinary=project(v.products,user,v.rules,{forOrder:true,mainWarehouses:v.mainWarehouses}),grants=(await proposalCartProducts(c,new Set(Array.isArray(p.lines)?p.lines.map(l=>l?.articul):[]))).filter(g=>Array.isArray(p.lines)&&p.lines.some(l=>l.articul===g.articul&&l.proposalHash===g.proposalHash)),products=[...new Map([...ordinary,...grants].map(p=>[p.articul,p])).values()],lines=normalizeLines(p.lines,products,[],false,priceMode);if(!lines.length)fail(400,'Զամբյուղը դատարկ է');
+   const v=await current(),priceMode=user.role==='admin'?checkedPriceCategory(p.priceMode,v.rules):'WS',ordinary=project(v.products,user,v.rules,{forOrder:true,mainWarehouses:v.mainWarehouses}),grants=(await proposalCartProducts(c,new Set(Array.isArray(p.lines)?p.lines.map(l=>l?.articul):[]))).filter(g=>Array.isArray(p.lines)&&p.lines.some(l=>l.articul===g.articul&&l.proposalHash===g.proposalHash)),products=[...new Map([...ordinary,...grants].map(p=>[p.articul,p])).values()],lines=normalizeLines(p.lines,products,[],false,priceMode);if(!lines.length)fail(400,'Զամբյուղը դատարկ է');
    if(p.lines.some(l=>l.proposalHash&&!grants.some(g=>g.articul===l.articul&&g.proposalHash===l.proposalHash)))fail(409,'Առաջարկի ժամկետը լրացել է կամ այն հասանելի չէ։ Թարմացրեք զամբյուղը');
    if(lines.some((line,i)=>Number(p.lines[i].unitPrice)!==line.unitPrice))fail(409,'Գները փոխվել են։ Թարմացրեք զամբյուղը և ստուգեք գումարը մինչև ուղարկելը');
    const context=buildOrderContext({catalog:v,user,lines,priceMode,proposalProducts:grants});
@@ -115,7 +117,9 @@ export async function orderRoutes(c){
   const search=String(new URL(req.url).searchParams.get('search')||'').replace(/[^\p{L}\p{N} ._-]/gu,'').trim().slice(0,100);
   let q=table('users').select('id,profile').eq('active',true).is('customer_id',null).eq('profile->>role','client').order('profile->>customerCode').limit(50);
   if(search)q=q.or('profile->>customerCode.ilike.*'+search+'*,profile->>client.ilike.*'+search+'*');
-  const rows=await query(q),exact=search?await query(table('users').select('id,profile').eq('active',true).is('customer_id',null).eq('profile->>role','client').eq('profile->>customerCode',search).maybeSingle()):null;const choices=exact?[exact,...rows.filter(r=>r.id!==exact.id)].slice(0,50):rows;return json({customers:choices.map(r=>({id:r.id,customerCode:r.profile.customerCode||'',client:r.profile.client}))});
+  const rows=await query(q),key=customerCodeKey(search);let exact=null;
+  if(search){let match=table('users').select('id,profile').eq('active',true).is('customer_id',null).eq('profile->>role','client');match=/^[0-9]{6}$/.test(key)?match.or('profile->>customerCode.ilike.'+key+'*'):match.eq('profile->>customerCode',search);const matches=await query(match.limit(2));if(matches.length===1&&customerCodeKey(matches[0].profile.customerCode)===key)exact=matches[0];}
+  const choices=exact?[exact,...rows.filter(r=>r.id!==exact.id)].slice(0,50):rows;return json({customers:choices.map(r=>({id:r.id,customerCode:r.profile.customerCode||'',client:r.profile.client}))});
  }
  if(['admin/orders/customer-catalog','admin/orders/customer-catalog/version','admin/orders/customer-catalog/export'].includes(path)&&req.method==='GET'){
   const profile=await customerProfile(new URL(req.url).searchParams.get('customerId')),v=await current();

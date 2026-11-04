@@ -8,6 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
@@ -64,8 +65,12 @@ import java.time.ZoneId
  val context=androidx.compose.ui.platform.LocalContext.current
  var confirm by remember{mutableStateOf(false)}
  var reload by remember{mutableStateOf(false)}
+ var clear by remember{mutableStateOf(false)}
  Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
-  LocalizedText("Զամբյուղ",fontSize=26.sp,fontWeight=FontWeight.Bold)
+  Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){
+   LocalizedText("Զամբյուղ",fontSize=26.sp,fontWeight=FontWeight.Bold,modifier=Modifier.weight(1f))
+   if(model.cart.isNotEmpty())TextButton(onClick={clear=true},enabled=!model.busy&&!model.pendingSubmission,modifier=Modifier.testTag("cart-clear-button")){LocalizedText("Մաքրել զամբյուղը",fontSize=12.sp)}
+  }
   if(model.pendingSubmission){
    LocalizedText("Նախորդ ուղարկման պատասխանը չի ստացվել։ Կրկնելիս կստուգվի նույն պատվերը՝ առանց կրկնօրինակի։")
    Button(onClick={model.submit()},enabled=!model.busy,modifier=Modifier.fillMaxWidth()){LocalizedText("Կրկնել նույն ուղարկումը")}
@@ -142,6 +147,7 @@ import java.time.ZoneId
    }
   }
  }
+ if(clear)AlertDialog(onDismissRequest={clear=false},title={LocalizedText("Մաքրե՞լ զամբյուղը")},text={LocalizedText("Զամբյուղի բոլոր ապրանքները կհեռացվեն։")},confirmButton={Button(onClick={clear=false;model.clearCart()},enabled=!model.busy&&!model.pendingSubmission,modifier=Modifier.testTag("cart-clear-confirm")){LocalizedText("Մաքրել")}},dismissButton={TextButton(onClick={clear=false},modifier=Modifier.testTag("cart-clear-cancel")){LocalizedText("Չեղարկել")}})
  if(confirm)AlertDialog(onDismissRequest={confirm=false},title={LocalizedText("Ուղարկե՞լ պատվերը")},text={LocalizedText("Ընդամենը՝ "+money(model.total)+" · "+model.selectedCount+" հատ")},confirmButton={Button(onClick={confirm=false;model.submit()},enabled=!model.busy){LocalizedText("Ուղարկել")}},dismissButton={TextButton(onClick={confirm=false}){LocalizedText("Հետ")}})
  if(reload)AlertDialog(onDismissRequest={reload=false},title={LocalizedText("Բեռնե՞լ սերվերի զամբյուղը")},text={LocalizedText("Այս սարքի զամբյուղը կփոխարինվի կայքում պահպանված տարբերակով։")},confirmButton={Button(onClick={reload=false;model.reloadServerCart()}){LocalizedText("Բեռնել")}},dismissButton={TextButton(onClick={reload=false}){LocalizedText("Չեղարկել")}})
 }

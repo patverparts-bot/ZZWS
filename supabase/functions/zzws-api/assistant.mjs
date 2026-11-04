@@ -1,3 +1,4 @@
+import {validPriceCategory} from './price-categories.mjs';
 import {categoryIntent} from './appliance-taxonomy.mjs';
 import {wantsSimilar} from './assistant-similarity.mjs';
 import {advise, validateAdvisor} from './advisor.mjs';
@@ -19,7 +20,7 @@ export function validateQuestion(payload) {
   const context = payload.context ?? [];
   if (payload.locale != null && !['hy','ru','en'].includes(payload.locale))
     throw Object.assign(Error('Լեզվի կարգավորումը սխալ է։'), {code: 400});
-  if (payload.orderPriceMode != null && !['WS','KP'].includes(payload.orderPriceMode))
+  if (payload.orderPriceMode != null && !validPriceCategory(payload.orderPriceMode))
     throw Object.assign(Error('Գնի կարգավորումը սխալ է։'), {code: 400});
   if (!Array.isArray(context) || context.length > 2 || context.some(id => typeof id !== 'string' || id.length > 100))
     throw Object.assign(Error('Ընտրեք առավելագույնը երկու ապրանք։'), {code: 400});
@@ -156,12 +157,12 @@ export async function answerQuestion(payload, visibleProducts, knowledge, option
     if(!found.selected.length){const publicFound=findProducts(message,publicProducts);if(publicFound.selected.length||publicFound.choices.length)found=publicFound;}
     const newSourceHint=/\b\d{4,}\b|[a-z][\w/-]*\d/i.test(message);
     const source=found.selected.length===1?found.selected[0]:!newSourceHint&&!found.choices.length&&context.length===1?visibleProducts.find(p=>p.articul===context[0]):!newSourceHint&&advisor?.similarTo?visibleProducts.find(p=>p.articul===advisor.similarTo):null;
-    if(source)return advise(query,advisor,visibleProducts,p=>knowledgeProduct(p,knowledge),locale,options.orderPriceMode==='KP'?'KP':'WS',publicProducts,{queryNormalized:true,similarTo:source.articul,learning:options.learning});
+    if(source)return advise(query,advisor,visibleProducts,p=>knowledgeProduct(p,knowledge),locale,options.orderPriceMode||'WS',publicProducts,{queryNormalized:true,similarTo:source.articul,learning:options.learning});
     const lang=locale||language(message);return {name:'ԶիգԶագ',answer:lang==='ru'?'Укажите точную исходную модель или артикул, чтобы подобрать аналог по функции, установке и близким характеристикам.':lang==='hy'?'Նշեք սկզբնական մոդելը կամ արտիկուլը՝ նույն գործառույթով, տեղադրմամբ և մոտ բնութագրերով համարժեք ընտրելու համար։':'Enter the exact source model or SKU to match its function, installation and specifications.',mode:'selection',modelUnavailable:false,products:[],context:[],advisor:null,recommendations:[],publicRecommendations:[],choices:found.choices.map(p=>knowledgeProduct(p,knowledge))};
   }
   const explicitModel = found.selected.length && (/[a-z][\w/-]*\d|\d[\w/-]*[a-z]/i.test(message) || (!advisor && visibleProducts.some(p => normalize(message) === normalize(p.articul))));
   if (!refresh && (!explicitModel||options.learning?.expectedRequest)&&!implicitCompare&&ordinal==null) {
-    const selection = advise(query, advisor, visibleProducts, p => knowledgeProduct(p, knowledge), locale, options.orderPriceMode==='KP'?'KP':'WS', publicProducts,{queryNormalized:true,learning:options.learning});
+    const selection = advise(query, advisor, visibleProducts, p => knowledgeProduct(p, knowledge), locale, options.orderPriceMode||'WS', publicProducts,{queryNormalized:true,learning:options.learning});
     if (selection) return selection;
   }
   let products = found.selected.map(p => knowledgeProduct(p, knowledge));

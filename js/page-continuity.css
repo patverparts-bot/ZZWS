@@ -1,0 +1,5 @@
+/* Keep the workspace behind the existing loader until its owned view is restored. */
+html[data-session-pending] #mainApp,html[data-session-pending] #workspace{visibility:hidden!important;pointer-events:none!important}
+html.zzws-buyer-restoring body>:not(#sessionLoader):not(dialog.buyer-mode){visibility:hidden!important;pointer-events:none!important}
+html.zzws-buyer-restoring body{overflow:hidden!important}
+html.zzws-buyer-restoring body>dialog.buyer-mode{visibility:visible!important;pointer-events:auto!important}

@@ -17,9 +17,28 @@ class PartnerPolicyTest {
   for(url in listOf("viber://chat?number=%2B37491123456&draft=Hello", "viber://forward?text=Hello&number=%2B37491123456", "viber://pa?chatURI=other", "intent://forward?text=Hello", "https://viber.com/", "viber://forward?text=Hello#extra", "viber://forward?text=Hello&text=Other", "viber://forward?text=%ZZ", "viber://forward?text=%00", "viber://forward?text=%7F", "viber://forward?text=", "viber://forward?text="+"a".repeat(2001), "viber://user@forward?text=Hello", "viber://forward:42?text=Hello", "viber://forward/path?text=Hello"))assertFalse(url,viberShareLink(url))
  }
  @Test fun onlyTheExactWebsiteReceivesTheSession(){
+  assertEquals("https://zzws-1z2.pages.dev/",PARTNER_SITE)
   assertTrue(trustedPartnerPage(PARTNER_SITE))
   assertTrue(trustedPartnerPage(PARTNER_SITE+"admin/#tab=users"))
+  assertTrue(trustedPartnerPage(LEGACY_PARTNER_SITE))
+  assertTrue(trustedPartnerPage(LEGACY_PARTNER_SITE+"admin/#tab=users"))
+  assertTrue(trustedPartnerPage("https://zzws-1z2.pages.dev:443/admin/"))
+  for(url in listOf("http://zzws-1z2.pages.dev/","https://zzws-1z2.pages.dev.evil.test/","https://main.zzws-1z2.pages.dev/","https://evil.test/","https://user@zzws-1z2.pages.dev/","https://zzws-1z2.pages.dev:444/","https://zzws-1z2.pages.dev/%2e%2e/","https://zzws-1z2.pages.dev/a/../admin/"))assertFalse(url,trustedPartnerPage(url))
   for(url in listOf("http://patverparts-bot.github.io/ZZWS/","https://patverparts-bot.github.io.evil.test/ZZWS/","https://patverparts-bot.github.io/other/","https://user@patverparts-bot.github.io/ZZWS/","https://patverparts-bot.github.io/ZZWS/%2e%2e/","file:///ZZWS/index.html","https://patverparts-bot.github.io:444/ZZWS/"))assertFalse(url,trustedPartnerPage(url))
+ }
+ @Test fun canonicalAndLegacyPathsShareOnlyTheSameReviewedAdminAndAssetRules(){
+  for(site in listOf(PARTNER_SITE,LEGACY_PARTNER_SITE)){
+   assertEquals("/admin/",partnerPagePath(site+"admin/#tab=users"))
+   assertTrue(partnerAdminPage(site+"admin/#tab=manager"));assertFalse(partnerAdminPage(site+"administrator/"))
+   assertFalse(partnerAdminPage(site));assertEquals("dealer-tools.js",partnerBundledAsset(site+"js/dealer-tools.js?v=1"))
+   assertEquals("bundle-policy.js",partnerBundledAsset(site+"js/bundle-policy.js"));assertNull(partnerBundledAsset(site+"other/js/dealer-tools.js"))
+  }
+  assertNull(partnerPagePath("https://evil.test/admin/"));assertNull(partnerBundledAsset("https://evil.test/js/dealer-tools.js"))
+ }
+ @Test fun blobDownloadsRemainPinnedToExactCanonicalOrLegacyOrigin(){
+  assertTrue(trustedPartnerBlob("blob:https://zzws-1z2.pages.dev/00000000-0000-4000-8000-000000000000"))
+  assertTrue(trustedPartnerBlob("blob:https://patverparts-bot.github.io/00000000-0000-4000-8000-000000000000"))
+  for(url in listOf("blob:https://zzws-1z2.pages.dev.evil.test/id","blob:https://preview.zzws-1z2.pages.dev/id","blob:http://zzws-1z2.pages.dev/id","blob:https://user@zzws-1z2.pages.dev/id","blob:https://zzws-1z2.pages.dev:444/id","https://zzws-1z2.pages.dev/id","blob:null/id"))assertFalse(url,trustedPartnerBlob(url))
  }
  @Test fun supplementalToolsKeepExistingPermissionBoundaries(){
   val client=JSONObject().put("role","client").put("active",true)

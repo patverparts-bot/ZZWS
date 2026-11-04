@@ -3,9 +3,10 @@ import {effectiveRules,selectPrice} from './rules.mjs';
 import {project} from './catalog.mjs';
 import {DEFAULT_MAIN_WAREHOUSES} from './warehouses.mjs';
 import {totalOf} from './orders.mjs';
+import {priceCategoryId} from './price-categories.mjs';
 const clone=value=>structuredClone(value);
 export function buildOrderContext({catalog,user,lines,priceMode='WS',previousOrder=null,previousContext=null,source='submit',proposalProducts=[]}){
- const rules=effectiveRules(catalog.rules),group=user?.sheet||'Dealers';
+ const rules=effectiveRules(catalog.rules),group=user?.sheet||'Dealers',priceGroup=user?.role==='admin'?priceCategoryId(priceMode):group;
  const available=new Map((user?project(catalog.products,user,rules,{forOrder:true,mainWarehouses:catalog.mainWarehouses}):[]).map(p=>[p.articul,p]));
  const raw=new Map(catalog.products.map(p=>[p.articul,p])),before=new Map((previousOrder?.lines||[]).map(p=>[p.articul,p]));
  const prior=new Map((previousContext?.lines||[]).map(p=>[p.articul,p])),original=new Map((previousOrder?.original_lines||[]).map(p=>[p.articul,p]));
@@ -27,13 +28,14 @@ export function buildOrderContext({catalog,user,lines,priceMode='WS',previousOrd
    }
    let selected={price:0,source:null};
    if(product&&permitted){
-    selected=user.role==='admin'?(priceMode==='KP'?{price:product.kpPromo||product.kp,source:product.kpPromo?'kpPromo':product.kp?'kp':null}:{price:product.ws,source:product.ws?'ws':null}):selectPrice(product,rules[group].pricing);
+    const policy=rules[priceGroup]?.pricing;
+    if(policy){selected=selectPrice(product,policy);if(user.role==='admin'&&policy.hideAboveRetail&&product.retail>0&&selected.price>product.retail)selected={price:0,source:null};}
    }
    const catalogUnitPrice=selected.price>0?selected.price:null;
    if(source==='submit'&&catalogUnitPrice!==line.unitPrice)throw Error('Հաշվարկված գինը չի համընկնում պատվերի գնին');
    const changed=prev?prev.unitPrice!==line.unitPrice:catalogUnitPrice!==line.unitPrice;
    return {...quantity,catalogUnitPrice,priceSource:selected.source,priceOrigin:source==='submit'||!changed?'catalogue':source==='confirmation'?'confirmation_file':'manager_manual',basisRevision:null,
-    calculation:{catalogVersion:catalog.id,rulesRevision:catalog.rulesRevision,clientCategory:user?group:null,sourceValue:selected.source?product[selected.source]:null,policy:user?.role==='admin'?{mode:priceMode}:clone(rules[group].pricing)}};
+    calculation:{catalogVersion:catalog.id,rulesRevision:catalog.rulesRevision,clientCategory:user?group:null,priceCategory:priceGroup,sourceValue:selected.source?product[selected.source]:null,policy:rules[priceGroup]?clone(rules[priceGroup].pricing):null}};
   })
  };
 }
