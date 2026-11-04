@@ -1,4 +1,5 @@
 import {orderExportData} from './order-export.mjs';
+import {boundedMultipart} from './body-reader.mjs';
 import {proposalCartProducts} from './proposal-cart.mjs';
 import {clientOrderExportRoute} from './client-order-export.mjs';
 import {viberContacts} from './contacts.mjs';
@@ -181,7 +182,7 @@ export async function orderRoutes(c){
  if(path==='admin/orders/preview'&&req.method==='POST'){
   let orderId,revision,parsed,filename;
   if((req.headers.get('content-type')||'').includes('application/json')){const p=await body(req);orderId=p.orderId;revision=p.revision;parsed=parsePastedConfirmation(p.text);filename='Տեղադրված աղյուսակ';}
-  else{const form=await req.formData(),upload=form.get('file');orderId=form.get('orderId');revision=Number(form.get('revision'));if(!(upload instanceof File)||!upload.name.toLowerCase().endsWith('.xlsx'))fail(400,'Ընտրեք XLSX');parsed=parseConfirmation(rowsFromBuffer(await upload.arrayBuffer()));filename=upload.name.slice(0,300);}
+  else{const form=await boundedMultipart(req),upload=form.get('file');orderId=form.get('orderId');revision=Number(form.get('revision'));if(!(upload instanceof File)||!upload.name.toLowerCase().endsWith('.xlsx'))fail(400,'Ընտրեք XLSX');parsed=parseConfirmation(rowsFromBuffer(await upload.arrayBuffer()));filename=upload.name.slice(0,300);}
   const o=await order(orderId,true);if(revision!==o.revision)fail(409,'Պատվերն արդեն փոխվել է։ Վերաբացեք այն');
   const {lines}=await prepare(o,parsed.lines),changes=changesBetween(o.lines,lines);
   const d=await query(table('drafts').insert({actor:user.id,kind:'order',payload:{orderId:o.id,revision:o.revision,lines,changes,filename,metadata:parsed.metadata,delivery:parsed.delivery}}).select('id').single());

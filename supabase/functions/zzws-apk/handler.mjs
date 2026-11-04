@@ -1,4 +1,5 @@
 import {inspectApk,MAX_APK_BYTES} from './apk.mjs';
+import {verifyProductionApk} from './signature.mjs';
 const BUCKET='zzws-android-releases',MIME='application/vnd.android.package-archive';
 const fail=(status,message,extra={})=>{throw Object.assign(new Error(message),{status,...extra});};
 const hash=async data=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',data)),b=>b.toString(16).padStart(2,'0')).join('');
@@ -27,13 +28,25 @@ export function createApkHandler({service,origins,baselineVersionCode=70008,now=
   // publications can only move this boundary forward, never endanger the keepers.
   for(let batch=0;batch<8;batch++){
    const files=await checked(store().list('releases',{limit:22,sortBy:{column:'name',order:'desc'}}));
-   if(files.length<=2)return;
+   if(!files.length)return;
    const versions=await Promise.all(files.map(async file=>{
     const match=/^(\d{10})\.json$/.exec(file.name);if(!match)fail(503,'APK թողարկման տվյալները սխալ են։');
     const r=await release(Number(match[1]));if(releasePath(r.versionCode)!=='releases/'+file.name)fail(503,'APK թողարկման տվյալները սխալ են։');
     return r;
    }));
-   const protectedPaths=new Set(versions.slice(0,2).map(r=>r.objectPath));
+   const keepers=versions.slice(0,2);
+   // Validate both immutable keeper objects before the first deletion. A valid
+   // manifest alone is not proof that a recoverable previous APK still exists.
+   for(const r of keepers){
+    const blob=await checked(store().download(r.objectPath));
+    if(blob.size!==r.bytes||await hash(await blob.arrayBuffer())!==r.sha256)fail(503,'Պահպանվող APK-ը չի անցել ստուգումը։ Մաքրումը դադարեցված է։');
+   }
+   // A concurrent newer publication changes the keeper pair. Restart without
+   // deleting until that pair has also passed the same complete-byte checks.
+   const current=await checked(store().list('releases',{limit:2,sortBy:{column:'name',order:'desc'}}));
+   if(current.length!==keepers.length||current.some((f,i)=>f.name!==files[i].name))continue;
+   if(files.length<=2)return;
+   const protectedPaths=new Set(keepers.map(r=>r.objectPath));
    const older=versions.slice(2),paths=[...new Set(older.map(r=>r.objectPath))].filter(path=>!protectedPaths.has(path));
    // Keep old manifests until their files have been removed. A failed delete is
    // then discoverable and retryable; never touch unpublished/in-flight uploads.
@@ -104,7 +117,7 @@ export function createApkHandler({service,origins,baselineVersionCode=70008,now=
    const description=typeof info.description==='string'?info.description.trim():'';
    if(typeof info.filename!=='string'||!info.filename.toLowerCase().endsWith('.apk')||description.length>4000)fail(400,'Ստուգեք APK ֆայլը և նկարագրությունը։');
    const bytes=input.subarray(4+headerLength);if(bytes.length>MAX_APK_BYTES)fail(413,'APK ֆայլը չպետք է գերազանցի 50 ՄԲ-ը։');
-   const metadata=inspectApk(bytes),sha256=await hash(bytes);
+   const metadata=inspectApk(bytes);await verifyProductionApk(bytes);const sha256=await hash(bytes);
    const previous=await latest();if(metadata.versionCode<baselineVersionCode||previous&&metadata.versionCode<=previous.versionCode){if(previous?.sha256===sha256&&previous.description===description)return json({ok:true,release:previous,unchanged:true,retention:await retention()});fail(409,'Ընտրեք ավելի նոր APK տարբերակ։ Ընթացիկ թողարկումը պահպանված է։');}
    // Recheck the actor after reading/validating a potentially slow upload.
    await identity(req,true);await bucket(true);

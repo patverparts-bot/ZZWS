@@ -1,0 +1,15 @@
+{
+  "date": "2026-11-04",
+  "timezone": "Asia/Yerevan",
+  "api": {"function": "zzws-api", "version": 81, "active": true, "sourceFilesMatchedAfterDownload": 68, "changedFiles": ["body-reader.mjs", "index.ts", "order-routes.mjs", "report-routes.mjs"]},
+  "apkFunction": {"function": "zzws-apk", "version": 11, "active": true, "sourceFilesMatchedAfterDownload": 4, "currentBinaryVersionUnchanged": "7.1.35", "currentBinaryVersionCode": 70135, "newBinaryPublished": false, "releaseFilesDeleted": false},
+  "publishedVerified": ["PUB-004", "PUB-005", "PUB-006"],
+  "deployedWithRemainingVerification": [{"id": "PUB-002", "verified": ["7 isolated boundary/route/authorization tests", "exact deployed source readback", "live malformed 24-byte multipart HTTP 400"], "remaining": "Live oversized HTTP 413 is unverified; large requests reached wall-clock time limits with low CPU. No confirmed root cause. Do not automatically repeat large probes."}],
+  "localValidation": {"apkTestsPassed": 27, "apkTestsSkipped": 0, "multipartTestsPassed": 7, "combinedCorsTestsPassed": 1, "combinedCorsResponsesChecked": 46},
+  "liveCors": {"newOrigin": "https://zzws-1z2.pages.dev", "existingOriginPreserved": "https://patverparts-bot.github.io", "trustedGet": 200, "trustedOptions": 204, "foreignOrLookalikeOrigin": 403, "unauthenticatedPrivateRoute": 401},
+  "notActivated": ["PUB-001", "PUB-003", "PUB-007", "PUB-008", "PUB-009"],
+  "databaseMigrationsApplied": [],
+  "realOrdersCreated": 0,
+  "realReportsSent": 0,
+  "priceListsPublished": 0
+}
