@@ -1,0 +1,21 @@
+{
+  "status": "PREPARED_SOURCE_ONLY_NOT_ACTIVATED",
+  "feature": "Full customer code label with relationship key from its first six digits",
+  "preserveLeadingZeros": true,
+  "existingCustomerIdsPreserved": true,
+  "liveApiVersionAtPreparation": 79,
+  "productionDatabaseMigrationApplied": false,
+  "edgeFunctionDeployed": false,
+  "requiredBeforeActivation": [
+    "Resolve the earlier zzws-api deployment request; support ticket SU-537346 is not itself deployment authorization",
+    "Recheck installed sources and versions and retain backups",
+    "Review and safely apply the migration collision guard and matching API changes together",
+    "Verify existing relationships and then publish the compatible frontend"
+  ],
+  "isolatedValidation": [
+    "Full label and leading zeros survive card save and reopen",
+    "Six-digit lookup selects the original customer UUID",
+    "Company, employee, saved cart, delivery, historical order and report relationships retained",
+    "Duplicate six-digit relationship keys rejected without merging customer cards"
+  ]
+}

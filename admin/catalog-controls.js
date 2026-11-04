@@ -54,7 +54,7 @@
   try{
    const [data,result]=await Promise.all([api('admin/catalog-controls'),api('admin/users')]);if(ticket!==generation)return;config=data.config||{};revision=data.revision;
    const target=el('catalogControlsTarget'),previous=target.value;target.replaceChildren();const all=node('option','Բոլոր օգտատերերի համար');all.value='global';target.append(all);
-   for(const user of result.users.filter(u=>u.clientRole!=='employee')){const option=node('option',(user.client||'')+' — '+(user.customerCode||''));option.value=user.id;target.append(option);}target.value=[...target.options].some(o=>o.value===previous)?previous:'global';render();
+   for(const user of result.users.filter(u=>u.clientRole!=='employee')){const option=node('option',(user.client||'')+' — '+(user.customerCode||''));option.dataset.i18nSkip='true';option.value=user.id;target.append(option);}target.value=[...target.options].some(o=>o.value===previous)?previous:'global';render();
   }finally{if(ticket===generation)busy(false);}
  }
  el('catalogControlsTarget').onchange=render;

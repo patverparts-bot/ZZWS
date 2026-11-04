@@ -49,6 +49,7 @@ function table(headers, rows) {
   rows.forEach(row => { const tr = body.insertRow(); row.forEach(v => { const td = tr.insertCell(); if (v instanceof Node) td.append(v); else td.textContent = String(v ?? ''); }); });
   return table;
 }
+function customerCodeNode(value){const node=document.createElement('span');node.textContent=String(value??'');node.dataset.i18nSkip='true';return node;}
 function button(label, callback, tone='secondary') { const b = document.createElement('button'); b.type='button'; b.dataset.actionTone=tone; b.textContent = label; b.onclick = () => run(callback); return b; }
 async function run(fn) { try { await fn(); } catch(e) { if(!e.staleSession)status(ZZWS.message(e), true); } }
 const adminTabs=['proposalManagement','assistantHistory','dashboard','manager','orders','templates','price','users','rules','audit','storage','email','offers','catalogControls','warehouses','operations','apkDownloads','systemDataReset','orderSettings','accountSettings','mobileApp'];
@@ -157,7 +158,7 @@ async function loadVersions() {
 }
 async function loadUsers() {
   const d = await api('admin/users'); users = d.users;categoryLabels={...categoryLabels,...d.categoryLabels};categoryByGroup=d.categoryByGroup||categoryByGroup;
-  el('userList').replaceChildren(table(['Հաճախորդի կոդ','Հաճախորդ','Դեր','Գներ','Կատեգորիա','Հասանելիություն',''], users.filter(u=>u.clientRole!=='employee').map(u => [u.role==='admin'?u.login:u.customerCode||'',u.client,u.role==='admin'?'Ադմինիստրատոր':'Հաճախորդ',categoryLabel(u.sheet),u.role==='client'?categoryLabel(u.sheet):'—',u.active?'Միացված է':'Անջատված է',button('Խմբագրել', () => editUser(u))])));
+  el('userList').replaceChildren(table(['Հաճախորդի կոդ','Հաճախորդ','Դեր','Գներ','Կատեգորիա','Հասանելիություն',''], users.filter(u=>u.clientRole!=='employee').map(u => [customerCodeNode(u.role==='admin'?u.login:u.customerCode||''),u.client,u.role==='admin'?'Ադմինիստրատոր':'Հաճախորդ',categoryLabel(u.sheet),u.role==='client'?categoryLabel(u.sheet):'—',u.active?'Միացված է':'Անջատված է',button('Խմբագրել', () => editUser(u))])));
 }
 async function editUser(user = {}) {
   const f = el('userForm'); f.reset(); f.hidden = false;
@@ -167,6 +168,7 @@ async function editUser(user = {}) {
   el('deleteClient').hidden=el('deleteClientNote').hidden=!user.id||user.role!=='client'||user.clientRole==='employee';
   el('archiveClient').hidden=!user.id||user.role!=='client'||user.clientRole==='employee';
   el('userTitle').textContent=editingUserId?'Օգտատիրոջ խմբագրում՝ '+(user.role==='client'?user.client+(user.customerCode?' ('+user.customerCode+')':''):user.login):'Նոր օգտատեր';
+  window.ZZWS_I18N?.protectData?.(el('userTitle'),[user.customerCode]);
   for (const key of ['customerCode','login','client','role','sheet']) if (user[key]) f.elements[key].value = user[key];
   for (const key of ['active','allowResale']) f.elements[key].checked = key === 'active' ? user.active !== false : !!user[key];
   userAccessEditor=ZZWS_RULES_UI.accessEditor(el('userAccessEditor'),ZZWS_RULES_UI.legacyAccess({...user,sheet:user.sheet||'Dealers'}),catalogPairs);
@@ -216,7 +218,7 @@ el('usersImportForm').onsubmit = e => { e.preventDefault(); run(async () => {
   const d = await api('admin/users/preview',{method:'POST',body:await ZZWS_I18N_WORKBOOKS.userImport(new FormData(e.target),categoryLabels)});
   userDraft = d.draft;
   const scopeLabels={owner:'Սեփականատեր՝ ամբողջ հասանելիություն',manager:'Պատվերների մենեջեր',price:'Գնացուցակի օպերատոր',viewer:'Միայն դիտում'},receiptLabels={inherit:'Ընդհանուր կարգավորում',on:'Միացված է',off:'Անջատված է',until:'Ժամանակավորապես անջատված է'},yes=value=>value==null?'Պահպանել նախկինը':value?'Այո':'Ոչ';
-  el('usersChanges').replaceChildren(table(['Մուտքանուն','Անվանում','Գործողություն','Դեր','Կատեգորիա','Հասանելիություն','Աշխատակցի իրավունքներ','Բջջային Հավելված','Telegram','Ստուգում (վրկ)','Ստացման վերահսկում','Ապրանքների կանոններ'],d.users.map(u=>[u.customerCode||u.login,u.client,u.action==='create'?'Նոր հաշիվ':'Թարմացնել և ավարտել աշխատաշրջանները',u.role==='admin'?'Ադմինիստրատոր':'Հաճախորդ',categoryLabel(u.sheet),yes(u.active),u.role==='admin'?(scopeLabels[u.scope]||'Իրավունքները նշանակված չեն'):'Չի կիրառվում',yes(u.mobile),yes(u.telegram),u.refresh??'—',receiptLabels[u.receipt]||'Պահպանել նախկինը',u.accessChanged?'Փոխվում են':'Պահպանել նախկինը'])));
+  el('usersChanges').replaceChildren(table(['Մուտքանուն','Անվանում','Գործողություն','Դեր','Կատեգորիա','Հասանելիություն','Աշխատակցի իրավունքներ','Բջջային Հավելված','Telegram','Ստուգում (վրկ)','Ստացման վերահսկում','Ապրանքների կանոններ'],d.users.map(u=>[customerCodeNode(u.customerCode||u.login),u.client,u.action==='create'?'Նոր հաշիվ':'Թարմացնել և ավարտել աշխատաշրջանները',u.role==='admin'?'Ադմինիստրատոր':'Հաճախորդ',categoryLabel(u.sheet),yes(u.active),u.role==='admin'?(scopeLabels[u.scope]||'Իրավունքները նշանակված չեն'):'Չի կիրառվում',yes(u.mobile),yes(u.telegram),u.refresh??'—',receiptLabels[u.receipt]||'Պահպանել նախկինը',u.accessChanged?'Փոխվում են':'Պահպանել նախկինը'])));
   el('usersPreview').hidden = false; status('Ստուգեք փոփոխությունները մինչև կիրառելը');
 }); };
 el('importUsers').onclick = () => run(async () => { if (!userDraft) return; el('importUsers').disabled=true; try {
