@@ -31,7 +31,7 @@
       const theme=value.theme==='dark'?'dark':'light';localStorage.setItem('zigzag_theme',theme);document.documentElement.classList.toggle('dark',theme==='dark');
       localStorage.setItem('zigzag_filters_open_'+userStorageId(),value.filtersOpen||'false');
       if(render)toggleMobileFilters(value.filtersOpen==='1');
-      adminOrderPriceMode=value.priceMode==='KP'&&isAdminUser()?'KP':'WS';localStorage.setItem('zigzag_admin_price_mode_'+userStorageId(),adminOrderPriceMode);
+      adminOrderPriceMode=isAdminUser()&&(value.priceMode==='KP'||/^cat_[a-z0-9_-]{1,60}$/.test(value.priceMode||''))?value.priceMode:'WS';localStorage.setItem('zigzag_admin_price_mode_'+userStorageId(),adminOrderPriceMode);
     }
     if(section==='draft'){for(const id of fields){const el=document.getElementById(id);if(!el)continue;if(id==='organizationSelect'){
       if(Object.hasOwn(value,id)){el.value=clientRowsData.some(row=>row.id===value[id])?value[id]:'';if(!el.value)banner('Պահպանված պատվերի համար կրկին ընտրեք առաքման տարբերակը։ Հասցեն և կոնտակտը պահպանված են։',true);}

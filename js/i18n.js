@@ -13,6 +13,18 @@
   if(letter.test(result))unknown.add(text);if(cache.size>10000)cache.clear();cache.set(text,result);return result;
  }
  const t=(value,locale=language)=>locale==='ru'?russian(value):String(value??'');
+ function protectData(root,values=[]){
+  if(!root)return root;
+  const protectedValues=[...new Set(values.map(value=>String(value??'')).filter(Boolean))].sort((a,b)=>b.length-a.length);
+  if(!protectedValues.length)return root;
+  const nodes=[],walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+  while(walker.nextNode())if(!walker.currentNode.parentElement?.closest('[data-i18n-skip]'))nodes.push(walker.currentNode);
+  for(const current of nodes){let text=current.nodeValue,matched=false;const fragment=document.createDocumentFragment();
+   while(text){let at=-1,value='';for(const candidate of protectedValues){const index=text.indexOf(candidate);if(index>=0&&(at<0||index<at)){at=index;value=candidate;}}if(at<0){fragment.append(document.createTextNode(text));break;}matched=true;if(at)fragment.append(document.createTextNode(text.slice(0,at)));const span=document.createElement('span');span.dataset.i18nSkip='true';span.textContent=value;fragment.append(span);text=text.slice(at+value.length);}
+   if(matched)current.replaceWith(fragment);
+  }
+  return root;
+ }
  function skip(node){return !node.parentElement||!!node.parentElement.closest('script,style,textarea,noscript,[contenteditable=true],[data-i18n-skip]');}
  function text(node){
   if(skip(node))return;const current=node.nodeValue,prior=sources.get(node),source=prior&&current===prior.last?prior.source:current;
@@ -50,6 +62,6 @@
  function start(){selector();refresh();}
  document.addEventListener('DOMContentLoaded',start,{once:true});window.addEventListener('storage',event=>{if(event.key===preference&&['hy','ru'].includes(event.newValue)){language=event.newValue;refresh();window.dispatchEvent(new CustomEvent('zzws:languagechange',{detail:{language}}));}});
  function canonical(value,choices=[]){const raw=String(value??''),query=raw.toLocaleLowerCase();const exact=choices.find(c=>String(c).toLocaleLowerCase()===query||russian(c).toLocaleLowerCase()===query);if(exact!==undefined)return exact;return raw;}
- window.ZZWS_I18N=Object.freeze({t,russian,canonical,setLanguage,get language(){return language;},refresh,unknown:()=>[...unknown],search:(value,query)=>{const a=String(value??'').toLocaleLowerCase(),b=String(query??'').toLocaleLowerCase();return a.includes(b)||russian(a).toLocaleLowerCase().includes(b)||russian(String(value??'')).toLocaleLowerCase().includes(b);}});
+ window.ZZWS_I18N=Object.freeze({t,russian,canonical,protectData,setLanguage,get language(){return language;},refresh,unknown:()=>[...unknown],search:(value,query)=>{const a=String(value??'').toLocaleLowerCase(),b=String(query??'').toLocaleLowerCase();return a.includes(b)||russian(a).toLocaleLowerCase().includes(b)||russian(String(value??'')).toLocaleLowerCase().includes(b);}});
  if(document.readyState!=='loading')start();
 })();

@@ -1,4 +1,5 @@
 (() => {
+ const protect=(element,code)=>{window.ZZWS_I18N?.protectData?.(element,[code]);return element;};
  const statuses={new:'Նոր',confirmed:'Հաստատված',in_progress:'Ձևակերպված է',completed:'Առաքված է',rejected:'Մերժված',received:'Ստացված է'};
  const el=id=>document.getElementById(id),money=v=>Number(v||0).toLocaleString((window.ZZWS_I18N?.language==='ru'?'ru-RU':'hy-AM'))+' ֏',date=v=>new Date(v).toLocaleString((window.ZZWS_I18N?.language==='ru'?'ru-RU':'hy-AM'),{timeZone:'Asia/Yerevan'});
  let list=[],selected=null,manualRows=[],preview=null,dirty=false,busy=false,timer=null,listEpoch=0,listKey=null,editorEpoch=0,operation=0,searchTimer,activeDialog=null,running=false,pollBusy=false,pollSession=0,summaryEpoch=0,summaryVersion=null,refreshSeconds=5,viewEpoch=0;
@@ -51,7 +52,7 @@
   const shown=list;el('adminOrderCount').textContent='Ցուցադրված է՝ '+shown.length;
   if(!shown.length){root.append(node('p','Ընտրված պայմաններով պատվերներ չկան։'));return;}
   const table=node('table'),head=table.createTHead().insertRow();for(const h of ['№ / ամսաթիվ','Հաճախորդ','Կարգավիճակ','Գումար',''])head.append(node('th',h));
-  for(const o of shown){const row=table.insertRow();row.insertCell().append(node('strong','№'+o.number),node('small',date(o.created),'admin-order-date'));const customer=row.insertCell();customer.append(node('strong',o.customer.client),node('small',o.customer.customerCode,'admin-order-date'));if(o.customer.author)customer.append(node('small',[o.customer.author.firstName,o.customer.author.lastName].filter(Boolean).join(' '),'admin-order-date'));if(o.created_by)customer.append(node('small','Լրացրել է՝ '+o.created_by.name+' ('+o.created_by.login+')','admin-order-date'));row.insertCell().append(node('span',window.ZZWS_ORDER_APPROVAL?.label(o)||statuses[o.status],'order-status status-'+o.status));row.insertCell().textContent=money(o.total);const actions=row.insertCell();actions.className='order-list-actions';actions.append(btn('Բացել',()=>open(o.id)),btn('Դիտել',()=>viewOrder(o.id)));window.ZZWS_ADMIN_ORDER_UNREAD?.apply(row,o,row.cells[0]);}root.append(table);controls();
+  for(const o of shown){const row=table.insertRow();row.insertCell().append(node('strong','№'+o.number),node('small',date(o.created),'admin-order-date'));const customer=row.insertCell();customer.append(node('strong',o.customer.client),protect(node('small',o.customer.customerCode,'admin-order-date'),o.customer.customerCode));if(o.customer.author)customer.append(node('small',[o.customer.author.firstName,o.customer.author.lastName].filter(Boolean).join(' '),'admin-order-date'));if(o.created_by)customer.append(node('small','Լրացրել է՝ '+o.created_by.name+' ('+o.created_by.login+')','admin-order-date'));row.insertCell().append(node('span',window.ZZWS_ORDER_APPROVAL?.label(o)||statuses[o.status],'order-status status-'+o.status));row.insertCell().textContent=money(o.total);const actions=row.insertCell();actions.className='order-list-actions';actions.append(btn('Բացել',()=>open(o.id)),btn('Դիտել',()=>viewOrder(o.id)));window.ZZWS_ADMIN_ORDER_UNREAD?.apply(row,o,row.cells[0]);}root.append(table);controls();
  }
  const acknowledgeRead=o=>window.ZZWS_ADMIN_ORDER_UNREAD?window.ZZWS_ADMIN_ORDER_UNREAD.acknowledge(o):request('admin/orders/read',{id:o.id,revision:o.revision});
  async function open(id,internal=false){
@@ -65,6 +66,7 @@
   el('adminOrderEditor').hidden=false;el('confirmationPaste').value='';el('finalOrderFile').value='';el('finalOrderFile').dispatchEvent(new Event('change',{bubbles:true}));
   el('selectedOrderTitle').textContent='Պատվեր №'+o.number+' · '+o.customer.client;
   el('selectedOrderMeta').textContent=o.customer.customerCode+' · Ստացվել է '+date(o.created)+' · Տարբերակ '+o.revision+(o.created_by?' · Լրացրել է ադմինիստրատոր՝ '+o.created_by.name+' ('+o.created_by.login+')':'');
+  window.ZZWS_I18N?.protectData?.(el('selectedOrderMeta'),[o.customer.customerCode]);
   let approvalInfo=el('adminApprovalInfo');if(!approvalInfo){approvalInfo=node('div');approvalInfo.id='adminApprovalInfo';el('selectedOrderMeta').after(approvalInfo);}approvalInfo.textContent=o.approval?.state==='approved'&&o.status==='confirmed'?'Հաճախորդը համաձայնեցրել է փոփոխությունները։ Կարելի է ձևակերպել պատվերը։':window.ZZWS_ORDER_APPROVAL?.label(o)||'';
   if(o.approval?.state==='pending'&&o.approval.reviewRequestedMinutes)approvalInfo.append(node('p','Հաճախորդը ժամանակ է խնդրել դիտարկման համար՝ '+o.approval.reviewRequestedMinutes+' րոպե։ Հիշեցնել՝ '+date(o.approval.remindAfter)));
   if(o.approval?.response?.declinedArticuls?.length)approvalInfo.append(node('p','Հաճախորդի մերժած ապրանքները՝ '+o.approval.response.declinedArticuls.join(', ')));
@@ -155,9 +157,9 @@
  }
  function renderPreview(){const root=el('confirmationPreviewContent');root.replaceChildren();const meta=preview.metadata||{};
   root.append(node('h3','Վերջնական կազմ · '+preview.lines.length+' դիրք · '+money(preview.total)));
-  root.append(node('p','Ընտրված պատվեր՝ №'+preview.context.number+' · '+preview.context.customer.client+' ('+preview.context.customer.customerCode+')','order-info'));
+  root.append(protect(node('p','Ընտրված պատվեր՝ №'+preview.context.number+' · '+preview.context.customer.client+' ('+preview.context.customer.customerCode+')','order-info'),preview.context.customer.customerCode));
   const customer=ZZWS_ORDER_COMPARE.confirmationCustomer(meta,preview.context.customer,preview.context.delivery);
-  root.append(node('p',customer.text,customer.status==='match'?'confirmation-match':'confirmation-warning'));
+  root.append(protect(node('p',customer.text,customer.status==='match'?'confirmation-match':'confirmation-warning'),preview.context.customer.customerCode));
   if(meta.customer||meta.organization)root.append(node('p',[meta.customer?'Ֆայլի պատվիրատու՝ '+meta.customer:'',meta.organization?'Իրավաբանական անձ՝ '+meta.organization:''].filter(Boolean).join(' · '),'order-info'));
   if(meta.format==='zigzag_sales_report')root.append(node('p',meta.totalProvided?'Փաստաթղթի ընդհանուր գումարը համընկնում է տողերի գումարին։ Գինը հաշվարկված է զեղչված գումարից։':'Ստուգիչ ընդհանուր գումարը նշված չէ։ Գումարը հաշվարկված է զեղչված տողերից։','order-info'));
   if(Object.keys(preview.delivery||{}).length)root.append(node('p','Հաստատման ամսաթվերն ու առաքումը՝ '+Object.entries(preview.delivery).map(([k,v])=>({date:'Առաքման ամսաթիվ',method:'Առաքման եղանակ',paymentDeadline:'Վճարման վերջնաժամկետ'}[k]||'Լրացուցիչ տվյալ')+': '+v).join(' · ')));

@@ -1,0 +1,31 @@
+.zzws-workspace-choice{box-sizing:border-box;width:min(680px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto;padding:32px;border:1px solid #dbe3ed;border-radius:24px;box-shadow:0 24px 80px #0f172a30;background:#fff;color:#172033;text-align:left;font-family:inherit}
+.zzws-workspace-choice::backdrop{background:#101c32a6;backdrop-filter:blur(5px)}
+.zzws-workspace-choice .workspace-choice-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:30px;background:#ecf8f2;color:#20664b;font-size:12px;font-weight:600}
+.workspace-choice-badge::before{content:'✓';font-weight:800}
+.zzws-workspace-choice h2{margin:18px 0 8px;font-size:26px;line-height:1.4;letter-spacing:-.4px}
+.zzws-workspace-choice p{margin:0 0 24px;color:#657185;font-size:14px;line-height:1.65}
+.workspace-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.zzws-workspace-choice button{display:flex;align-items:flex-start;gap:14px;width:100%;min-width:0;min-height:170px;margin:0;padding:20px;border:1px solid #dbe3ed;border-radius:16px;background:#f8fafc;color:#24324a;text-align:left;font-family:inherit;cursor:pointer;transition:background .15s,border-color .15s,box-shadow .15s}
+.zzws-workspace-choice button[data-workspace=admin]{background:#edf4ff;border-color:#b9d0f4;color:#174d99}
+.zzws-workspace-choice button:hover{background:#eef3fa;border-color:#7d9ecb;box-shadow:0 4px 14px #1e407912}
+.zzws-workspace-choice button[data-workspace=admin]:hover{background:#e1edff;border-color:#648fc9}
+.zzws-workspace-choice button:focus-visible{outline:3px solid #2563eb;outline-offset:4px}
+.zzws-workspace-choice button:disabled{cursor:wait;opacity:.65}
+.workspace-choice-icon{display:flex;flex-shrink:0;align-items:center;justify-content:center;width:36px;height:36px;border:1px solid #d5dfed;border-radius:10px;background:#fff;font-size:24px;line-height:1}
+.workspace-choice-copy{display:grid;gap:9px;min-width:0}
+.workspace-choice-copy strong{font-size:16px;line-height:1.5;font-weight:700;overflow-wrap:anywhere}
+.workspace-choice-copy small{color:#657185;font-size:13px;line-height:1.6;font-weight:400}
+.zzws-workspace-choice button[data-workspace=both]{align-items:center;min-height:76px;margin-top:16px;padding:16px 20px;background:transparent;border-style:dashed}
+.zzws-workspace-choice button[data-workspace=both] .workspace-choice-copy{gap:3px}
+.zzws-workspace-choice .workspace-choice-error:empty{display:none}
+.zzws-workspace-choice .workspace-choice-error:not(:empty){margin:16px 0 0;padding:12px;border-radius:10px;background:#fff1f2;color:#a32135}
+.dark .zzws-workspace-choice{background:#192537;color:#f1f5f9;border-color:#40516b}
+.dark .zzws-workspace-choice button{background:#233146;color:#e7eef9;border-color:#425570}
+.dark .zzws-workspace-choice button[data-workspace=admin]{background:#203d63;color:#e0edff;border-color:#527eaf}
+.dark .zzws-workspace-choice button:hover{background:#30445f}
+.dark .zzws-workspace-choice .workspace-choice-icon{background:#18283e;border-color:#49617f}
+.dark .zzws-workspace-choice p,.dark .workspace-choice-copy small{color:#b7c5d9}
+.dark .zzws-workspace-choice .workspace-choice-badge{background:#1b493b;color:#b6efd7}
+@media(max-width:540px){.zzws-workspace-choice{padding:24px 20px;border-radius:20px}.zzws-workspace-choice h2{font-size:22px}.workspace-choice-grid{grid-template-columns:1fr;gap:12px}.zzws-workspace-choice button{min-height:112px;padding:16px}.zzws-workspace-choice p{margin-bottom:20px}}
+@media(prefers-reduced-motion:reduce){.zzws-workspace-choice button{transition:none}}
+.zzws-workspace-choice .workspace-choice-grid button{flex-direction:column;gap:14px}.zzws-workspace-choice .workspace-choice-grid .workspace-choice-copy{width:100%}

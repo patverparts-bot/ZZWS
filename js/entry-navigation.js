@@ -12,11 +12,12 @@
  async function choose(user,continueCurrent){
   if(!allowed(user)){await continueCurrent();return;}
   return new Promise((resolve,reject)=>{
-   const dialog=node('dialog'),title=node('h2','Ընտրեք աշխատանքային միջավայրը'),info=node('p','Մուտքը հաստատված է։ Ընտրեք՝ որտեղ շարունակել աշխատանքը։'),error=node('p');dialog.id='workspaceChoiceDialog';dialog.className='zzws-workspace-choice';error.setAttribute('role','alert');dialog.append(title,info);
-   const currentAdmin=location.pathname.startsWith(admin.pathname),current=currentAdmin?'admin':'site';let pending=false;
+   const dialog=node('dialog'),title=node('h2','Ընտրեք աշխատանքային միջավայրը'),info=node('p','Մուտքը հաստատված է։ Ընտրեք՝ որտեղ շարունակել աշխատանքը։'),error=node('p'),badge=node('span','Մուտքը հաստատված է'),choices=node('div');dialog.id='workspaceChoiceDialog';dialog.className='zzws-workspace-choice';title.id='workspaceChoiceTitle';info.id='workspaceChoiceDescription';dialog.setAttribute('aria-labelledby',title.id);dialog.setAttribute('aria-describedby',info.id);badge.className='workspace-choice-badge';choices.className='workspace-choice-grid';error.className='workspace-choice-error';error.setAttribute('role','alert');dialog.append(badge,title,info,choices);
+   const currentAdmin=location.pathname.startsWith(admin.pathname),current=currentAdmin?'admin':'site';let pending=false;const buttons=[];
+   const busy=value=>{pending=value;dialog.setAttribute('aria-busy',String(value));for(const button of buttons)button.disabled=value;};
    const close=()=>{dialog.close();dialog.remove();};
-   const add=(label,target)=>{const button=node('button',label);button.type='button';button.onclick=async()=>{
-    if(pending)return;pending=true;let extra=null;
+   const add=(label,target,description,icon)=>{const button=node('button'),symbol=node('span',icon),copy=node('span'),name=node('strong',label),detail=node('small',description);button.type='button';button.dataset.workspace=target;symbol.className='workspace-choice-icon';symbol.setAttribute('aria-hidden','true');copy.className='workspace-choice-copy';copy.append(name,detail);button.append(symbol,copy);button.onclick=async()=>{
+    if(pending)return;busy(true);error.textContent='';let extra=null;
     try{
      if(target==='both'){
       // Create a same-origin blank tab during the click. Never put credentials in a URL or localStorage.
@@ -27,9 +28,9 @@
      }
      if(target===current){await continueCurrent();close();resolve();}
      else{location.assign((target==='admin'?admin:site).href);close();resolve();}
-    }catch(e){extra?.close();error.textContent=window.ZZWS.message(e);pending=false;}
-   };dialog.append(button);};
-   add('Բացել կայքը','site');add('Բացել կառավարման վահանակը','admin');add('Բացել երկուսն էլ','both');dialog.append(error);dialog.addEventListener('cancel',e=>e.preventDefault());document.body.append(dialog);dialog.showModal();
+    }catch(e){extra?.close();error.textContent=window.ZZWS.message(e);busy(false);button.focus();}
+   };buttons.push(button);(target==='both'?dialog:choices).append(button);};
+   add('Բացել կառավարման վահանակը','admin','Պատվերներ, հաճախորդներ և աշխատանքային գործիքներ','▦');add('Բացել կայքը','site','Ապրանքներ, գներ և պատվերի ձևավորում','▤');add('Բացել երկուսն էլ','both','Երկու միջավայր՝ առանձին ներդիրներում','↗');dialog.append(error);dialog.addEventListener('cancel',e=>e.preventDefault());document.body.append(dialog);dialog.showModal();
   });
  }
  window.ZZWS_ENTRY=Object.freeze({choose,navigation,reset});

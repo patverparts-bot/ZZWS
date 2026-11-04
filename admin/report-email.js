@@ -1,4 +1,5 @@
 (() => {
+ const protect=(element,code)=>{window.ZZWS_I18N?.protectData?.(element,[code]);return element;};
  const node=(tag,text)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;return n;},button=(text,fn)=>{const b=node('button',text);b.type='button';b.onclick=fn;return b;},request=(path,body)=>ZZWS.json(path,{method:'POST',body:body instanceof FormData?body:JSON.stringify(body)});
  const card=node('fieldset');card.id='userEmailSettings';card.append(node('legend','Էլ․ փոստ՝ հաշվետվությունների համար'));const replyLabel=node('label','Ադմինիստրատորի Reply-To հասցեն'),reply=node('input');reply.type='email';reply.maxLength=254;replyLabel.append(reply);card.append(replyLabel);document.getElementById('userForm').append(card);
  let dialog=null,active=false;
@@ -15,7 +16,7 @@
    const close=button('Փակել',()=>{if(!active)reset();}),verify=button('Ստուգել հաշվետվությունը',()=>inspect()),send=button('Ուղարկել հաշվետվությունը',()=>submit()),manualButton=button('Շարունակել ձեռքով',()=>continueManually());
    for(const [control,tone]of [[close,'secondary'],[verify,'secondary'],[send,'primary'],[manualButton,'warning']])control.dataset.actionTone=tone;
    manualButton.hidden=true;send.disabled=true;candidate.hidden=true;
-   root.append(node('h2','Ուղարկել հաշվետվություն · №'+order.number),node('p',order.customer.client+' · '+order.customer.customerCode),node('p','Կցեք բոլոր ֆայլերը։ Համեմատության համար ընտրեք վաճառքի հաշվետվությունը։ Ֆայլերը պահվում են միայն այս բաց պատուհանի հիշողությունում։'),files,summary,candidate,verify,preview,to,cc,replyInfo,outcomes);
+   root.append(node('h2','Ուղարկել հաշվետվություն · №'+order.number),protect(node('p',order.customer.client+' · '+order.customer.customerCode),order.customer.customerCode),node('p','Կցեք բոլոր ֆայլերը։ Համեմատության համար ընտրեք վաճառքի հաշվետվությունը։ Ֆայլերը պահվում են միայն այս բաց պատուհանի հիշողությունում։'),files,summary,candidate,verify,preview,to,cc,replyInfo,outcomes);
    const extraLabel=node('label','Լրացուցիչ էլ․ փոստեր՝ ստորակետով կամ կետ-ստորակետով, ոչ պարտադիր');extraLabel.append(extra);
    const consent=node('label','Հաստատում եմ հաճախորդին և ստացողներին');consent.prepend(confirm);root.append(extraLabel,consent,error,send,manualButton,close);d.append(root);document.body.append(d);d.showModal();files.hidden=true;
    const chooseFiles=button('Ընտրել ֆայլը',()=>files.click());chooseFiles.dataset.actionTone='secondary';files.after(chooseFiles);d.addEventListener('cancel',e=>{if(active)e.preventDefault();else reset();});

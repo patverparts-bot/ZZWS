@@ -124,7 +124,7 @@
   if(!previous&&Number.isSafeInteger(serverIdentity.profileRevision)){
    const before=JSON.stringify(cart),quote=await secureApi('orders/quote',{method:'POST',body:JSON.stringify({articuls:Object.keys(window.ZZWS_CHECKOUT?.activeCart()||cart),proposalRefs:Object.values(window.ZZWS_CHECKOUT?.activeCart()||cart).filter(i=>i.proposalHash).map(i=>({articul:i.articul,proposalHash:i.proposalHash}))})});if(serverIdentity?.id!==activeOwner||JSON.stringify(cart)!==before)return;
    if(quote.unavailable?.length){alert('Հասանելի գին չկա՝ '+quote.unavailable.join(', ')+'։ Դիրքերը պահպանված են զամբյուղում։');return;}
-   const changed=quote.products.some(p=>getItemWholesalePrice({articul:p.articul})!==(isAdminUser()&&adminOrderPriceMode==='KP'?p.kpPrice:p.wholesale));for(const p of quote.products)productIndex.set(p.articul,p);if(changed){updateOrderPanel();renderModalItems();ZZWS_CHECKOUT?.changed();alert('Գները թարմացվել են։ Կրկին ստուգեք պատվերը։');return;}
+   const changed=quote.products.some(p=>getItemWholesalePrice({articul:p.articul})!==getOrderProductPrice(p));for(const p of quote.products)productIndex.set(p.articul,p);if(changed){updateOrderPanel();renderModalItems();ZZWS_CHECKOUT?.changed();alert('Գները թարմացվել են։ Կրկին ստուգեք պատվերը։');return;}
   }
   if(window.ZZWS_CHECKOUT&&!window.ZZWS_CHECKOUT.ready())return;
   const snapshot=JSON.stringify(cart),lines=Object.values(window.ZZWS_CHECKOUT?.activeCart()||cart).map(item=>({articul:item.articul,qty:item.qty,unitPrice:getItemWholesalePrice(item),...(item.proposalHash?{proposalHash:item.proposalHash}:{})})).sort((a,b)=>a.articul.localeCompare(b.articul));

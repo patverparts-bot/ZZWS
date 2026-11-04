@@ -6,7 +6,7 @@
     const text=String(value),known={'Доступ включён':'Հասանելիությունը միացված է','Доступ выключен':'Հասանելիությունն անջատված է','Изменена роль':'Դերը փոփոխված է','Обновлены контрагенты, адреса или контакты':'Գործընկերները, հասցեները կամ կոնտակտները թարմացված են','Обновлён доступ к брендам и категориям':'Ապրանքանիշերի և կատեգորիաների հասանելիությունը թարմացված է'};
     if(known[text])return known[text];
     if(text.startsWith('Логин: '))return 'Մուտքանուն՝ '+text.slice(7);
-    if(text.startsWith('Группа цен: '))return 'Գների խումբ՝ '+text.slice(12).replace(/Dealers/g,'Մշտական Գորրընկեր').replace(/KP/g,'Խոշոր Գործընկեր');
+    if(text.startsWith('Группа цен: '))return 'Գների խումբ՝ '+text.slice(12).replace(/\b(?:Dealers|KP|cat_[a-z0-9_-]{1,60})(?![a-z0-9_-])/g,id=>window.ZZWS_PRICE_CATEGORIES?.label(id)||id);
     return /[А-Яа-яЁё]/.test(text)?'Հաշվի կարգավորումները փոփոխված են':text;
   }
   function describe(rows,users,versions){
@@ -44,12 +44,11 @@
           const version=prices.get(String(row.detail).split(':')[0]);description=version?'Գնացուցակ՝ '+date(version.created*1000):'Գնացուցակի արխիվային տարբերակ';break;
         }
         case 'warehouse_settings':description='Հիմնական պահեստներ՝ '+(info.mainWarehouses||[]).join(', ');break;
-        case 'rules_update':description='Խոշոր / մշտական գործընկերներ խմբերի հասանելիության և գների ընտրության ընդհանուր կանոնները թարմացված են։';break;
+        case 'rules_update':description='Հաճախորդների կատեգորիաների հասանելիության և գների ընտրության ընդհանուր կանոնները թարմացված են։';break;
         default:description='Լրացուցիչ տեղեկությունները հասանելի են ստորև։';
       }
-      return {time:date(row.created*1000),actor,action,group,description,raw:{event:row.id,actorId:row.actor,code:row.action,detail:row.detail}};
+      return {time:date(row.created*1000),actor,action,group,description,categoryNames:window.ZZWS_PRICE_CATEGORIES?.choices().map(row=>window.ZZWS_PRICE_CATEGORIES.label(row.id))||[],raw:{event:row.id,actorId:row.actor,code:row.action,detail:row.detail}};
     });
   }
   window.ZZWS_AUDIT={describe};
 })();
-

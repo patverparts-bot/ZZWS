@@ -56,7 +56,7 @@
  }
  function allocate(rows,products,includeLast=false,priceGroup='Dealers',priority){
   if(!Array.isArray(priority)||priority.some(code=>typeof code!=='string'||!/^\d{3}$/.test(code))||new Set(priority).size!==priority.length)throw new Error('Warehouse policy is missing or invalid');
-  if(!['Dealers','KP'].includes(priceGroup))throw new Error('Invalid price group');
+  if(!['Dealers','KP'].includes(priceGroup)&&!/^cat_[a-z0-9_-]{1,60}$/.test(priceGroup))throw new Error('Invalid price group');
   const remaining=new Map();
   return rows.map(row=>{
    if(!row.valid)return {...row,error:'quantity',allocated:0,allocations:[]};
@@ -83,7 +83,7 @@
     }
    }
    // Current category rules are evaluated by the server on every catalog request.
-   const sourcePrice=p.stockPickerPrices?p.stockPickerPrices[priceGroup]:priceGroup==='KP'&&Number.isFinite(Number(p.kpPrice))&&Number(p.kpPrice)>0?p.kpPrice:p.wholesale;
+   const sourcePrice=p.stockPickerPrices?p.stockPickerPrices[priceGroup]:priceGroup==='KP'&&Number.isFinite(Number(p.kpPrice))&&Number(p.kpPrice)>0?p.kpPrice:['Dealers','KP'].includes(priceGroup)?p.wholesale:null;
    const price=sourcePrice==null||sourcePrice===''?null:Number(sourcePrice);
    return {...row,articul:p.articul,matchedName:p.name,price:Number.isFinite(price)&&price>0?price:null,allocated:row.quantity-need,shortage:need,allocations};
   });

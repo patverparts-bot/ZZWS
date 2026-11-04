@@ -42,6 +42,7 @@ function lockCatalog() {
   window.ZZWS_ORDERS?.stop();
   window.ZZWS_MEMORY?.capture();window.ZZWS_MEMORY?.stop();
   serverIdentity = null; window.ZZWS_HELP_USER=null;
+  window.ZZWS_PRICE_CATEGORIES?.reset();
   authorizedClient = ''; userSheetType = ''; clientRowsData = []; allProducts = []; filteredProducts = [];
   productIndex = new Map(); catalogLoaded = false; cart = {}; favoritesSet.clear();
   if (backgroundPollTimer) clearTimeout(backgroundPollTimer);
@@ -424,7 +425,7 @@ function requestCatalog(){return window.ZZWS_CATALOG_VIEW?.active()?ZZWS_CATALOG
 async function fetchPriceRows(initialCatalog = null) {
   const identity=serverIdentity?.id,session=sessionStorage.getItem('zzws_session_v3'),context=window.ZZWS_CATALOG_VIEW?.key()||'';
   const data=await (initialCatalog&&initialCatalog.owner===identity&&initialCatalog.session===session&&initialCatalog.context===context?initialCatalog.promise:requestCatalog());if(identity!==serverIdentity?.id||session!==sessionStorage.getItem('zzws_session_v3')||context!==(window.ZZWS_CATALOG_VIEW?.key()||''))throw {staleCatalog:true};
-  if(data.account?.id===identity){serverIdentity=data.account;window.ZZWS_HELP_USER=data.account;authorizedClient=data.account.client;userSheetType=data.account.sheet;clientRowsData=data.account.rowsList;}window.ZZWS_STOREFRONT?.configure(data);window.ZZWS_CATALOG_CONTROLS?.apply(data);return {rows:data.products, dateText:data.updated};
+  if(data.account?.id===identity){serverIdentity=data.account;window.ZZWS_HELP_USER=data.account;authorizedClient=data.account.client;userSheetType=data.account.sheet;clientRowsData=data.account.rowsList;}if(isAdminUser()&&data.priceCategories)window.ZZWS_PRICE_CATEGORIES?.configure(data.priceCategories);window.ZZWS_STOREFRONT?.configure(data);window.ZZWS_CATALOG_CONTROLS?.apply(data);return {rows:data.products, dateText:data.updated};
 }
 
 function applyPriceDate(dateText) {
