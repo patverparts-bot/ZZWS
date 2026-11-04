@@ -1,3 +1,4 @@
+import {checkedPriceCategory,projectedCategoryPrice} from './price-categories.mjs';
 import {knowledgeProduct} from './assistant.mjs';
 import {technicalFacts} from './dealer.mjs';
 import {canAccess} from './operations.mjs';
@@ -14,7 +15,7 @@ export function replacementGroup(source,target){
  return {matchGroup:changed?'differences':'verified',missingFacts:[]};
 }
 export function suggestReplacements(source,products,knowledge,{priceMode='WS',inCart=[],history=[]}={}){
- const price=p=>Number(p[priceMode==='KP'?'kpPrice':'wholesale'])||0;
+ const price=p=>projectedCategoryPrice(p,priceMode);
  const sourceFacts=technicalFacts(source,knowledge),sourceDimensions=sourceFacts.dimensions,previous=new Set(history.flatMap(o=>(o.lines||[]).map(l=>l.articul))),quantities=new Map(inCart.map(r=>[r.articul,r.qty]));
  return products.filter(p=>p.articul!==source.articul&&normalized(p.category)===normalized(source.category)&&price(p)>0).map(p=>{
   const details=knowledgeProduct(p,knowledge),facts=technicalFacts(p,knowledge),sizes=facts.dimensions,differences=[];
@@ -40,7 +41,7 @@ export async function replacementRoutes(c){
   const raw=admin?new Map(v.products.map(p=>[p.articul,p])):null;
   const internal=admin?all.map(p=>({...p,_stockStatus:Object.entries(raw.get(p.articul)?.stocks||{}).filter(([,qty])=>qty>0).map(([code,qty])=>code+': '+qty).join(', ')})):all;
   const allowed=new Set(visible.map(p=>p.articul)),eligible=internal.filter(p=>p.articul===source.articul||allowed.has(p.articul));
-  const mode=user.role==='admin'&&input.priceMode==='KP'?'KP':'WS';
+  const mode=user.role==='admin'?checkedPriceCategory(input.priceMode,v.rules):'WS';
   let result;try{result=suggestStockReplacements(internal.find(p=>p.articul===source.articul),eligible,knowledge,{...input,priceMode:mode,includeLast:user.role==='admin'&&input.includeLast,priority:v.warehousePriority,admin:user.role==='admin'});}catch(e){fail(e.code||400,e.message);}
   return json({catalogueVersion:v.id,warehouseRevision:v.warehouseRevision,priceMode:mode,...result});
  }
@@ -63,7 +64,7 @@ export async function replacementRoutes(c){
  }
  if(path!=='orders/replacements'||req.method!=='POST')return null;
  const p=await body(req);if(typeof p.articul!=='string'||p.articul.length>100||!Array.isArray(p.inCart)||p.inCart.length>5000||p.inCart.some(r=>!r||typeof r.articul!=='string'||r.articul.length>100||!Number.isInteger(r.qty)||r.qty<1||r.qty>9999))fail(400,'Ստուգեք ապրանքն ու քանակները');
- const v=await current(),products=project(v.products,user,v.rules,{mainWarehouses:v.mainWarehouses}),mode=user.role==='admin'&&p.priceMode==='KP'?'KP':'WS';let source=products.find(r=>r.articul===p.articul),order;
+ const v=await current(),products=project(v.products,user,v.rules,{mainWarehouses:v.mainWarehouses}),mode=user.role==='admin'?checkedPriceCategory(p.priceMode,v.rules):'WS';let source=products.find(r=>r.articul===p.articul),order;
  if(p.orderId){order=await query(table('orders').select('id,lines').eq('id',p.orderId).eq('user_id',user.id).maybeSingle());if(!order?.lines.some(l=>l.articul===p.articul))fail(404,'Պատվերի ապրանքը չի գտնվել');}
  if(!source&&order){const line=order.lines.find(l=>l.articul===p.articul),raw=v.products.find(r=>r.articul===p.articul);if(raw)source={articul:line.articul,name:line.name,category:raw.category,wholesale:0};}
  if(!source)fail(404,'Ապրանքը հասանելի չէ։ Փորձեք փոխարինում փնտրել ձեր պատվերի պատմությունից։');

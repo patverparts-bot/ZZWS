@@ -1,3 +1,4 @@
+import {checkedPriceCategory} from './price-categories.mjs';
 import {orderExportData} from './order-export.mjs';
 import {boundedMultipart} from './body-reader.mjs';
 import {proposalCartProducts} from './proposal-cart.mjs';
@@ -56,7 +57,7 @@ export async function orderRoutes(c){
   const existing=await query(table('orders').select('*').eq('user_id',user.id).eq('request_id',p.requestId).maybeSingle());if(existing)return json(existing);
   const owned=ownedDeliverySnapshot(user,{...p.delivery,variantId:p.deliveryVariantId},p.profileRevision);
   return json(await checked(async()=>{
-   const v=await current(),priceMode=user.role==='admin'&&p.priceMode==='KP'?'KP':'WS',ordinary=project(v.products,user,v.rules,{forOrder:true,mainWarehouses:v.mainWarehouses}),grants=(await proposalCartProducts(c,new Set(Array.isArray(p.lines)?p.lines.map(l=>l?.articul):[]))).filter(g=>Array.isArray(p.lines)&&p.lines.some(l=>l.articul===g.articul&&l.proposalHash===g.proposalHash)),products=[...new Map([...ordinary,...grants].map(p=>[p.articul,p])).values()],lines=normalizeLines(p.lines,products,[],false,priceMode);if(!lines.length)fail(400,'Զամբյուղը դատարկ է');
+   const v=await current(),priceMode=user.role==='admin'?checkedPriceCategory(p.priceMode,v.rules):'WS',ordinary=project(v.products,user,v.rules,{forOrder:true,mainWarehouses:v.mainWarehouses}),grants=(await proposalCartProducts(c,new Set(Array.isArray(p.lines)?p.lines.map(l=>l?.articul):[]))).filter(g=>Array.isArray(p.lines)&&p.lines.some(l=>l.articul===g.articul&&l.proposalHash===g.proposalHash)),products=[...new Map([...ordinary,...grants].map(p=>[p.articul,p])).values()],lines=normalizeLines(p.lines,products,[],false,priceMode);if(!lines.length)fail(400,'Զամբյուղը դատարկ է');
    if(p.lines.some(l=>l.proposalHash&&!grants.some(g=>g.articul===l.articul&&g.proposalHash===l.proposalHash)))fail(409,'Առաջարկի ժամկետը լրացել է կամ այն հասանելի չէ։ Թարմացրեք զամբյուղը');
    if(lines.some((line,i)=>Number(p.lines[i].unitPrice)!==line.unitPrice))fail(409,'Գները փոխվել են։ Թարմացրեք զամբյուղը և ստուգեք գումարը մինչև ուղարկելը');
    const context=buildOrderContext({catalog:v,user,lines,priceMode,proposalProducts:grants});

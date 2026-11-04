@@ -1,3 +1,4 @@
+import {checkedPriceCategory,projectedCategoryPrice} from './price-categories.mjs';
 import {knowledgeProduct} from './assistant.mjs';
 import {dimensions} from './advisor.mjs';
 
@@ -59,7 +60,7 @@ export function productDetails(p,knowledge){
 // Candidate sets are supported by actual co-purchases, never fabricated from popularity.
 export function suggestBundles(products,history,{recipe='kitchen',seed=null,priceMode='WS'}={}){
  const slots=Object.hasOwn(recipes,recipe)?recipes[recipe]:null;if(!slots)throw Object.assign(Error('Անհայտ հավաքածու։'),{code:400});
- const price=p=>Number(p[priceMode==='KP'?'kpPrice':'wholesale'])||0;
+ const price=p=>projectedCategoryPrice(p,priceMode);
  const permitted=products.filter(p=>price(p)>0),bySku=new Map(permitted.map(p=>[p.articul,p]));
  if(seed&&(!bySku.has(seed)||!slots.includes(applianceType(bySku.get(seed)))))throw Object.assign(Error('Ապրանքը հասանելի չէ այս հավաքածուի համար։'),{code:404});
  const index=new Map(),buyers=new Map();
@@ -114,7 +115,7 @@ export async function dealerRoutes(c){
   return json({items:selected.map(p=>productDetails(p,knowledge))});
  }
  if(!Object.hasOwn(recipes,input.recipe)||input.seed!=null&&(typeof input.seed!=='string'||input.seed.length>100))fail(400,'Ստուգեք հավաքածուի պայմանները։');
- const mode=user.role==='admin'&&input.priceMode==='KP'?'KP':'WS';
+ const mode=user.role==='admin'?checkedPriceCategory(input.priceMode,version.rules):'WS';
  if(input.seed&&!products.some(p=>p.articul===input.seed))fail(404,'Ապրանքը հասանելի չէ։');
  const history=await (c.loadHistory?c.loadHistory():loadPurchaseHistory(table,query));
  return json({bundles:suggestBundles(products,history,{recipe:input.recipe,seed:input.seed,priceMode:mode}),history:'all_completed_client_orders',minimumCustomers:3});

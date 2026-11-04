@@ -65,6 +65,7 @@ export const cleanSchemaFiles=[
   "supabase/proposal-recipients.sql",
   "supabase/migrations/20261103142753_editable_proposal_management.sql",
   "supabase/migrations/20261103211609_customer_code_prefix.sql",
-  "supabase/migrations/20261104051759_maintenance_proposal_coverage.sql"
+  "supabase/migrations/20261104051759_maintenance_proposal_coverage.sql",
+  "supabase/migrations/20261104085417_dynamic_price_categories.sql"
 ];
 export const schemaVersion="zzws-unified-4.1.0-optimized";

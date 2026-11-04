@@ -1,9 +1,11 @@
+import {checkedPriceCategory,priceCategoryId,validPriceCategory} from './price-categories.mjs';
 import {proposalManagementRoutes} from './proposal-management.mjs';
 export const PROPOSAL_LIFETIME=7*24*60*60*1000;
 import {groupedProposal,proposalCartRoutes} from './proposal-cart.mjs';
 import {effectiveRules} from './rules.mjs';
 export function proposalLines(input,products,mode,admin){
- if(!['KP','Dealers'].includes(mode)||!Array.isArray(input)||!input.length||input.length>2000)throw Error('Ստուգեք առաջարկի ցանկը');
+ mode=priceCategoryId(mode);
+ if(!validPriceCategory(mode)||!Array.isArray(input)||!input.length||input.length>2000)throw Error('Ստուգեք առաջարկի ցանկը');
  const bySku=new Map(products.map(p=>[p.articul,p]));
  return input.map(row=>{
   if(!row||typeof row!=='object'||Array.isArray(row))throw Error('Ստուգեք առաջարկի ցանկը');
@@ -37,7 +39,8 @@ export async function proposalRoutes(c){
   const row=await query(table('proposals').select('lines,customer_id,created_at,expires_at,price_mode,revoked_at').eq('token_hash',await digest(token)).gt('expires_at',new Date().toISOString()).maybeSingle());
   if(!row||row.revoked_at)fail(404,'Առաջարկը չի գտնվել կամ ժամկետը լրացել է');
   if(row.customer_id)return json({requiresLogin:true,expiresAt:row.expires_at});
-  return json({lines:row.lines,createdAt:row.created_at,expiresAt:row.expires_at,priceMode:row.price_mode});
+  const state=await query(table('state').select('rules').eq('id',true).single()),category=effectiveRules(state.rules)[row.price_mode],priceCategoryName=category?.name||({Dealers:'Մշտական Գորրընկեր',KP:'Խոշոր Գործընկեր'}[row.price_mode])||row.price_mode;
+  return json({lines:row.lines,createdAt:row.created_at,expiresAt:row.expires_at,priceMode:row.price_mode,priceCategoryName});
  }
  if(!['catalog/proposals','catalog/proposals/quote'].includes(path))return null;
  if(req.method!=='POST')fail(405,'Չթույլատրված գործողություն');
@@ -55,12 +58,12 @@ export async function proposalRoutes(c){
  const v=await current(),products=project(v.products,user,v.rules,{mainWarehouses:v.mainWarehouses});let lines,pricing=null,priceMode=input.priceMode;
  if(customer){
   const categoryId=customer.profile.sheet||'Dealers',category=effectiveRules(v.rules)[categoryId];if(!category)fail(409,'Հաճախորդի գնային կատեգորիան հասանելի չէ');
-  pricing={categoryId,categoryName:category.name||categoryId};priceMode=categoryId==='KP'?'KP':'Dealers';
+  pricing={categoryId,categoryName:category.name||categoryId};priceMode=categoryId;
   const customerProducts=project(v.products,{...customer.profile,id:customer.id},v.rules,{forOrder:true,mainWarehouses:v.mainWarehouses});
   try{lines=customerProposalLines(input.lines,products,customerProducts,pricing,{quote:quoting});}catch(e){fail(e.code||400,e.message);}
   if(quoting)return json({customerId,lines,pricing,priceMode});
   try{const explicit=new Set(lines.filter(line=>line.priceProvided).map(line=>line.articul));lines=groupedProposal(lines).map(line=>({...line,priceProvided:explicit.has(line.articul)}));}catch(e){fail(400,e.message);}
- }else try{lines=proposalLines(input.lines,products,input.priceMode,user.role==='admin');}catch(e){fail(400,e.message);}
+ }else try{priceMode=checkedPriceCategory(input.priceMode,v.rules);lines=proposalLines(input.lines,products,priceMode,user.role==='admin');}catch(e){fail(400,e.message);}
  const token=random(),createdAt=new Date().toISOString(),expiresAt=new Date(Date.parse(createdAt)+validDays*86400000).toISOString();
  await query(table('proposals').insert({token_hash:await digest(token),owner_id:user.id,customer_id:customerId,valid_days:validDays,lines,price_mode:priceMode,created_at:createdAt,expires_at:expiresAt}));
  return json({token,createdAt,expiresAt,validDays,lines,priceMode,...(pricing?{pricing}:{})});

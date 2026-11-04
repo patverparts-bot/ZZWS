@@ -167,7 +167,7 @@
     const waitingObserver=new ResizeObserver(()=>{if(busy&&pending.isConnected)scroll();});waitingObserver.observe(pending);waitingObserver.observe(messages);
     const requestController = controller, timeout = setTimeout(() => requestController.abort(), 45000);
     try {
-      const orderPriceMode=isAdminUser()&&adminOrderPriceMode==='KP'?'KP':'WS';
+      const orderPriceMode=isAdminUser()?adminOrderPriceMode:'WS';
       const data = await secureApi('assistant/chat', {method: 'POST', body: JSON.stringify({message, context, refresh, advisor, locale,orderPriceMode,conversationId}), signal: requestController.signal});
       if (currentRevision !== revision || serverIdentity?.id !== userId) return;
       pending.remove(); currentMode=data.mode;mode.textContent = t(data.mode==='selection'?'selection':data.mode === 'ai' ? 'ai' : 'mode'); const reply = bubble(data.answer);

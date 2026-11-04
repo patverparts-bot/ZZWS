@@ -283,9 +283,9 @@ try { var __t = localStorage.getItem('zigzag_theme'); document.documentElement.c
 <span id="orderSum" class="text-green-600 dark:text-green-400 font-bold text-base sm:text-lg">0 ֏</span>
 <div id="adminPriceModePanelWrap" class="admin-price-mode-wrap hidden mt-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-2">
   <label for="adminOrderPriceModePanel" class="text-xs font-bold text-indigo-900 dark:text-indigo-300 uppercase">Հաշվարկել ըստ՝</label>
-  <select id="adminOrderPriceModePanel" onchange="setAdminOrderPriceMode(this.value)" aria-label="Ընտրել խոշոր գործընկերոջ կամ մեծածախ գին զամբյուղի հաշվարկման համար" data-admin-price-mode-select class="px-3 py-2 bg-white dark:bg-gray-900 border border-indigo-300 dark:border-indigo-800 rounded-lg text-xs sm:text-sm font-semibold text-indigo-900 dark:text-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
-    <option value="WS">Մեծածախ գին</option>
-    <option value="KP">Խոշոր գործընկերոջ գին</option>
+  <select id="adminOrderPriceModePanel" onchange="setAdminOrderPriceMode(this.value)" aria-label="Գնային կատեգորիա" data-admin-price-mode-select class="px-3 py-2 bg-white dark:bg-gray-900 border border-indigo-300 dark:border-indigo-800 rounded-lg text-xs sm:text-sm font-semibold text-indigo-900 dark:text-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
+    <option value="WS">Մշտական Գորրընկեր</option>
+    <option value="KP">Խոշոր Գործընկեր</option>
   </select>
 </div>
 
@@ -321,9 +321,9 @@ try { var __t = localStorage.getItem('zigzag_theme'); document.documentElement.c
 <section class="order-modal-items-column" aria-label="Պատվերի ապրանքներ">
 <div id="adminPriceModeModalWrap" class="admin-price-mode-wrap hidden flex flex-col sm:flex-row items-start sm:items-center gap-2">
   <label for="adminOrderPriceModeModal" class="text-xs font-bold text-indigo-900 dark:text-indigo-300 uppercase">Հաշվարկել ըստ՝</label>
-  <select id="adminOrderPriceModeModal" onchange="setAdminOrderPriceMode(this.value)" aria-label="Ընտրել խոշոր գործընկերոջ կամ մեծածախ գին զամբյուղի հաշվարկման համար" data-admin-price-mode-select class="px-3 py-2 bg-white dark:bg-gray-900 border border-indigo-300 dark:border-indigo-800 rounded-lg text-xs sm:text-sm font-semibold text-indigo-900 dark:text-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
-    <option value="WS">Մեծածախ գին</option>
-    <option value="KP">Խոշոր գործընկերոջ գին</option>
+  <select id="adminOrderPriceModeModal" onchange="setAdminOrderPriceMode(this.value)" aria-label="Գնային կատեգորիա" data-admin-price-mode-select class="px-3 py-2 bg-white dark:bg-gray-900 border border-indigo-300 dark:border-indigo-800 rounded-lg text-xs sm:text-sm font-semibold text-indigo-900 dark:text-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
+    <option value="WS">Մշտական Գորրընկեր</option>
+    <option value="KP">Խոշոր Գործընկեր</option>
   </select>
 </div>
 
@@ -496,24 +496,24 @@ try { var __t = localStorage.getItem('zigzag_theme'); document.documentElement.c
 <script defer src="js/server-progress.js?v=20261102-foreground-progress"></script>
 <script defer src="js/api-client.js?v=20261104-security-web-1"></script>
 <script defer src="js/order-generation.js?v=20261102-system-maintenance-1"></script><script defer src="js/entry-navigation.js?v=20261101-apk-tracking"></script>
-<script defer src="js/core.js?v=20261103-card-sidebar-1"></script>
+<script defer src="js/price-categories.js?v=20261104-price-categories-1"></script><script defer src="js/core.js?v=20261103-card-sidebar-1"></script>
 <script defer src="js/photo-preview.js?v=20261101-photo-preview-fix"></script>
 <script defer src="js/security-ui.js?v=20261101-apk-tracking"></script><script defer src="js/password-setup.js?v=20261101-apk-tracking"></script><script defer src="js/client-team.js?v=20261101-team-menu"></script>
 <script defer src="js/price-sort.js?v=20261101-apk-tracking"></script>
-<script defer src="js/admin-resources.js?v=20261103-mobile-app-1"></script><script defer src="js/catalog-controls.js?v=20261101-storefront-release"></script><script defer src="js/warehouse-allocation.js?v=20261102-category-prices-1"></script><script defer src="admin/stock-replacements.js?v=20261102-partial-stock-photos-1"></script><script defer src="admin/stock-picker.js?v=20261103-proposal-1"></script><script defer src="js/proposal-data.js?v=20261103-offer-counts-1"></script><script defer src="js/proposals.js?v=20261104-customer-code-prepared-1"></script><script defer src="js/proposal-cart.js?v=20261103-proposal-management-1"></script><script defer src="js/auth-data.js?v=20261104-security-web-1"></script>
+<script defer src="js/admin-resources.js?v=20261103-mobile-app-1"></script><script defer src="js/catalog-controls.js?v=20261101-storefront-release"></script><script defer src="js/warehouse-allocation.js?v=20261104-price-categories-1"></script><script defer src="admin/stock-replacements.js?v=20261102-partial-stock-photos-1"></script><script defer src="admin/stock-picker.js?v=20261104-price-categories-1"></script><script defer src="js/proposal-data.js?v=20261103-offer-counts-1"></script><script defer src="js/proposals.js?v=20261104-price-categories-1"></script><script defer src="js/proposal-cart.js?v=20261103-proposal-management-1"></script><script defer src="js/auth-data.js?v=20261104-price-categories-1"></script>
 <script defer src="js/multi-search.js?v=20261101-apk-tracking"></script>
 <script defer src="js/admin-prices.js?v=20261101-admin-prices-1"></script>
 <script defer src="js/catalog-warehouse.js?v=20261103-command-panel-1"></script><script defer src="js/catalog.js?v=20261103-visible-view"></script>
-<script defer src="js/order-state.js?v=20261103-cart-photos-1"></script><script defer src="js/admin-assisted-order.js?v=20261104-customer-code-prepared-1"></script><script defer src="js/catalog-customer-view.js?v=20261104-customer-code-prepared-1"></script>
+<script defer src="js/order-state.js?v=20261104-price-categories-1"></script><script defer src="js/admin-assisted-order.js?v=20261104-customer-code-prepared-1"></script><script defer src="js/catalog-customer-view.js?v=20261104-customer-code-prepared-1"></script>
 <script defer src="js/bulk-add.js?v=20261101-apk-tracking"></script>
 <script defer src="js/order-submit.js?v=20261103-command-panel-1"></script>
-<script defer src="js/user-memory.js?v=20261104-security-web-1"></script>
+<script defer src="js/user-memory.js?v=20261104-price-categories-1"></script>
 <script defer src="js/order-actors.js?v=20261101-full-diagnostics-7121"></script><script defer src="js/order-timeline.js?v=20261101-full-diagnostics-7122"></script><script defer src="js/order-comparison.js?v=20261104-customer-code-prepared-1"></script>
-<script defer src="js/receipts.js?v=20261103-receipt-notice-1"></script><script defer src="js/approval-reminder.js?v=20261101-apk-tracking"></script><script defer src="js/order-approval.js?v=20261101-full-diagnostics-7121"></script><script defer src="js/server-orders.js?v=20261103-direct-approval-1"></script>
+<script defer src="js/receipts.js?v=20261103-receipt-notice-1"></script><script defer src="js/approval-reminder.js?v=20261101-apk-tracking"></script><script defer src="js/order-approval.js?v=20261101-full-diagnostics-7121"></script><script defer src="js/server-orders.js?v=20261104-price-categories-1"></script>
 <script defer src="js/catalog-columns.js?v=20261102-table-width-1"></script><script defer src="js/sticky-controls.js?v=20261103-command-panel-1"></script>
 <script defer src="js/user-guide.js?v=20261101-native-navigation-7123"></script>
 <script defer src="js/zigzag-armenian.js?v=20261101-apk-tracking"></script>
-<script defer src="js/assistant-product-summary.js?v=20261103-history"></script><script defer src="js/zigzag-assistant.js?v=20261103-learning-v2"></script>
+<script defer src="js/assistant-product-summary.js?v=20261103-history"></script><script defer src="js/zigzag-assistant.js?v=20261104-price-categories-1"></script>
 <script>
 (() => {
   const screen = document.getElementById('authScreen');
@@ -544,6 +544,6 @@ try { var __t = localStorage.getItem('zigzag_theme'); document.documentElement.c
   showAuthCard();
 })();
 </script>
-<script defer src="js/cart-checkout.js?v=20261103-recipient-1"></script><script defer src="js/purchase-plans.js?v=20261101-apk-tracking"></script><script defer src="js/replacements.js?v=20261101-apk-tracking"></script><script defer src="js/bundle-policy.js?v=20261101-full-diagnostics-7122"></script><script defer src="js/dealer-tools.js?v=20261103-proposal-1"></script><script defer src="js/product-technical.js?v=20261101-photo-click"></script><script defer src="js/ui-language.js?v=20261101-apk-tracking"></script><script defer src="js/context-help.js?v=20261103-help-field-layout"></script><script defer src="js/date-picker.js?v=20261101-apk-tracking"></script><script defer src="js/catalog-bulletins.js?v=20261101-offers-tabs"></script><script defer src="js/view-state.js?v=20261101-full-diagnostics-7122"></script><script defer src="js/page-state.js?v=20261101-video-7124"></script><script defer src="js/storefront-categories.js?v=20261102-reviewed-category-photos"></script><script defer src="js/storefront-brands.js?v=20261101-brand-marquee"></script><script defer src="js/storefront.js?v=20261103-command-panel-1"></script><script defer src="js/catalog-table-width.js?v=20261103-sticky-table"></script><script defer src="js/catalog-layout.js?v=20261102-catalog-layout"></script><script defer src="js/catalog-tools.js?v=20261103-recipient-1"></script><script defer src="js/catalog-command-panel.js?v=20261103-card-sidebar-1"></script><script defer src="js/disclosure-menus.js?v=20261101-video-7124"></script><script defer src="js/catalog-view-controls.js?v=20261103-visible-view"></script><script defer src="js/catalog-table-focus.js?v=20261103-scroll-screen"></script><script defer src="js/proposal-management.js?v=20261104-customer-code-prepared-1"></script></body>
+<script defer src="js/cart-checkout.js?v=20261103-recipient-1"></script><script defer src="js/purchase-plans.js?v=20261101-apk-tracking"></script><script defer src="js/replacements.js?v=20261101-apk-tracking"></script><script defer src="js/bundle-policy.js?v=20261101-full-diagnostics-7122"></script><script defer src="js/dealer-tools.js?v=20261103-proposal-1"></script><script defer src="js/product-technical.js?v=20261101-photo-click"></script><script defer src="js/ui-language.js?v=20261101-apk-tracking"></script><script defer src="js/context-help.js?v=20261103-help-field-layout"></script><script defer src="js/date-picker.js?v=20261101-apk-tracking"></script><script defer src="js/catalog-bulletins.js?v=20261101-offers-tabs"></script><script defer src="js/view-state.js?v=20261101-full-diagnostics-7122"></script><script defer src="js/page-state.js?v=20261101-video-7124"></script><script defer src="js/storefront-categories.js?v=20261102-reviewed-category-photos"></script><script defer src="js/storefront-brands.js?v=20261101-brand-marquee"></script><script defer src="js/storefront.js?v=20261103-command-panel-1"></script><script defer src="js/catalog-table-width.js?v=20261103-sticky-table"></script><script defer src="js/catalog-layout.js?v=20261102-catalog-layout"></script><script defer src="js/catalog-tools.js?v=20261103-recipient-1"></script><script defer src="js/catalog-command-panel.js?v=20261103-card-sidebar-1"></script><script defer src="js/disclosure-menus.js?v=20261101-video-7124"></script><script defer src="js/catalog-view-controls.js?v=20261103-visible-view"></script><script defer src="js/catalog-table-focus.js?v=20261103-scroll-screen"></script><script defer src="js/proposal-management.js?v=20261104-price-categories-1"></script></body>
 </html>
 

@@ -1,3 +1,4 @@
+import {validPriceCategory,projectedCategoryPrice} from './price-categories.mjs';
 import {technicalFacts} from './dealer.mjs';
 import {knowledgeProduct} from './assistant.mjs';
 
@@ -40,7 +41,7 @@ export function validateStockReplacementInput(p){
  const sku=v=>typeof v==='string'&&v.trim()===v&&v.length>0&&v.length<=100;
  const qty=v=>Number.isSafeInteger(v)&&v>0&&v<=999999;
  if(!p||typeof p!=='object'||Array.isArray(p)||!sku(p.sourceArticul)||!qty(p.qty)||!Array.isArray(p.rows)||p.rows.length>4000||p.rows.some(r=>!r||!sku(r.articul)||!qty(r.qty)))throw Object.assign(Error('Ստուգեք ապրանքն ու ցանկի քանակները։'),{code:400});
- if(p.includeLast!=null&&typeof p.includeLast!=='boolean'||p.sameBrand!=null&&typeof p.sameBrand!=='boolean'||p.priceMode!=null&&!['WS','KP'].includes(p.priceMode)||p.maxPrice!=null&&(!Number.isFinite(p.maxPrice)||p.maxPrice<=0||p.maxPrice>1e12)||p.candidateArticul!=null&&!sku(p.candidateArticul))throw Object.assign(Error('Ստուգեք փոխարինման պայմանները։'),{code:400});
+ if(p.includeLast!=null&&typeof p.includeLast!=='boolean'||p.sameBrand!=null&&typeof p.sameBrand!=='boolean'||p.priceMode!=null&&!validPriceCategory(p.priceMode)||p.maxPrice!=null&&(!Number.isFinite(p.maxPrice)||p.maxPrice<=0||p.maxPrice>1e12)||p.candidateArticul!=null&&!sku(p.candidateArticul))throw Object.assign(Error('Ստուգեք փոխարինման պայմանները։'),{code:400});
  const manual=p.manualRequirements??{};
  if(!manual||typeof manual!=='object'||Array.isArray(manual)||Object.keys(manual).length>4||Object.entries(manual).some(([key,value])=>numeric.includes(key)?!Number.isFinite(value)||value<=0||value>100000:boolFields.has(key)?typeof value!=='boolean':stringFields.has(key)?typeof value!=='string'||!value.trim()||value.length>100:true))throw Object.assign(Error('Նշեք մինչև չորս հստակ պահանջ։'),{code:400});
  const modes=p.manualModes??{};
@@ -122,7 +123,7 @@ function compare(source,target,requirements,manual,modes){
  return {same,differences,missing:[...new Set(missing)]};
 }
 export function suggestStockReplacements(source,products,knowledge,{qty,rows=[],priority,includeLast=false,priceMode='WS',sameBrand=false,maxPrice,manualRequirements={},manualModes={},candidateArticul,admin=false}={}){
- const sourceFacts=facts(source,knowledge),requirements=stockReplacementRequirements(sourceFacts.values.type).map(r=>canonical('installation',sourceFacts.values.installation)==='built_in'&&r.key.startsWith('niche')?{...r,required:true}:r),price=p=>{const value=Number(admin&&p.stockPickerPrices?p.stockPickerPrices[priceMode==='KP'?'KP':'Dealers']:p[priceMode==='KP'?'kpPrice':'wholesale']);return Number.isFinite(value)&&value>0?value:null;};
+ const sourceFacts=facts(source,knowledge),requirements=stockReplacementRequirements(sourceFacts.values.type).map(r=>canonical('installation',sourceFacts.values.installation)==='built_in'&&r.key.startsWith('niche')?{...r,required:true}:r),price=p=>{const value=admin?projectedCategoryPrice(p,priceMode):Number(p.wholesale);return Number.isFinite(value)&&value>0?value:null;};
  const sourceDTO={articul:source.articul,name:source.name,price:price(source),sourceType:sourceFacts.sourceType,sourceUrl:sourceFacts.sourceUrl,checkedAt:sourceFacts.checkedAt};
  const modes=Object.fromEntries(Object.keys(manualRequirements).filter(key=>numeric.includes(key)).map(key=>[key,manualModes[key]||'exact']));
  const base={source:sourceDTO,requirements,manualRequirements,manualModes:modes,manualRequirementsSource:'user_request',quantityConfirmed:admin,candidates:[]};

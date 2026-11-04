@@ -1,11 +1,12 @@
-let categoryLabels={Dealers:'Մշտական Գորրընկեր',KP:'Խոշոր Գործընկեր'};
+const defaultCategoryLabels={Dealers:'Մշտական Գորրընկեր',KP:'Խոշոր Գործընկեր'};
+let categoryLabels={...defaultCategoryLabels};
 const categoryLabel=id=>categoryLabels[id]||id;
 const el = id => document.getElementById(id);
 function finishSessionLoading(){document.documentElement.removeAttribute('data-session-pending');}
 function sessionLoadFailed(message){document.documentElement.setAttribute('data-session-pending','true');el('sessionLoadingText').textContent=message||'Չհաջողվեց թարմացնել տվյալները։ Ստուգեք կապը։';el('sessionSpinner').hidden=true;el('sessionRetryActions').hidden=false;}
 let draft = null, userDraft = null, users = [], pricePreviewTicket=0;
 let catalogPairs=[],userAccessEditor=null,groupEditors={},groupRevision=null;
-let editingUserId=null,editingProfile=null,auditEntries=[],categoryByGroup={KP:'KP',Dealers:'Dealers'};
+let editingUserId=null,editingProfile=null,auditEntries=[],auditVersions=[],categoryByGroup={KP:'KP',Dealers:'Dealers'};
 let categoryDefaults=null;
 let pricingByGroup={Dealers:{sources:['ws'],mode:'first'},KP:{sources:['kpPromo','kp','ws'],mode:'first'}};
 function status(message, error = false) { el('status').textContent = message; el('status').className = error ? 'error' : ''; }
@@ -157,8 +158,8 @@ async function loadVersions() {
     v.id === d.active ? 'Գործող' : button('Վերականգնել', async () => { if (!confirm('Վերադարձնե՞լ գնացուցակի այս տարբերակը։')) return; await api('admin/price/rollback',{method:'POST',body:JSON.stringify({version:v.id})}); await loadVersions(); status('Տարբերակը վերականգնված է'); },'warning')])));
 }
 async function loadUsers() {
-  const d = await api('admin/users'); users = d.users;categoryLabels={...categoryLabels,...d.categoryLabels};categoryByGroup=d.categoryByGroup||categoryByGroup;
-  el('userList').replaceChildren(table(['Հաճախորդի կոդ','Հաճախորդ','Դեր','Գներ','Կատեգորիա','Հասանելիություն',''], users.filter(u=>u.clientRole!=='employee').map(u => [customerCodeNode(u.role==='admin'?u.login:u.customerCode||''),u.client,u.role==='admin'?'Ադմինիստրատոր':'Հաճախորդ',categoryLabel(u.sheet),u.role==='client'?categoryLabel(u.sheet):'—',u.active?'Միացված է':'Անջատված է',button('Խմբագրել', () => editUser(u))])));
+  const d = await api('admin/users'); users = d.users;categoryLabels={...defaultCategoryLabels,...d.categoryLabels};categoryByGroup=d.categoryByGroup||categoryByGroup;window.ZZWS_PRICE_CATEGORIES?.configure(Object.entries(categoryLabels).map(([id,label])=>({id,label})));
+  el('userList').replaceChildren(table(['Հաճախորդի կոդ','Հաճախորդ','Դեր','Գներ','Կատեգորիա','Հասանելիություն',''], users.filter(u=>u.clientRole!=='employee').map(u => [customerCodeNode(u.role==='admin'?u.login:u.customerCode||''),u.client,u.role==='admin'?'Ադմինիստրատոր':'Հաճախորդ',customerCodeNode(categoryLabel(u.sheet)),u.role==='client'?customerCodeNode(categoryLabel(u.sheet)):'—',u.active?'Միացված է':'Անջատված է',button('Խմբագրել', () => editUser(u))])));
 }
 async function editUser(user = {}) {
   const f = el('userForm'); f.reset(); f.hidden = false;
@@ -274,7 +275,7 @@ el('userForm').onsubmit = e => { e.preventDefault(); run(async () => {
 async function loadAudit(){
   await loadUsers();
   const [data,versions]=await Promise.all([api('admin/audit'),api('admin/price/versions')]);
-  auditEntries=ZZWS_AUDIT.describe(data.events,users,versions.versions);renderAudit();
+  auditVersions=versions.versions;auditEntries=ZZWS_AUDIT.describe(data.events,users,auditVersions);renderAudit();
 }
 function renderAudit(){
   const search=el('auditSearch').value.trim().toLocaleLowerCase('ru'),group=el('auditGroup').value;
@@ -282,7 +283,7 @@ function renderAudit(){
   el('auditCount').textContent=`Ցուցադրված իրադարձություններ՝ ${entries.length} / ${auditEntries.length}`;
   if(!entries.length){const empty=document.createElement('p');empty.textContent='Ընտրված պայմաններով իրադարձություններ չկան։';el('events').replaceChildren(empty);return;}
   el('events').replaceChildren(table(['Երբ · Երևան','Ով','Գործողություն','Մանրամասներ'],entries.map(e=>{
-    const details=document.createElement('div'),text=document.createElement('p');text.textContent=e.description;details.append(text);
+    const details=document.createElement('div'),text=document.createElement('p');text.textContent=e.description;window.ZZWS_I18N?.protectData?.(text,e.categoryNames||[]);details.append(text);
     const disclosure=document.createElement('details'),title=document.createElement('summary'),code=document.createElement('pre');
     title.textContent='Տեխնիկական տվյալներ';code.textContent=JSON.stringify(e.raw,null,2);disclosure.append(title,code);details.append(disclosure);
     return [e.time,e.actor,e.action,details];
@@ -292,12 +293,13 @@ el('refreshAudit').onclick=()=>run(loadAudit);el('auditSearch').oninput=renderAu
 async function loadGroupRules(draftData=null){
   const data=draftData||await api('admin/rules');groupRevision=data.revision;categoryDefaults=data.defaults;groupEditors={};
   pricingByGroup=Object.fromEntries(Object.keys(data.rules).map(group=>[group,data.rules[group].pricing]));
-  for(const [id,rule] of Object.entries(data.rules))if(rule.name)categoryLabels[id]=rule.name;
-  const select=el('clientCategory'),selected=select.value;select.replaceChildren(...['Dealers','KP',...Object.keys(data.rules).filter(id=>!['Dealers','KP'].includes(id))].map(id=>{const option=document.createElement('option');option.value=id;option.textContent=categoryLabel(id);return option;}));select.value=pricingByGroup[selected]?selected:'Dealers';updateClientCategory();
+  categoryLabels=Object.fromEntries(Object.entries(data.rules).map(([id,rule])=>[id,rule.name||defaultCategoryLabels[id]||id]));
+  if(!draftData)window.ZZWS_PRICE_CATEGORIES?.configure(Object.keys(data.rules).map(id=>({id,label:categoryLabel(id)})));
+  const select=el('clientCategory'),selected=select.value;select.replaceChildren(...['Dealers','KP',...Object.keys(data.rules).filter(id=>!['Dealers','KP'].includes(id))].map(id=>{const option=document.createElement('option');option.value=id;option.textContent=categoryLabel(id);option.dataset.i18nSkip='true';return option;}));select.value=pricingByGroup[selected]?selected:'Dealers';updateClientCategory();
   const container=el('groupRulesEditors');container.replaceChildren();el('groupRulesPreview').replaceChildren();
   for(const group of Object.keys(pricingByGroup)){
     const card=document.createElement('fieldset');card.dataset.groupRules=group;
-    const title=document.createElement('legend');title.textContent=categoryLabel(group);const name=document.createElement('input');name.value=categoryLabel(group);name.maxLength=100;name.required=true;name.setAttribute('aria-label','Կատեգորիայի անվանումը');
+    const title=document.createElement('legend');title.textContent=categoryLabel(group);title.dataset.i18nSkip='true';const name=document.createElement('input');name.value=categoryLabel(group);name.maxLength=100;name.required=true;name.setAttribute('aria-label','Կատեգորիայի անվանումը');
     const priceTitle=document.createElement('h3');priceTitle.textContent='Գնի ընտրություն';
     const priceRoot=document.createElement('div'),accessRoot=document.createElement('div');
     const accessTitle=document.createElement('h3');accessTitle.textContent='Խմբի ընդհանուր հասանելիություն';
@@ -330,7 +332,7 @@ const setupToken = new URLSearchParams(location.hash.slice(1)).get('setup');
 if (setupToken) {
   history.replaceState(null, '', location.pathname);
   finishSessionLoading();el('login').hidden = true; el('setup').hidden = false;
-} else if (window.top === window.self) {
+} else {
   run(async () => { try { await enter(); } catch(e) { if(e.staleSession)return;if(sessionStorage.getItem('zzws_session_v3')&&e.status!==403)sessionLoadFailed(e.message);else{showLogin();if (!e.message.includes('Մուտք գործեք'))status(e.message,true);} } });
 }
 el('setupForm').onsubmit = e => { e.preventDefault(); run(async () => {
@@ -367,5 +369,6 @@ el('saveAdminPolling').onclick=()=>run(async()=>{
  if(window.ZZWS_HELP_USER?.id===id)ZZWS_ADMIN_ORDERS.setRefreshSeconds(data.seconds);el('adminPollingStatus').textContent='Միջակայքը պահպանված է՝ '+data.seconds+' վայրկյան։';
 });
 
-
 document.getElementById('allProposalsOpen').onclick=()=>ZZWS_PROPOSAL_MANAGEMENT.loadAll();
+
+window.addEventListener('zzws:price-categories',()=>{if(auditEntries.length){auditEntries=ZZWS_AUDIT.describe(auditEntries.map(e=>e.raw),users,auditVersions);renderAudit();}});

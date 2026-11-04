@@ -1,3 +1,4 @@
+import {projectedCategoryPrice} from './price-categories.mjs';
 export const statuses={new:'Նոր',confirmed:'Հաստատված',in_progress:'Ձևակերպված է',completed:'Առաքված է',rejected:'Մերժված',received:'Ստացված է'};
 const text=(v,n=300)=>String(v??'').trim().slice(0,n);
 export function deliverySnapshot(p,user){
@@ -11,7 +12,7 @@ export function normalizeLines(raw,products,old=[],admin=false,mode='WS'){
   const articul=text(input.articul,100);if(!articul||seen.has(articul))throw new Error('Դատարկ կամ կրկնվող արտիկուլ՝ '+articul);seen.add(articul);
   const qty=Number(input.qty);if(!Number.isInteger(qty)||qty<1||qty>9999)throw new Error('Քանակը՝ 1-ից 9999, արտիկուլ՝ '+articul);
   const product=permitted.get(articul),prior=previous.get(articul);if(!product&&!(admin&&prior))throw new Error('Ապրանքը հասանելի չէ՝ '+articul);
-  const source=product||prior,serverPrice=mode==='KP'&&source.kpPrice!==undefined?source.kpPrice:source.wholesale;
+  const source=product||prior,serverPrice=projectedCategoryPrice(source,mode);
   const unitPrice=admin?Number(input.unitPrice??prior?.unitPrice??serverPrice):Number(serverPrice);
   if(!Number.isFinite(unitPrice)||unitPrice<=0||unitPrice>1e10)throw new Error('Հասանելի գին չկա՝ '+articul);
   return {articul,name:text(source.name,500),brand:text(source.brand),category:text(source.category),qty,unitPrice};

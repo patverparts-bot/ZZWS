@@ -18,7 +18,7 @@ import {bulletinRoutes} from './bulletin-routes.mjs';
 import {currentOffer,offerStamp,offerDTO} from './special-offers.mjs';
 import {reportRoutes} from './report-routes.mjs';
 import {mobileRoutes} from './mobile-routes.mjs';
-import {userTemplate,parseUserSheet} from './user-sheet.mjs';
+import {userTemplate,parseUserSheet,categoryChoices} from './user-sheet.mjs';
 import {workbookColumns,catalogMetadataMerge,priceVersionLabel} from './workbook-layout.mjs';
 import {pricePreview} from './price-preview.mjs';
 import {handleStartWebhook,startReplyTransport} from './telegram-start.mjs';
@@ -353,7 +353,7 @@ async function handleRequest(req:Request){
       if(path==='catalog'){
         const rules=popularityRules(settings.catalog_controls);
         const [rows,banners]=await Promise.all([controls.popular||controls.personalPopular?query(service.rpc('zzws_catalog_popularity',{p_user:user.id,p_days:rules.days})):Promise.resolve([]),storefrontRanking(service,query,products,settings.catalog_controls,user.id,rules.days)]);
-        return json({products,version,updated,controls,account:user,...(user.role==='admin'?{warehousePolicy:{mainWarehouses:v.mainWarehouses,priority:v.warehousePriority,revision:v.warehouseRevision}}:{}),storefront:storefrontDTO(products,banners,settings.catalog_controls),specialOffer:controls.promo?offerDTO(offer,products,user.role==='admin'):null,popularityRules:rules,popularity:visiblePopularity(rows,products,controls,settings.catalog_controls,user.id)});
+        return json({products,version,updated,controls,account:user,...(user.role==='admin'?{priceCategories:categoryChoices(v.rules),warehousePolicy:{mainWarehouses:v.mainWarehouses,priority:v.warehousePriority,revision:v.warehouseRevision}}:{}),storefront:storefrontDTO(products,banners,settings.catalog_controls),specialOffer:controls.promo?offerDTO(offer,products,user.role==='admin'):null,popularityRules:rules,popularity:visiblePopularity(rows,products,controls,settings.catalog_controls,user.id)});
       }
       const rows=[['Ստացող',user.client,'Տարբերակ',priceVersionLabel(v.created)],['Արտիկուլ','Բրենդ','Կատեգորիա','Անվանում','Մանրածախ','Ձեր գինը','Առկայություն',...(user.role==='admin'?['KP']:[])],
         ...products.map((p:any)=>[p.articul,p.brand,p.category,p.name,p.retail,p.wholesale,p.stockStatus,...(user.role==='admin'?[p.kpPrice]:[])])];

@@ -1,3 +1,4 @@
+import {checkedPriceCategory} from './price-categories.mjs';
 import {answerQuestion, validateQuestion} from './assistant.mjs';
 import {conversationId,historyEntry} from './assistant-history.mjs';
 import {feedbackKey,feedbackSemanticKey,combineLessons} from './assistant-learning.mjs';
@@ -20,7 +21,7 @@ export async function assistantRoutes(c) {
     const products = project(version.products, user, version.rules,{mainWarehouses:version.mainWarehouses});
     // The request may select KP only for an authenticated administrator.
     // Prices still come from the server-projected catalogue on every turn.
-    const orderPriceMode=user.role==='admin'&&payload.orderPriceMode==='KP'?'KP':'WS';
+    const orderPriceMode=user.role==='admin'?checkedPriceCategory(payload.orderPriceMode,version.rules):'WS';
     // Production assistant is fully deterministic: no provider request or usage charge,
     // even if legacy free-tier provider variables remain configured on the project.
     const baseOptions={...options,freeTierConfirmed:false,orderPriceMode,publicCatalog};

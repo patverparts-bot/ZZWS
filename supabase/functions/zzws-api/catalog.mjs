@@ -69,7 +69,7 @@ export function project(products,user,storedRules,{forOrder=false,mainWarehouses
       marginVal:margin(wholesale),stockAvailable:base>=group.stock.availableFrom,stockStatus:admin?entries.filter(([,q])=>q>0).map(([n,q])=>`${n}: ${q}`).join(', '):(base>=group.stock.availableFrom?'Առկա է':'Ճշտել'),hasMainStock:base>0};
     Object.assign(item,newProductFlags(p,newDays,now));
     if(admin){
-      const stockPickerPrices=Object.fromEntries(['KP','Dealers'].map(id=>{const rule=categoryRules[id]?.pricing,price=rule?selectPrice(p,rule).price:0;return [id,price>0&&!(rule.hideAboveRetail&&retail>0&&price>retail)?price:null];}));
+      const stockPickerPrices=Object.fromEntries(Object.keys(categoryRules).map(id=>{const rule=categoryRules[id].pricing,price=selectPrice(p,rule).price;return [id,price>0&&!(rule.hideAboveRetail&&retail>0&&price>retail)?price:null];}));
       Object.assign(item,{kpPrice,kpIsPromo:!!p.kpPromo,kpMarginVal:margin(kpPrice),targetWarehousesStock:base,stockPickerPrices});
     }
     if(admin||user.allowResale)item.resaleWholesale=p.ws;

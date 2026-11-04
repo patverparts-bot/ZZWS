@@ -15,7 +15,7 @@ function normalizeCart(raw) {
       articul: articul,
       qty: qty,
       addedPrice: Number(v.addedPrice) || 0,
-      addedPriceMode: v.addedPriceMode === 'KP' ? 'KP' : 'WS',
+      addedPriceMode: v.addedPriceMode === 'KP'||/^cat_[a-z0-9_-]{1,60}$/.test(v.addedPriceMode||'') ? v.addedPriceMode : 'WS',
       ...(/^[a-f0-9]{64}$/.test(v.proposalHash||'')?{proposalHash:v.proposalHash}:{}),
     };
   });
@@ -127,40 +127,75 @@ function refreshAllActions() {
   });
 }
 
+function orderPriceCategory(mode=adminOrderPriceMode) {
+  return window.ZZWS_PRICE_CATEGORIES?.normalize(mode)||(mode==='WS'?'Dealers':mode);
+}
+function getOrderProductPrice(p) {
+  if(!p)return 0;
+  if(!isAdminUser())return p.wholesale>0?p.wholesale:0;
+  const category=orderPriceCategory();
+  // An authoritative null/missing category is unavailable, never an invitation
+  // to silently use another category's price. Raw values support old DTOs only.
+  const value=p.stockPickerPrices? p.stockPickerPrices[category]
+    :category==='KP'?p.kpPrice:category==='Dealers'?p.wholesale:0;
+  return typeof value==='number'&&Number.isFinite(value)&&value>0?value:0;
+}
 function getItemWholesalePrice(item) {
   const proposalPrice=window.ZZWS_PROPOSAL_CART?.price(item?.articul);if(proposalPrice!=null)return proposalPrice;
   if(window.ZZWS_ASSISTED?.active())return ZZWS_ASSISTED.price(item?.articul);
   const p = productIndex.get(item && item.articul);
   if (!p) return 0;
-  const selectedPrice = isAdminUser() && adminOrderPriceMode === 'KP' ? p.kpPrice : p.wholesale;
-  return selectedPrice > 0 ? selectedPrice : 0;
+  return getOrderProductPrice(p);
 }
 
 function getOrderPriceLabel() {
   if(window.ZZWS_ASSISTED?.active())return 'Ընտրված հաճախորդի գին';
-  return isAdminUser() && adminOrderPriceMode === 'KP' ? 'Խոշոր գործընկերոջ գին' : 'Մեծածախ գին';
+  if(!isAdminUser())return 'Ձեր գինը';
+  return window.ZZWS_PRICE_CATEGORIES?.label(orderPriceCategory())||(orderPriceCategory()==='KP'?'Խոշոր Գործընկեր':'Մշտական Գորրընկեր');
 }
+
+function refreshOrderPriceCategories(){
+  const registry=window.ZZWS_PRICE_CATEGORIES;
+  if(registry){
+    const id=registry.normalize(adminOrderPriceMode);
+    // A removed category cannot silently recalculate a basket in another group.
+    document.querySelectorAll('[data-admin-price-mode-select]').forEach(select=>{
+      registry.populate(select,{selected:id,legacyWS:true});
+      if(!registry.choices().some(c=>c.id===id)&&![...select.options].some(o=>o.value===adminOrderPriceMode)){
+        const option=document.createElement('option');option.value=adminOrderPriceMode;option.textContent=id;option.dataset.i18nSkip='true';select.append(option);
+      }
+      select.value=adminOrderPriceMode==='Dealers'?'WS':adminOrderPriceMode;
+    });
+  }else document.querySelectorAll('[data-admin-price-mode-select]').forEach(select=>{select.value=adminOrderPriceMode;});
+}
+window.addEventListener?.('zzws:price-categories',()=>{
+  refreshOrderPriceCategories();
+  if(isAdminUser()&&typeof catalogLoaded!=='undefined'&&catalogLoaded){updateOrderPanel();if(!document.getElementById('orderModal')?.classList.contains('hidden'))renderModalItems();}
+});
 
 function loadAdminOrderPriceMode() {
   adminOrderPriceMode = 'WS';
   if (isAdminUser()) {
     try {
-      adminOrderPriceMode = localStorage.getItem('zigzag_admin_price_mode_' + userStorageId()) === 'KP' ? 'KP' : 'WS';
+      const saved=localStorage.getItem('zigzag_admin_price_mode_' + userStorageId());
+      adminOrderPriceMode = saved==='KP'||/^cat_[a-z0-9_-]{1,60}$/.test(saved||'')?saved:'WS';
     } catch (e) {}
   }
-  document.querySelectorAll('[data-admin-price-mode-select]').forEach(select => { select.value = adminOrderPriceMode; });
+  refreshOrderPriceCategories();
   updateOrderPanel();
 }
 
 function setAdminOrderPriceMode(mode) {
   if (!isAdminUser()) return;
-  adminOrderPriceMode = mode === 'KP' ? 'KP' : 'WS';
+  const category=orderPriceCategory(mode);
+  if(window.ZZWS_PRICE_CATEGORIES&&!window.ZZWS_PRICE_CATEGORIES.choices().some(c=>c.id===category))return;
+  adminOrderPriceMode = category==='Dealers'?'WS':category;
   Object.values(cart).forEach(item => {
     item.addedPrice = getItemWholesalePrice(item);
     item.addedPriceMode = adminOrderPriceMode;
   });
   try { localStorage.setItem('zigzag_admin_price_mode_' + userStorageId(), adminOrderPriceMode); } catch (e) {}
-  document.querySelectorAll('[data-admin-price-mode-select]').forEach(select => { select.value = adminOrderPriceMode; });
+  refreshOrderPriceCategories();
   saveCartToStorage();
   updateOrderPanel();
   renderModalItems();
@@ -292,7 +327,7 @@ function renderModalItems() {
         ${priceDiffNotice ? `<div class="basket-price-notice">${priceDiffNotice}</div>` : ''}
       </div>
       <div class="basket-item-details">
-        <div class="basket-unit-price"><span class="basket-field-label">Միավորի գին${isAdminUser() ? ` (${escapeHtml(getOrderPriceLabel())})` : ''}</span><strong>${currentPrice > 0 ? currentPrice.toLocaleString((window.ZZWS_I18N?.language==='ru'?'ru-RU':'hy-AM')) + ' ֏' : 'Գին չկա'}</strong></div>
+        <div class="basket-unit-price"><span class="basket-field-label">Միավորի գին${isAdminUser() ? ` (<span data-i18n-skip>${escapeHtml(getOrderPriceLabel())}</span>)` : ''}</span><strong>${currentPrice > 0 ? currentPrice.toLocaleString((window.ZZWS_I18N?.language==='ru'?'ru-RU':'hy-AM')) + ' ֏' : 'Գին չկա'}</strong></div>
         <div class="basket-quantity"><span class="basket-field-label">Քանակ (հատ)</span><div class="basket-quantity-control print-hidden">
           <button type="button" data-act="mqty" data-delta="-1" data-art="${escapeHtml(articul)}" aria-label="Նվազեցնել քանակը">−</button>
           <input type="number" data-act="mqty-input" data-art="${escapeHtml(articul)}" value="${item.qty}" min="1" max="9999" aria-label="Ապրանքի քանակ">
@@ -313,7 +348,7 @@ function renderModalItems() {
 }
 function openOrderModal() {
   ZZWS_MEMORY.savedList();
-  document.querySelectorAll('[data-admin-price-mode-select]').forEach(select => { select.value = adminOrderPriceMode; });
+  refreshOrderPriceCategories();
   renderModalItems();
   if (!modalFieldsInitialized) {
     populateOrderModalFields();

@@ -1,0 +1,30 @@
+{
+  "status": "PREPARED_NOT_ACTIVATED",
+  "baseCommit": "aa746b2b5bb521f6b09a2b6b19c70c8ede4881de",
+  "features": [
+    "Administrator baskets use the saved category pricing policy, including ordered fallback, adjustments, rounding and retail ceiling.",
+    "Category IDs are stable; current names and added categories propagate to basket, stock allocation, proposals, public offer captions, user forms and audit display.",
+    "Resolved category prices and list are admin-only; client/assisted/proposal price scopes remain independent.",
+    "Historical order calculation evidence and existing offer prices remain unchanged after rename."
+  ],
+  "activationRequires": [
+    "Matching API and web sources",
+    "Migration 20261104085417_dynamic_price_categories.sql",
+    "Resolution of the earlier zzws-api deployment request before any deployment retry"
+  ],
+  "productionChanges": {
+    "server": false,
+    "database": false,
+    "apk": false,
+    "cloudflare": false
+  },
+  "tests": {
+    "reportedCartTotal": 33400,
+    "reportedCartQuantities": [
+      1,
+      3,
+      1
+    ],
+    "visual": "Local Edge fixture using actual order-state.js and price-categories.js; rename, add, select and 390px overflow checks passed. No production API used."
+  }
+}
