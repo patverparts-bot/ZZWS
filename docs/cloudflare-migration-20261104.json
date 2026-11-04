@@ -1,8 +1,8 @@
 {
-  "status": "SITE_API_APK_PC_VERIFIED_MAIN_PIPELINE_FINALIZING",
+  "status": "PUBLISHED_VERIFIED_COMPLETE",
   "date": "2026-11-04",
   "canonicalOrigin": "https://zzws-1z2.pages.dev",
-  "sourceBranch": "release/cloudflare-complete-20261104",
+  "sourceBranch": "main",
   "apiBase": 84,
   "candidateRuntimeFiles": 72,
   "apk": {
@@ -29,9 +29,7 @@
     ],
     "allAcknowledged": true
   },
-  "pending": [
-    "Cloudflare production branch main + final build/readback"
-  ],
+  "pending": [],
   "futureCompanion": {
     "id": "PUB-REMOTE-001",
     "currentReleaseExcluded": true
@@ -40,16 +38,49 @@
   "apiVersion": 85,
   "apiExactSourceFiles": 72,
   "canonicalVerified": {
-    "deploymentId": "80c3365f-89cc-45c6-b3c4-acffe21979af",
+    "deploymentId": "af9fdeea-2ba9-4758-8cb3-88d2b809f6db",
+    "sourceCommit": "1bc71bc222a6f2332ccd2c2e9495006484941911",
     "httpChecks": 203,
     "anonymousEdgeChecks": 9,
-    "previewStaticResponses": 456,
-    "previewUniquePaths": 114
+    "realIframeDenied": true,
+    "coreCommit": "296bf87437f105d12791d4030fd33189dff861d8"
   },
   "pcVerified": {
     "operationsChecks": 7,
     "operatorFiles": 6,
     "sizeAutomationUpdated": true,
     "schedulePreserved": true
+  },
+  "productionBranch": "main",
+  "legacy": {
+    "sourceBytesVerified": 4,
+    "redirectBrowserChecks": 30,
+    "oldNativeCompatibilityPreserved": true
+  },
+  "publishedFeatureIds": [
+    "PUB-001",
+    "PUB-003",
+    "PUB-007",
+    "PUB-008",
+    "PUB-009",
+    "PUB-010-R1",
+    "PUB-011",
+    "PUB-012",
+    "PUB-013"
+  ],
+  "futureOnly": [
+    "PUB-REMOTE-001"
+  ],
+  "preparedSourceBranch": "release/cloudflare-complete-20261104",
+  "verifiedMainBeforeDocumentationCommit": "1bc71bc222a6f2332ccd2c2e9495006484941911",
+  "applicationBackup": {
+    "tables": 51,
+    "rows": 2061,
+    "orderTotals": 27,
+    "buyerOffers": 5,
+    "proposalRows": 2,
+    "productSpecifications": 1,
+    "specificationRefreshJobs": 2,
+    "encryptedAndVerified": true
   }
 }
