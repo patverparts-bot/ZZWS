@@ -1,0 +1,13 @@
+/* Keep basket actions grouped and hand the draft to the existing offer flow. */
+(() => {
+ document.addEventListener('DOMContentLoaded',()=>{
+  const host=document.querySelector('.checkout-preparation-actions');if(!host)return;
+  const node=(tag,cls)=>{const n=document.createElement(tag);if(cls)n.className=cls;return n;};
+  const addButtons=[...host.querySelectorAll(':scope>button')].filter(b=>!['checkoutClearCart','cartDownloadExcel','cartCopyProducts'].includes(b.id));
+  const add=node('section','cart-action-group cart-action-add'),addTitle=node('h5'),addRow=node('div','cart-action-row'),use=node('section','cart-action-group cart-action-use'),useTitle=node('h5'),useRow=node('div','cart-action-row'),danger=node('div','cart-action-danger'),proposal=node('button','checkout-button cart-create-proposal'),note=document.getElementById('cartExportStatus');
+  addTitle.dataset.i18nSkip=useTitle.dataset.i18nSkip=proposal.dataset.i18nSkip='true';proposal.id='cartCreateProposal';proposal.type='button';add.append(addTitle,addRow);use.append(useTitle,useRow);addRow.append(...addButtons);useRow.append(proposal);for(const id of ['cartDownloadExcel','cartCopyProducts']){const b=document.getElementById(id);if(b)useRow.append(b);}const clear=document.getElementById('checkoutClearCart');if(clear)danger.append(clear);host.append(add,use,danger);if(note)host.append(note);
+  function refresh(){const ru=window.ZZWS_I18N?.language==='ru';addTitle.textContent=ru?'Добавить товары':'Ավելացնել ապրանքներ';useTitle.textContent=ru?'Использовать корзину':'Զամբյուղի գործողություններ';proposal.textContent=ru?'Создать предложение':'Ստեղծել առաջարկ';proposal.hidden=typeof serverIdentity==='undefined'||serverIdentity?.role!=='admin';proposal.disabled=!Object.keys(cart).length;}
+  proposal.onclick=()=>{try{if(serverIdentity?.role!=='admin')return;const customer=window.ZZWS_ASSISTED?.customer?.()||(window.ZZWS_CATALOG_VIEW?.active?.()?window.ZZWS_CATALOG_VIEW.identity():null);const items=Object.values(cart).map(i=>{const price=Number(getItemWholesalePrice(i));return {articul:String(i.articul),name:getItemName(i),quantity:Number(i.qty),price:Number.isFinite(price)&&price>0?price:null};});const priceMode=typeof orderPriceCategory==='function'?orderPriceCategory():adminOrderPriceMode;if(ZZWS_PROPOSALS.openFromCart({items,priceMode,customer:customer?.role==='admin'?null:customer})){closeOrderModal();document.getElementById('proposalPaste').focus();}}catch(e){if(note)note.textContent=e.message;}};
+  new MutationObserver(refresh).observe(document.getElementById('modalItemsList'),{childList:true,subtree:true});window.addEventListener('zzws:languagechange',refresh);refresh();
+ });
+})();
