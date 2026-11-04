@@ -16,6 +16,9 @@ HTTP413 проверен снова в API85 от Cloudflare:10_100_001байт 
 
 Подтверждения: `work/remaining-release/prepared-publication.json`, `api85-source-readback.json`, `api85-upload-verification.json`, `application-backup-final51.json`, `cloudflare/canonical-80c3365f/http-verification.json`, `cloudflare/canonical-anonymous/browser-verification.json`, `cloudflare/candidate2-publication-result.json`, `cloudflare/candidate2-primary-api-verification.json`, `computer/operator-sync-result.json`, `computer/codex-automation-result.json`. История подготовки и частичных активаций ниже сохранена.
 
+<!-- BUYER R1 INDEPENDENT LIVE VERIFICATION -->
+Дополнительная независимая проверка PUB-010-R1: [13 канонических файлов и CORS/health](../work/buyer-mode-usability-20261104/published-verification.json) совпали с общим выпуском (штатная Git-нормализация LF учтена). Health200; OPTIONS204 для Cloudflare и прежнего GitHub origin в API/APK. Buyer-модуль в выгрузке API85 совпадает с замороженным. Проверки интерфейса до выпуска использовали тестовые данные/API; новая авторизованная production-сессия здесь не запускалась. Старые freeze-артефакты остаются историей подготовки; [текущее состояние](../work/buyer-mode-usability-20261104/latest-status.json) — опубликовано.
+
 <!-- END CURRENT COORDINATED RELEASE -->
 
 ## Текущее состояние
@@ -165,3 +168,11 @@ HTTP413 проверен снова в API85 от Cloudflare:10_100_001байт 
 - Проверено3задания Windows, службы/автозагрузка/переменные/ярлыки: перенос базы и резервных копий не требуется. Подготовлено изменение `server/check-operations.ps1` и операторских URL на canonicalCF. Применить после проверки canonicalproduction. Реальные отчёты/письма/заказы не отправлять для этих проверок.
 - Блокер на момент подготовки, устранён: интеграция замороженного Pereezd R1/R2 и ожидаемого Warranty PUB-011/012, общий preview/deployed gate, затем согласованная активация API/CF/APK/main и локальных процессов. Действующий зависший процесс не подтверждён. Новые объекты Git загружены, но это не публикация ветки или функции.
 - Исторический следующий шаг, выполнен: закончить точечную интеграцию, сверить источники, проверить актуальный API83/main перед записью, включить общий выпуск и проверить рабочий результат; после этого закрыть только доказанно опубликованные пункты.
+
+## PUB-014 — оформление витрины выбранного клиента в рабочем каталоге администратора
+
+**НЕ ОПУБЛИКОВАНО — только локально.** Два ранее разработанных hunk в `supabase/functions/zzws-api/order-routes.mjs` передают `storefrontDTO` и персональный ranking в ответ `admin/orders/customer-catalog`. Без них существующий интерфейс выбранного клиента сбрасывает конфигурацию витрины к пустой: теряются разделы/баннеры, цены и товары не меняются.
+
+- Источники: `work/remaining-release/canonical-sync/preserved-local/order-routes-storefront-vs-live85.patch`; кандидат на свежем API85 `order-routes-live85-plus-local-storefront.mjs`, SHA256 `e5c0a6c202dbe96e8a82881b7cfaafe16b2d2f52e500d73fd62b6c2999abaa77`.
+- Проверка актуальности: localhunk существует ещё до customer-prefix; mainbcb/05aa и живые82/83/84/85 не выдавали этот DTO в данном маршруте. Обычный catalog предоставляет DTO, но выбранный customer-route к нему не возвращается. Это действующее локальное поведение, не подтверждённая публикация. Сохранён весь API85 unread/price/body-reader/customerкод.
+- Точный блокер: закончить focused route-проверки, сверить текущий API85, выпустить один объединённый module как API86, проверить readonly ответ выбранного клиента и исходники. Зависший процесс не мешает; Cloudflare/АПК-переезд уже завершён.

@@ -10,7 +10,7 @@ import {orderPublic} from './order-public.mjs';
 import {projectOrderHistory} from './order-history.mjs';
 import {currentOffer,offerStamp,offerDTO} from './special-offers.mjs';
 import {effectiveControls} from './catalog-controls.mjs';
-import {storefrontSettings} from './storefront.mjs';
+import {storefrontSettings,storefrontDTO,storefrontRanking} from './storefront.mjs';
 import {statuses,normalizeLines,totalOf,changesBetween,parseConfirmation,parsePastedConfirmation} from './orders.mjs';
 import {deliveryId,ownedDeliverySnapshot} from './delivery-variants.mjs';
 import {buildOrderContext,calculationRetry} from './order-context.mjs';
@@ -130,7 +130,8 @@ export async function orderRoutes(c){
   const products=project(v.products,profile,v.rules,{mainWarehouses:v.mainWarehouses,newDays:storefrontSettings(v.catalogControls).newDays});
   if(path.endsWith('/export'))return file([['Ստացող',profile.client,'Տարբերակ',priceVersionLabel(v.created)],['Արտիկուլ','Բրենդ','Կատեգորիա','Անվանում','Մանրածախ','Ձեր գինը','Առկայություն',...(profile.allowResale?['Վերավաճառքի մեծածախ գին']:[])],...products.map(p=>[p.articul,p.brand,p.category,p.name,p.retail,p.wholesale,p.stockStatus,...(profile.allowResale?[p.resaleWholesale]:[])])],'PriceList.xlsx');
   const controls=effectiveControls(v.catalogControls,profile.customerId||profile.id);
-  return json({customer:customerInfo(profile),hiddenColumns,products,version,updated,controls,specialOffer:controls.promo?offerDTO(offer,products):null});
+  const banners=await storefrontRanking(service,query,products,v.catalogControls,profile.id,v.catalogControls?.popularityRules?.days||90);
+  return json({customer:customerInfo(profile),hiddenColumns,products,version,updated,controls,storefront:storefrontDTO(products,banners,v.catalogControls),specialOffer:controls.promo?offerDTO(offer,products):null});
  }
  if(path==='admin/orders/customer-quote'&&req.method==='POST'){
   const p=await body(req),profile=await customerProfile(p.customerId);if(!Array.isArray(p.articuls)||p.articuls.length>500||p.articuls.some(a=>typeof a!=='string'||!a||a.length>100))fail(400,'Ստուգեք արտիկուլները');
