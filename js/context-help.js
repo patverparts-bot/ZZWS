@@ -20,7 +20,7 @@
  if(!anchor&&target.tagName==='DETAILS')anchor=target.querySelector('summary');
  if(!anchor&&['FORM','FIELDSET','DIV'].includes(target.tagName)){const section=target.closest('section,dialog,fieldset,[role=dialog]')||target.parentElement;anchor=target.querySelector(':scope>h1,:scope>h2,:scope>h3,:scope>legend')||section.querySelector('h1,h2,h3,legend');if(!anchor){link.hidden=true;continue;}}
  if(!anchor){if(target.parentElement.classList.contains('context-help-action'))anchor=target.parentElement;else{anchor=node('span');anchor.className='context-help-action';target.before(anchor);anchor.append(target);}}
- link.hidden=false;link.classList.remove('field-help');if(link.parentElement!==anchor)anchor.append(link);if(old?.classList.contains('has-context-help')&&!old.querySelector(':scope>.field-help'))old.classList.remove('has-context-help');
+ link.hidden=[...anchor.querySelectorAll(':scope > .context-help')].some(other=>other!==link&&!other.hidden&&other.href===link.href);link.classList.remove('field-help');if(link.parentElement!==anchor)anchor.append(link);if(old?.classList.contains('has-context-help')&&!old.querySelector(':scope>.field-help'))old.classList.remove('has-context-help');
  }}
  window.ZZWS_CONTEXT_HELP=Object.freeze({open,reposition,viewState:()=>active?.open?{topic:active.dataset.helpTopic}:null,async restoreView(value){if(value?.topic&&open(value.topic))await activeLoad;}});attach();reposition();new MutationObserver(()=>{attach();reposition();}).observe(document.body,{childList:true,subtree:true});
 })();

@@ -16,3 +16,10 @@ console.log('107-row exports, headerless paste, footer exclusion, formatted pric
 
 assert.deepEqual(data.counts([{articul:'001',quantity:2},{articul:'001',quantity:3},{articul:'002',quantity:4}]),{items:2,quantity:9});
 assert.deepEqual(data.counts([]),{items:0,quantity:0});
+
+const XLSX=require('../js/vendor/xlsx.full.min.js');
+for(const separator of [' - ',' -',' – ',' — ',' ','  ']){const text=['686626'+separator+'1','6866301'+separator+'1','686629'+separator+'3'].join('\n');const book=XLSX.read(text,{type:'string',raw:true});const rows=XLSX.utils.sheet_to_json(book.Sheets[book.SheetNames[0]],{header:1,raw:true,defval:''});assert.deepEqual(data.parse(rows).map(r=>[r.name,r.quantity,r.price]),[['686626',1,null],['6866301',1,null],['686629',3,null]]);}
+assert.equal(data.parse([['Bosch SMV-123 - 2 шт.']])[0].name,'Bosch SMV-123');assert.equal(data.parse([['001234 - 2 հատ']])[0].name,'001234');
+for(const line of ['686626 - 0','686626 - -1','686626 - 1.5'])assert.throws(()=>data.parse([[line]]),/տող 1/);
+assert.throws(()=>data.parse([['Bosch SMV-123']]),/տող 1/);
+console.log('Plain hyphen lists and Unicode dashes, units, leading zeros, invalid quantities and hyphenated models passed');

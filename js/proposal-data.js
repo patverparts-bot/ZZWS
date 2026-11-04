@@ -8,7 +8,10 @@
   return /^[+-]?(\d+(\.\d*)?|\.\d+)$/.test(s)?Number(s):NaN;
  }
  function parse(rows){
-  const populated=rows.map((r,i)=>({cells:Array.from(r,v=>String(v??'').trim()),line:i+1})).filter(r=>r.cells.some(Boolean));
+  const populated=rows.map((r,i)=>{let cells=Array.from(r,v=>String(v??'').trim());
+   // Plain pasted lists may have one cell containing identity - quantity.
+   if(cells.length===1){const pair=cells[0].match(/^(.+?)\s+[-–—]\s*([+-]?\d+(?:[.,]\d+)?)(?:\s*(?:հատ|hat|шт\.?|pcs?\.?))?$/iu);const spaced=cells[0].match(/^([0-9][A-Z0-9._/\-]*)\s+([+-]?\d+(?:[.,]\d+)?)(?:\s*(?:հատ|hat|шт\.?|pcs?\.?))?$/iu);if(pair||spaced){const match=pair||spaced;cells=[match[1].trim(),match[2]];}}
+   return {cells,line:i+1};}).filter(r=>r.cells.some(Boolean));
   if(!populated.length)throw Error('Ցանկը դատարկ է');
   const first=populated[0].cells,find=re=>first.findIndex(v=>re.test(v));
   let q=find(/^(քանակ|количество|qty|quantity)$/i),s=find(/^(արտիկուլ|կոդ|артикул|код|sku)$/i),n=find(/^(մոդել|անվանում|номенклатура|модель|наименование|name|model)$/i),p=find(/^(գին|цена|price)$/i);
